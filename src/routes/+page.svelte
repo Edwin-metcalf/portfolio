@@ -2,6 +2,7 @@
 	//import { fly } from 'svelte/transition';
     import Header from '../lib/Header.svelte';
     import Aboutme from '../lib/Aboutme.svelte';
+    import Languages from '$lib/Languages.svelte';
 </script>
 <Header></Header>
 <div class="main-page">
@@ -18,10 +19,9 @@
         </div>
     </div>
     <Aboutme></Aboutme>
+    <Languages></Languages>
 
 </div>
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
 
 <style>
     .main-page {
@@ -66,7 +66,7 @@
         margin: 0 auto;
     }
     .hero-section {
-        min-height: 90vh;
+        min-height: 80vh;
         display: flex;
         align-items: center;
         padding: 0 5%;
@@ -77,6 +77,9 @@
     }
     to {
         filter: drop-shadow(0 0 20px rgba(0, 212, 170, 0.6));
+    }
+    html {
+        scroll-behavior: smooth;
     }
 }
 </style>

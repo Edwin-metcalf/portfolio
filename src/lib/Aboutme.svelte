@@ -1,6 +1,6 @@
 <script lang="ts">
 </script>
-<div class="about-section">
+<div class="about-section" id="about-me">
     <div class="about-container">
     <h1 class="about-title">About Me</h1>
         <p class="about-text">

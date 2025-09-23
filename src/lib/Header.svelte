@@ -7,7 +7,7 @@
     </a>
     <div class="header-right">
         <a href="#classes">Classes</a>
-        <a href="#about me">About me</a>
+        <a href="#about-me">About me</a>
         <a href="#experience">Experience</a>
         <a href="#Portfolio">Portfolio</a>
         <a href="#Contact">Contact</a>
