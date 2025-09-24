@@ -3,6 +3,7 @@
     import Header from '../lib/Header.svelte';
     import Aboutme from '../lib/Aboutme.svelte';
     import Languages from '$lib/Languages.svelte';
+    import Portfolio from '$lib/Portfolio.svelte';
 </script>
 <Header></Header>
 <div class="main-page">
@@ -20,6 +21,7 @@
     </div>
     <Aboutme></Aboutme>
     <Languages></Languages>
+    <Portfolio></Portfolio>
 
 </div>
 
