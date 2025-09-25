@@ -33,6 +33,7 @@
 		"vite": "^7.0.4"
 	},
 	"dependencies": {
+		"lucide-svelte": "^0.544.0",
 		"simple-icons": "^15.16.0"
 	}
 }
