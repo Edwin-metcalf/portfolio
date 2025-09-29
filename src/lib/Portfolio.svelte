@@ -71,6 +71,7 @@
         padding: 80px 5%;
         display: flex;
         justify-content: center;
+        min-height: 80vh;
     }
     
     .portfolio-container {
@@ -113,10 +114,6 @@
         perspective: 1000px;
     }
     
-    .project-card:hover {
-        transform: translateY(-5px);
-    }
-    
     .card-inner {
         position: relative;
         width: 100%;
@@ -133,6 +130,8 @@
     .card-front,
     .card-back {
         position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 200px;
         backface-visibility: hidden;
@@ -146,12 +145,17 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
     }
     
     .card-back {
         transform: rotateY(180deg);
         background: rgba(13, 17, 23, 0.95);
         border-color: rgba(0, 212, 170, 0.3);
+        box-shadow: 
+            0 0 20px rgba(0, 212, 170, 0.3),
+            0 0 40px rgba(0, 212, 170, 0.1),
+            inset 0 0 20px rgba(0, 212, 170, 0.05);
     }
     
     .card-icon {

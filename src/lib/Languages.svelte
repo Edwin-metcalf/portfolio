@@ -27,7 +27,7 @@
     { icon: siGo, name: 'Go', color: '#00ADD8' },
     { icon: siOpenjdk, name: 'Java', color: '#007396' },
     { icon: siHtml5, name: 'HTML5', color: '#E34F26' },
-    { icon: siCss, name: 'CSS3', color: '#1572B6' },
+    { icon: siCss, name: 'CSS', color: '#1572B6' },
     
     // Tools
     { icon: siGit, name: 'Git', color: '#F05032' },

@@ -4,6 +4,7 @@
     import Aboutme from '../lib/Aboutme.svelte';
     import Languages from '$lib/Languages.svelte';
     import Portfolio from '$lib/Portfolio.svelte';
+    import Contact from '$lib/Contact.svelte';
 </script>
 <Header></Header>
 <div class="main-page">
@@ -22,6 +23,7 @@
     <Aboutme></Aboutme>
     <Languages></Languages>
     <Portfolio></Portfolio>
+    <Contact></Contact>
 
 </div>
 
