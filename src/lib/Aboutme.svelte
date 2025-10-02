@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Courses from "./Courses.svelte";
 </script>
 <div class="about-section" id="about-me">
     <div class="about-container">
@@ -6,6 +7,7 @@
         <p class="about-text">
             Hi welcome to my website. I am an aspiring full stack developer. I am currently am studying both computer science and history. I am from San Francisco and have always been super interested in computers and especially video games.
         </p>
+        <Courses></Courses>
     </div>
 </div>
 

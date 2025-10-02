@@ -112,8 +112,38 @@
         min-height: 200px;
         cursor: pointer;
         perspective: 1000px;
+        overflow: hidden;
+        border-radius: 16px;
     }
-    
+    .project-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+            120deg,
+            rgba(0, 212, 170, 0) 0%,       
+            rgba(0, 212, 170, 0.12) 50%,    
+            rgba(0, 212, 170, 0) 100%       
+        );
+        transform: skewX(-25deg);
+        animation: shine 4s infinite;
+        pointer-events: none;
+    }
+    @keyframes shine {
+        0% {
+            left: -75%;
+        }
+        100% {
+            left: 125%;
+        }
+    }
+    .project-card:hover::before {
+        animation: none;
+        opacity: 0;
+    }
     .card-inner {
         position: relative;
         width: 100%;

@@ -5,6 +5,7 @@
     import Languages from '$lib/Languages.svelte';
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
+
 </script>
 <Header></Header>
 <div class="main-page">
@@ -16,6 +17,9 @@
                 <p class="name-subtitle">Check out what I am working on</p>
                 <!-- prolly want to replace with cool buttons -->
 
+            </div>
+            <div class="profile-wrapper">
+                <img src="/images/ProfilePicV1.jpg" alt="Edwin Metcalf" class="profile-pic" />
             </div>
             <!-- add a fuckin photo brother -->
         </div>
@@ -74,6 +78,20 @@
         display: flex;
         align-items: center;
         padding: 0 5%;
+    }
+    .profile-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 50px;
+    }
+    .profile-pic {
+        width: 60vh;
+        height: 60vh;
+        border-radius: 50%;
+        border: 5px solid #0d1117;
+        object-fit: cover;
+        box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
     }
     @keyframes glow {
     from {
