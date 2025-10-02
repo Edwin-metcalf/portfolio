@@ -1,12 +1,13 @@
 <script lang="ts">
-    import { FileCode, BrainCircuit, Shield, Cpu, Code, AppWindow, SquareTerminal, FileText} from 'lucide-svelte'
+    import { FileCode, BrainCircuit, Shield, Cpu, Code, AppWindow, SquareTerminal, FileText, Search} from 'lucide-svelte'
 
     const vassarCourses = [
         {name: "Data Structures", icon: FileCode},
         {name: "Foundations of Computer science", icon: SquareTerminal},
         {name: "Analysis of Algorithms", icon: BrainCircuit},
         {name: "Theory of Computation", icon: Code},
-        {name: "Natural Language Processing", icon: FileText}
+        {name: "Natural Language Processing", icon: FileText},
+        {name: "Problem Solving and abstraction", icon: Search}
     ];
 
     const berkeleyCourses = [
