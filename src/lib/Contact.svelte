@@ -263,4 +263,23 @@
         transform: translateX(5px);
     }
 
+      @media (max-width: 768px) {
+        .contact-content {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+        
+        .contact-form-container {
+            padding: 30px 20px;
+        }
+        
+        .contact-title {
+            font-size: 2.5rem;
+        }
+        
+        .contact-subtitle {
+            font-size: 1.1rem;
+        }
+    }
+
 </style>

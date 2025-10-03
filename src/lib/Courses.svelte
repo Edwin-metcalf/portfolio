@@ -142,4 +142,13 @@
         font-size: 0.95rem;
         font-weight: 500;
     }
+    @media (max-width: 768px) {
+        .coursework-title {
+            font-size: 1.5rem;
+        }
+        
+        .course-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>

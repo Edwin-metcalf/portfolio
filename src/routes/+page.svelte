@@ -104,4 +104,45 @@
         scroll-behavior: smooth;
     }
 }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            min-height: auto;
+            padding: 2rem 5%;
+        }
+        
+        .hero-content {
+            flex-direction: column-reverse;
+            gap: 2rem;
+        }
+        
+        .name-header {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .name-header p {
+            text-align: center;
+        }
+        
+        .name-title {
+            font-size: 2.5rem;
+        }
+        
+        .name-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .profile-wrapper {
+            margin-right: 0;
+            margin-top: 2rem;
+        }
+        
+        .profile-pic {
+            width: 250px;
+            height: 250px;
+            border: 3px solid #0d1117;
+        }
+    }
+
 </style>

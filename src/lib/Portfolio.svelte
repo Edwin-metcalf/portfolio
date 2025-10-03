@@ -232,4 +232,20 @@
         background: rgba(0, 212, 170, 0.25);
         transform: scale(1.05);
     }
+
+    @media (max-width: 768px) {
+        .projects-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .project-card {
+            max-width: 100%;
+            min-height: 180px;
+        }
+        
+        .portfolio-title {
+            font-size: 2.5rem;
+        }
+    }
 </style>

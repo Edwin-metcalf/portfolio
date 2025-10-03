@@ -43,4 +43,32 @@
         color: #c9d1d9;
         margin: 0;
     }
+
+    @media (max-width: 768px) {
+        .about-section {
+            padding: 50px 5%;
+        }
+        
+        .about-container {
+            max-width: 100%;
+        }
+        
+        .about-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .about-title::after {
+            width: 50px;
+            height: 2px;
+            margin: 15px auto;
+        }
+        
+        .about-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            text-align: left;
+        }
+    }
+    
 </style>

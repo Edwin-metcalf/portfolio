@@ -2,8 +2,8 @@
 </script>
 
 <div class="header">
-    <a href="/">
-        Edwin Metcalf
+    <a href="/" class="logo-wrapper">
+        <img src="/images/EMlogo.png" alt="Edwin Metcalf Logo" class="logo" />
     </a>
     <div class="header-right">
         <a href="#about-me">About me</a>
@@ -39,5 +39,14 @@
     }
     .header-right {
         float: right;
+    }
+    .logo {
+        width: 50px;
+        height: auto;
+        display: block;
+        transition: filter 0.3s ease;
+    }
+    .logo:hover {
+        filter: brightness(0.5);
     }
 </style>

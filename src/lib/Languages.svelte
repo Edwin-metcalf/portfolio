@@ -24,9 +24,9 @@
     { icon: siOcaml, name: 'OCaml', color: '#EC6813' },
     { icon: siC, name: 'C', color: '#A8B9CC' },
     { icon: siRuby, name: 'Ruby', color: '#CC342D' },
-    { icon: siGo, name: 'Go', color: '#00ADD8' },
+    { icon: siGo, name: 'GoLang', color: '#00ADD8' },
     { icon: siOpenjdk, name: 'Java', color: '#007396' },
-    { icon: siHtml5, name: 'HTML5', color: '#E34F26' },
+    { icon: siHtml5, name: 'HTML', color: '#E34F26' },
     { icon: siCss, name: 'CSS', color: '#1572B6' },
     
     // Tools
@@ -50,6 +50,7 @@
                         <div class="skill-icon" style="color: {lang.color}">
                             {@html lang.icon.svg}
                         </div>
+                        <span class="skill-name">{lang.name}</span>
                     </div>
                 {/each}
             </div>
@@ -128,6 +129,45 @@
         width: 100%;
         height: 100%;
         fill: currentColor;
+    }
+    .skill-name {
+        font-size: 0.95rem;
+        color: #8b949e;
+        font-weight: 500;
+        text-align: center;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        position: absolute;
+        bottom: 10px;
+        white-space: nowrap;
+    }
+
+    .skill-item:hover .skill-name {
+        opacity: 1;
+        transform: translateY(0);
+        color: #00d4aa;
+    }
+
+    @media (max-width: 768px) {
+        .skills-grid {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
+        }
+        
+        .skill-item {
+            padding: 15px;
+            min-width: 90px;
+        }
+        
+        .skill-icon {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .skills-title {
+            font-size: 2.5rem;
+        }
     }
     
 </style>
