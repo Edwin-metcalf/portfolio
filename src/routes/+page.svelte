@@ -1,10 +1,19 @@
 <script lang="ts">
-	//import { fly } from 'svelte/transition';
+	import { fly, scale } from 'svelte/transition';
+    import { quintOut } from 'svelte/easing';
+    import{ onMount } from 'svelte';
+
     import Header from '../lib/Header.svelte';
     import Aboutme from '../lib/Aboutme.svelte';
     import Languages from '$lib/Languages.svelte';
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
+
+    let mounted = false;
+
+    onMount(() => {
+        mounted = true;
+    });
 
 </script>
 <Header></Header>
@@ -12,16 +21,23 @@
     <div class="hero-section">
         <div class="hero-content">
             <div class="name-header">
-                <p class="name-subtitle">Hey! I'm</p>
-                <h1 class="name-title">Edwin Metcalf</h1>
-                <p class="name-subtitle">Check out what I am working on</p>
-                <!-- prolly want to replace with cool buttons -->
+                {#if mounted}
+                    <p class="name-subtitle" in:fly={{ y: -20, duration: 880, delay: 200, easing: quintOut}}>
+                        Hey! I'm
+                    </p>
+                    <h1 class="name-title" in:fly={{ x: -50, duration: 1000, delay: 400, easing: quintOut}}>
+                        Edwin Metcalf
+                    </h1>
+                    <!--<p class="name-subtitle">Check out what I am working on</p>-->
+                    <!-- prolly want to replace with cool buttons -->
+                {/if}
 
             </div>
-            <div class="profile-wrapper">
-                <img src="/images/ProfilePicV1.jpg" alt="Edwin Metcalf" class="profile-pic" />
-            </div>
-            <!-- add a fuckin photo brother -->
+            {#if mounted}
+                <div class="profile-wrapper" in:scale= {{ duration: 1000, delay: 300, start: 0.8, easing: quintOut}}>
+                    <img src="/images/ProfilePicV1.jpg" alt="Edwin Metcalf" class="profile-pic" />
+                </div>
+            {/if}
         </div>
     </div>
     <Aboutme></Aboutme>

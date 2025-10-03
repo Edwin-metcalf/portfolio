@@ -276,10 +276,6 @@
         .contact-title {
             font-size: 2.5rem;
         }
-        
-        .contact-subtitle {
-            font-size: 1.1rem;
-        }
     }
 
 </style>
