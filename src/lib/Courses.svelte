@@ -2,18 +2,18 @@
     import { FileCode, BrainCircuit, Shield, Cpu, Code, AppWindow, SquareTerminal, FileText, Search} from 'lucide-svelte'
 
     const vassarCourses = [
-        {name: "Data Structures", icon: FileCode},
-        {name: "Foundations of Computer science", icon: SquareTerminal},
-        {name: "Analysis of Algorithms", icon: BrainCircuit},
-        {name: "Theory of Computation", icon: Code},
-        {name: "Natural Language Processing", icon: FileText},
-        {name: "Problem Solving and abstraction", icon: Search}
+        {name: "Data Structures", icon: FileCode, courseNum: "CMPU 102"},
+        {name: "Foundations of Computer science", icon: SquareTerminal, courseNum: "CMPU 145"},
+        {name: "Analysis of Algorithms", icon: BrainCircuit, courseNum: "CMPU 241"},
+        {name: "Theory of Computation", icon: Code, courseNum: "CMPU 240"},
+        {name: "Natural Language Processing", icon: FileText, courseNum: "CMPU 166"},
+        {name: "Problem Solving and abstraction", icon: Search, courseNum: "CMPU 101"}
     ];
 
     const berkeleyCourses = [
-        {name: "Computer Security", icon: Shield},
-        {name: "Computer Architecture", icon: Cpu},
-        {name: "Software Engineering", icon: AppWindow}
+        {name: "Computer Security", icon: Shield, courseNum: "CS 161"},
+        {name: "Computer Architecture", icon: Cpu, courseNum: "CS 61C"},
+        {name: "Software Engineering", icon: AppWindow, courseNum: "CS 169"}
     ];
 </script>
 
@@ -31,6 +31,7 @@
                         <svelte:component this={course.icon} size={20}/>
                     </div>
                     <span class="course-name">{course.name}</span>
+                    <span class="course-tooltip">{course.courseNum}</span>
                 </div>
                 {/each}
             </div>
@@ -45,6 +46,7 @@
                         <svelte:component this={course.icon} size={20}/>
                     </div>
                     <span class="course-name">{course.name}</span>
+                    <span class="course-tooltip">{course.courseNum}</span>
                 </div>
                 {/each}
             </div>
@@ -150,5 +152,41 @@
         .course-grid {
             grid-template-columns: 1fr;
         }
+    }
+
+    .course-tooltip {
+        position: absolute;
+        top: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 212, 170, 0.95);
+        color: #0d1117;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+    }
+
+    .course-tooltip::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid rgba(0, 212, 170, 0.95);
+    }
+    .course-item:hover .course-tooltip {
+        opacity: 1;
+        visibility: visible;
     }
 </style>

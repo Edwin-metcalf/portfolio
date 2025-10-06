@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Lock, UserPlus, Vote, BookOpenText, X } from 'lucide-svelte';
+    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks } from 'lucide-svelte';
 
     interface Project {
         id: number;
@@ -19,7 +19,7 @@
             icon: Vote,
             tools: ["Ruby", "Rails", "SQL"],
             longDescription: "Worked in an agile team environment with multiple iterations. Used Ruby on Rails with MVC architecutre to build a wesbsite to learn about your representatives. Incorporated multiple API's to pull information along with omni auth2 for SSO. Also cached results onto a SQL database.",
-            highlights: ["cool","awesome"]
+            highlights: ["Agile team environment to create a SaaS product ","Connected API calls and SQL Database", "built a responsive and intersting front end", "Used Cucumber and Rspec for exhaustive testing"]
         },
         {
             id: 2,
@@ -27,8 +27,8 @@
             description: "End to end encypted file sharing software using: ",
             icon: Lock,
             tools: ["GoLang"],
-            longDescription: "Built an end to end encypted secure file sharing Software in Go. Leveraged AES-CTR, HashKDF, HMACs, RSA signatures, and UUID's to ensure Integrity, Confidentiality and Authenticity.",
-            highlights: ["filler"]
+            longDescription: "Built an end to end encypted secure file sharing Software in Go. Leveraged AES-CTR, HashKDF, HMACs, RSA signatures, and UUID's to ensure Integrity, Confidentiality and Authenticity. Users are able to share and revoke access to files ",
+            highlights: ["Employed Cyptographic schemes to securely store, share and send files","used both public key encyption and symetric key encyption"]
         },
         {
             id: 3,
@@ -36,8 +36,8 @@
             description: "My portfolio website",
             icon: UserPlus,
             tools: ["Svelte", "HTML", "CSS", "TS","Heroku"],
-            longDescription: "Used Svelte, html, css, and Type Script. It is all hosted using Heroku",
-            highlights: ["filler"]
+            longDescription: "Used Svelte, HTML, CSS, and Type Script. It is all hosted using Heroku",
+            highlights: ["created an informative and good looking"]
         },
         {
             id: 4,
@@ -46,7 +46,7 @@
             icon: BookOpenText,
             tools: ["Java"],
             longDescription: "Created software that processes CSV files of students and their class selections along with classes and their openings. Then puts students in classes depending on factors like grade or draw number.",
-            highlights: ["filler"]
+            highlights: ["Ability to load courses and students from CSV", "Return a CSV with all the students schedules with the correct classes enrolled"]
         }
 
     ];
@@ -107,7 +107,18 @@
                             <p class="project-description">{project.description}</p>
                             <div class="tech-stack">
                                 {#each project.tools as tool}
-                                    <span class="tech-button">{tool}</span>
+                                    {#if tool == "Java" || tool == "Ruby" || tool == "GoLang" || tool == "TS" || tool == "HTML" || tool == "CSS"}
+                                        <span class="tech-button"> <Code size={15}></Code> {tool}</span>
+                                    {:else if tool == "SQL"}
+                                       <span class="tech-button"> <Database size={15}></Database> {tool}</span>
+                                    {:else if tool == "Heroku"}
+                                        <span class="tech-button"> <Server size={15}></Server> {tool}</span>
+                                    {:else if tool == "Svelte" || tool == "Rails"}
+                                        <span class="tech-button"> <Blocks size={15}></Blocks> {tool}</span>
+                                    {:else}
+                                        <span class="tech-button">{tool}</span>
+                                    {/if}
+
                                 {/each}
                             </div>
                             <span class="click-hint">Click for details →</span>
@@ -149,7 +160,17 @@
                     <h3 class="section-title">Tech Stack</h3>
                     <ul class="tech-stack">
                         {#each selectedProject.tools as tool}
-                            <span class="tech-button">{tool}</span>
+                            {#if tool == "Java" || tool == "Ruby" || tool == "GoLang" || tool == "TS" || tool == "HTML" || tool == "CSS"}
+                                <span class="tech-button"> <Code size={15}></Code> {tool}</span>
+                            {:else if tool == "SQL"}
+                                <span class="tech-button"> <Database size={15}></Database> {tool}</span>
+                            {:else if tool == "Heroku"}
+                                <span class="tech-button"> <Server size={15}></Server> {tool}</span>
+                            {:else if tool == "Svelte" || tool == "Rails"}
+                                <span class="tech-button"> <Blocks size={15}></Blocks> {tool}</span>
+                            {:else}
+                                <span class="tech-button">{tool}</span>
+                            {/if}
                         {/each}
                     </ul>
                 </div>
@@ -325,6 +346,9 @@
         font-weight: 500;
         border: 1px solid rgba(0, 212, 170, 0.3);
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
     
     .tech-button:hover {
