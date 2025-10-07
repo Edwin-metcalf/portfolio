@@ -9,7 +9,7 @@
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
 
-    let mounted = false;
+    let mounted: boolean = false;
 
     onMount(() => {
         mounted = true;

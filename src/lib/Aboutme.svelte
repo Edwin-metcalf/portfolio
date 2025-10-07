@@ -1,13 +1,45 @@
 <script lang="ts">
     import Courses from "./Courses.svelte";
+    import { fly, scale } from 'svelte/transition';
+    import { quintOut } from 'svelte/easing';
+    import{ onMount } from 'svelte';
+
+
+    let visable: boolean = false;
+    let sectionRef: HTMLElement | null = null;
+
+    onMount(() => {
+        if (!sectionRef) return;
+
+        const handleIntersection: IntersectionObserverCallback = (entries, observer) => {
+            for (const entry of entries){
+                if (entry.isIntersecting) {
+                    visable = true;
+                    observer.unobserve(entry.target);
+                }
+            }
+        };
+
+        const options: IntersectionObserverInit = {
+            threshold: 0.8,
+        };
+
+        const observer = new IntersectionObserver(handleIntersection, options);
+        observer.observe(sectionRef);
+
+        return () => observer.disconnect();
+    });
+
 </script>
-<div class="about-section" id="about-me">
+<div class="about-section" id="about-me" bind:this={sectionRef}>
     <div class="about-container">
-    <h1 class="about-title">About Me</h1>
-        <p class="about-text">
-            Hi welcome to my website. I am an aspiring full stack developer. I am currently am studying both computer science and history. I am from San Francisco and have always been super interested in computers and especially video games.
-        </p>
-        <Courses></Courses>
+        {#if visable}
+            <h1 class="about-title" in:fly={{ y: -50, duration: 1000, delay: 100, easing: quintOut}}>About Me</h1>
+            <p class="about-text">
+                Hi welcome to my website. I am an aspiring full stack developer. I am currently am studying both computer science and history. I am from San Francisco and have always been super interested in computers and especially video games.
+            </p>
+            <Courses></Courses>
+        {/if}
     </div>
 </div>
 

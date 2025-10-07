@@ -37,7 +37,7 @@
             icon: UserPlus,
             tools: ["Svelte", "HTML", "CSS", "TS","Heroku"],
             longDescription: "Used Svelte, HTML, CSS, and Type Script. It is all hosted using Heroku",
-            highlights: ["created an informative and good looking"]
+            highlights: ["created an informative and good looking website "]
         },
         {
             id: 4,
