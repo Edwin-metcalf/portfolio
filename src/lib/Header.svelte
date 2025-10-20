@@ -2,7 +2,7 @@
     import {onMount} from 'svelte';
     import { fly } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
-   let mounted = false;
+   let mounted: boolean = false;
 
     onMount(() => {
         mounted = true;

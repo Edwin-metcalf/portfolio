@@ -182,6 +182,7 @@
 <style>
     .portfolio-section {
         padding: 80px 5%;
+        padding-left: 85px;
         display: flex;
         justify-content: center;
         min-height: 80vh;

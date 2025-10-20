@@ -1,6 +1,6 @@
 <script lang="ts">
     import Courses from "./Courses.svelte";
-    import { fly, scale } from 'svelte/transition';
+    import { fly } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
     import{ onMount } from 'svelte';
 
@@ -36,7 +36,7 @@
         {#if visable}
             <h1 class="about-title" in:fly={{ y: -50, duration: 1000, delay: 100, easing: quintOut}}>About Me</h1>
             <p class="about-text">
-                Hi welcome to my website. I am an aspiring full stack developer. I am currently am studying both computer science and history. I am from San Francisco and have always been super interested in computers and especially video games.
+                Hello Welcome to my Website my name is Edwin, I am an aspiring full stack software developer. I have a strong love of problem solving and video games which continually sends me down rabbit holes of learning new frameworks or languages. Not only do I enjoy programming, I love history and am a double major at Vassar College. Through my curiosity I have spent time abroad studying in London and traveling Europe along with taking classes at UC Berkeley to not only expand my education but also for new experiences.
             </p>
             <Courses></Courses>
         {/if}

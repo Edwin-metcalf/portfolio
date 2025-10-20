@@ -8,6 +8,7 @@
     import Languages from '$lib/Languages.svelte';
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
+    import Sidebar from '$lib/Sidebar.svelte';
 
     let mounted: boolean = false;
 
@@ -17,6 +18,7 @@
 
 </script>
 <Header></Header>
+<Sidebar></Sidebar>
 <div class="main-page">
     <div class="hero-section">
         <div class="hero-content">
@@ -28,6 +30,7 @@
                     <h1 class="name-title" in:fly={{ x: -50, duration: 1000, delay: 400, easing: quintOut}}>
                         Edwin Metcalf
                     </h1>
+                    <button class="resume-btn">Resume</button>
                     <!--<p class="name-subtitle">Check out what I am working on</p>-->
                     <!-- prolly want to replace with cool buttons -->
                 {/if}
@@ -110,16 +113,42 @@
         box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
     }
     @keyframes glow {
-    from {
-        filter: drop-shadow(0 0 5px rgba(0, 212, 170, 0.3));
+        from {
+            filter: drop-shadow(0 0 5px rgba(0, 212, 170, 0.3));
+        }
+        to {
+            filter: drop-shadow(0 0 20px rgba(0, 212, 170, 0.6));
+        }
+        html {
+            scroll-behavior: smooth;
+        }
     }
-    to {
-        filter: drop-shadow(0 0 20px rgba(0, 212, 170, 0.6));
+
+    .resume-btn {
+        background: transparent;
+        color: #00d4aa;
+        border: 2px solid #00d4aa;
+        padding: 10px 26px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
     }
-    html {
-        scroll-behavior: smooth;
+
+    .resume-btn:hover {
+        background: rgba(0, 212, 170, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 170, 0.2);
     }
-}
+
+    .resume-btn:active {
+        transform: translateY(0);
+    }
 
     @media (max-width: 768px) {
         .hero-section {

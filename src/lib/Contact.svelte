@@ -77,22 +77,23 @@
             </div>
             <div class="contact-info">
                 <h3 class="info-title">Let's Connect</h3>
-            </div>
-            <div class="contact-links">
-                <a href="mailto:winmetcalf1@gmail.com" class="contact-link">
-                        <Mail size={20} />
-                        winmetcalf1@gmail.com
-                </a>
+            
+                <div class="contact-links">
+                    <a href="mailto:winmetcalf1@gmail.com" class="contact-link">
+                            <Mail size={20} />
+                            winmetcalf1@gmail.com
+                    </a>
 
-                <a href="https://github.com/Edwin-metcalf" class="contact-link" target="_blank">
-                        <Github size={20} />
-                        github.com/Edwin-metcalf
-                </a>
-                
-                <a href="https://www.linkedin.com/in/edwin-metcalf" class="contact-link" target="_blank">
-                        <Linkedin size={20} />
-                        linkedin.com/in/edwin-metcalf
-                </a>
+                    <a href="https://github.com/Edwin-metcalf" class="contact-link" target="_blank">
+                            <Github size={20} />
+                            github.com/Edwin-metcalf
+                    </a>
+                    
+                    <a href="https://www.linkedin.com/in/edwin-metcalf" class="contact-link" target="_blank">
+                            <Linkedin size={20} />
+                            linkedin.com/in/edwin-metcalf
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -101,6 +102,7 @@
 <style>
     .contact-section {
         padding: 80px 5%;
+        padding-left: 120px;
         display: flex;
         justify-content: center;
         background: rgba(0, 0, 0, 0.1);
@@ -128,7 +130,7 @@
 
     .contact-content {
         display: grid;
-        grid-template-columns: 1fr, 1fr;
+        grid-template-columns: 2.3fr 1fr;
         gap: 60px;
         align-items: start;
     }
