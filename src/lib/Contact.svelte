@@ -266,6 +266,9 @@
     }
 
       @media (max-width: 768px) {
+        .contact-section {
+            padding: 80px 5%;
+        }
         .contact-content {
             grid-template-columns: 1fr;
             gap: 40px;

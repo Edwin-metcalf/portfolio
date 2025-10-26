@@ -494,6 +494,10 @@
     }
 
     @media (max-width: 768px) {
+        .portfolio-section {
+            padding: 80px 5%;
+
+        }
         .projects-grid {
             grid-template-columns: 1fr;
             gap: 20px;
