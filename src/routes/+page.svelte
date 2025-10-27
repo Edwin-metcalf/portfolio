@@ -30,7 +30,9 @@
                     <h1 class="name-title" in:fly={{ x: -50, duration: 1000, delay: 400, easing: quintOut}}>
                         Edwin Metcalf
                     </h1>
-                    <button class="resume-btn">Resume</button>
+                    <a href="/ResumeEdwin2025oct.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                        Resume
+                    </a>
                     <!--<p class="name-subtitle">Check out what I am working on</p>-->
                     <!-- prolly want to replace with cool buttons -->
                 {/if}
@@ -38,7 +40,7 @@
             </div>
             {#if mounted}
                 <div class="profile-wrapper" in:scale= {{ duration: 1000, delay: 300, start: 0.8, easing: quintOut}}>
-                    <img src="/images/ProfilePicV1.jpg" alt="Edwin Metcalf" class="profile-pic" />
+                    <img src="/images/ProfilePicV1.jpg" alt="Me hiking up the highest peak in Wales" class="profile-pic" />
                 </div>
             {/if}
         </div>
@@ -148,6 +150,23 @@
 
     .resume-btn:active {
         transform: translateY(0);
+    }
+
+    .resume-btn {
+        background: transparent;
+        color: #00d4aa;
+        border: 2px solid #00d4aa;
+        padding: 10px 26px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-top: 20px;  /* ADD THIS for spacing */
     }
 
     @media (max-width: 768px) {

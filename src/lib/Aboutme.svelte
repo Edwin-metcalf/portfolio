@@ -36,7 +36,7 @@
         {#if visable}
             <h1 class="about-title" in:fly={{ y: -50, duration: 1000, delay: 100, easing: quintOut}}>About Me</h1>
             <p class="about-text">
-                Welcome to my Website my name is Edwin, I am an aspiring full stack software developer. I have a strong love of problem solving and video games which continually sends me down rabbit holes of learning new frameworks or languages. Not only do I enjoy programming, I love history and double majored at Vassar College, CS and history. Through my curiosity I have spent time abroad studying in London and traveling Europe along with taking CS classes at UC Berkeley to not only expand my education but also for new experiences.
+                Welcome to my Website my name is Edwin, I am an aspiring full stack software developer. I have a strong love of problem solving and video games which continually sends me down rabbit holes of learning new frameworks or languages. Not only do I enjoy programming, I love history and double majored at Vassar College. Through my curiosity I have spent time abroad studying in London and traveling Europe along with taking CS classes at UC Berkeley to not only expand my education but also for new experiences.
             </p>
             <Courses></Courses>
         {/if}
