@@ -30,7 +30,7 @@
                     <h1 class="name-title" in:fly={{ x: -50, duration: 1000, delay: 400, easing: quintOut}}>
                         Edwin Metcalf
                     </h1>
-                    <a href="/ResumeEdwin2025oct.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                    <a href="/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
                         Resume
                     </a>
                     <!--<p class="name-subtitle">Check out what I am working on</p>-->
@@ -126,22 +126,6 @@
         }
     }
 
-    .resume-btn {
-        background: transparent;
-        color: #00d4aa;
-        border: 2px solid #00d4aa;
-        padding: 10px 26px;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-
     .resume-btn:hover {
         background: rgba(0, 212, 170, 0.15);
         transform: translateY(-2px);
@@ -166,7 +150,18 @@
         align-items: center;
         gap: 8px;
         text-decoration: none;
-        margin-top: 20px;  /* ADD THIS for spacing */
+        margin-top: 20px; 
+    }
+
+    :global(body) {
+        background: #0d1117; 
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    :global(html) {
+        background: #0d1117;
     }
 
     @media (max-width: 768px) {
