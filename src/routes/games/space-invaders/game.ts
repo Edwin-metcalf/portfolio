@@ -1,5 +1,6 @@
 import { Play } from "lucide-svelte";
 import playerImageUrl from './imgs/player.png';
+import { siVelocity } from "simple-icons";
 
 interface Position {
     x: number;
@@ -16,6 +17,9 @@ export class SpaceInvaders {
     private player: Player;
     private animationId: number | null = null;
     private keys: { [key: string]: boolean} = {};
+    private projectiles: Projectile[] = [];
+    private lastShotTime: number = 0;
+    private shootCooldown: number = 250;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -43,7 +47,7 @@ export class SpaceInvaders {
     private handleKeyUp = (event: KeyboardEvent): void => {
         this.keys[event.key] = false;
     }
-    private updatePlayerMovement(): void {
+    private updatePlayerControls(): void {
         this.player.rotation = 0;
         this.player.velocity.x = 0;
         const speed = 5;
@@ -55,6 +59,15 @@ export class SpaceInvaders {
             this.player.velocity.x = speed;
             this.player.rotation = .2;
         }
+        if(this.keys[' ']) {
+            const currentTime = Date.now();
+            if (currentTime - this.lastShotTime >= this.shootCooldown){
+                this.lastShotTime = currentTime;
+                this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -3  }));
+
+
+            }
+        }
 
     }
     
@@ -62,8 +75,20 @@ export class SpaceInvaders {
         this.animationId = requestAnimationFrame(this.animate);
         this.c.fillStyle = 'black';
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
-        this.updatePlayerMovement();
+        this.updatePlayerControls();
         this.player.update();
+
+        this.projectiles.forEach((projectile, idx) => {
+            if (projectile.position.y + projectile.radius <= 0 ) {
+                setTimeout(() => {
+                    this.projectiles.splice(idx, 1);
+
+                }, 0);
+            } else {
+                projectile.update()
+            }
+            
+        });
 
 
     }
@@ -127,4 +152,34 @@ class Player {
         this.draw();
     }
     
+}
+
+class Projectile {
+    public position: Position;
+    public velocity: Velocity;
+    public radius: number;
+    private c: CanvasRenderingContext2D;
+
+    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity ){
+        this.position = position;
+        this.velocity = velocity;
+        this.c = context;
+
+        this.radius = 3;
+    }
+    draw() {
+        this.c.beginPath();
+        this.c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+
+        this.c.fillStyle = 'red';
+        this.c.fill();
+        this.c.closePath();
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;  
+    }
+
 }
