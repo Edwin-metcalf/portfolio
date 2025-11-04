@@ -16,5 +16,9 @@
 <canvas bind:this={canvas}></canvas>
 
 <style>
+    canvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
 
 </style>

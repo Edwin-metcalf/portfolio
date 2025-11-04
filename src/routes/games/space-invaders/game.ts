@@ -1,6 +1,7 @@
 import { Play } from "lucide-svelte";
 import playerImageUrl from './imgs/player.png';
 import { siVelocity } from "simple-icons";
+import enemyImg from './imgs/enemy.png';
 
 interface Position {
     x: number;
@@ -21,6 +22,8 @@ export class SpaceInvaders {
     private lastShotTime: number = 0;
     private shootCooldown: number = 250;
 
+    private testEnemy: Enemy;
+
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         const context = canvas.getContext("2d");
@@ -32,6 +35,8 @@ export class SpaceInvaders {
         this.canvas.height = window.innerHeight;
 
         this.player = new Player(this.c, this.canvas.width, this.canvas.height);
+        this.testEnemy = new Enemy(this.c);
+        this.testEnemy.draw();
         this.player.draw();
         
         this.setupEventListeners();
@@ -77,6 +82,7 @@ export class SpaceInvaders {
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
         this.player.update();
+        this.testEnemy.update();
 
         this.projectiles.forEach((projectile, idx) => {
             if (projectile.position.y + projectile.radius <= 0 ) {
@@ -160,7 +166,7 @@ class Projectile {
     public radius: number;
     private c: CanvasRenderingContext2D;
 
-    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity ){
+    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity ) {
         this.position = position;
         this.velocity = velocity;
         this.c = context;
@@ -182,4 +188,38 @@ class Projectile {
         this.position.y += this.velocity.y;  
     }
 
+}
+
+class Enemy {
+    private c: CanvasRenderingContext2D;
+    public position: Position;
+    public velocity: Velocity;
+    private image: HTMLImageElement;
+    public readonly width: number;
+    public readonly height: number;
+
+    constructor(context: CanvasRenderingContext2D) {
+        this.c = context;
+        const image = new Image();
+        image.src = enemyImg;
+
+        this.image = image;
+
+        this.width = image.width * 0.10;
+        this.height = image.height * 0.10;
+        this.velocity = { x: 0, y: 0 };
+        this.position = { x: 300, y: 300};
+
+    }
+    draw(): void {
+        this.c.save();
+        this.c.filter = 'hue-rotate(300deg) saturate(2) brightness(1.1)';
+        this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        this.c.restore();
+    }
+    update(): void {
+        this.draw()
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
 }
