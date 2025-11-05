@@ -15,12 +15,20 @@ interface Velocity {
 export class SpaceInvaders {
     private canvas: HTMLCanvasElement;
     private c: CanvasRenderingContext2D;
+
     private player: Player;
     private animationId: number | null = null;
     private keys: { [key: string]: boolean} = {};
+
+    //variables for the shooting 
     private projectiles: Projectile[] = [];
     private lastShotTime: number = 0;
     private shootCooldown: number = 250;
+
+    //variables for the enemies
+    private enemies: Enemy[] = [];
+    private enemyVelocity: Velocity = {x:3, y:0};
+    private enemyDropDistance: number = 40;
 
     private testEnemy: Enemy;
 
@@ -38,6 +46,7 @@ export class SpaceInvaders {
         this.testEnemy = new Enemy(this.c);
         this.testEnemy.draw();
         this.player.draw();
+        this.spawnEnemyGrid();
         
         this.setupEventListeners();
     }
@@ -52,6 +61,7 @@ export class SpaceInvaders {
     private handleKeyUp = (event: KeyboardEvent): void => {
         this.keys[event.key] = false;
     }
+
     private updatePlayerControls(): void {
         this.player.rotation = 0;
         this.player.velocity.x = 0;
@@ -75,6 +85,63 @@ export class SpaceInvaders {
         }
 
     }
+
+    private spawnEnemyGrid(): void {
+        const rows = 4;
+        const cols = 15;
+        const enemySpacing = 60;
+        const startX = 100;
+        const startY = 50;
+
+        for (let row = 0; row < rows; row++){
+            for (let col = 0; col < cols; col++) {
+                this.enemies.push(new Enemy(this.c, {x: startX + col * enemySpacing, y: startY + row * enemySpacing}));
+            }
+        }
+
+
+    }
+
+    private updateEnemies(): void {
+        let hitEdge = false;
+
+        this.enemies.forEach(enemy => {
+            if ((enemy.position.x + enemy.width >= this.canvas.width && this.enemyVelocity.x > 0) || (enemy.position.x <= 0 && this.enemyVelocity.x < 0)) {
+                hitEdge = true;
+            }
+        });
+
+        if (hitEdge) {
+            this.enemyVelocity.x *= -1;
+            this.enemies.forEach(enemy => {
+                enemy.position.y += this.enemyDropDistance;
+            })
+        }
+        this.enemies.forEach((enemy, i) => {
+            enemy.velocity = {...this.enemyVelocity};
+            this.projectiles.forEach((projectile, j) => {
+                if (
+                    projectile.position.y - projectile.radius <= enemy.position.y + enemy.height && 
+                    projectile.position.x + projectile.radius >= enemy.position.x &&
+                    projectile.position.x - projectile.radius <= enemy.position.x + enemy.width &&
+                    projectile.position.y + projectile.radius >= enemy.position.y
+                ) {
+                    setTimeout(() => {
+                        const invaderFound = this.enemies.find(enemy2 => enemy2 === enemy );
+
+                        const projectileFound = this.projectiles.find(projectile2 => projectile2 === projectile);
+
+                        if (invaderFound && projectileFound){
+                            this.enemies.splice(i, 1);
+                            this.projectiles.splice(j,1);
+                        }
+
+                    }, 0);
+                }
+            });
+            enemy.update();
+        });
+    }
     
     animate = (): void => {
         this.animationId = requestAnimationFrame(this.animate);
@@ -82,7 +149,8 @@ export class SpaceInvaders {
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
         this.player.update();
-        this.testEnemy.update();
+        //this.testEnemy.update();
+        this.updateEnemies();
 
         this.projectiles.forEach((projectile, idx) => {
             if (projectile.position.y + projectile.radius <= 0 ) {
@@ -198,7 +266,7 @@ class Enemy {
     public readonly width: number;
     public readonly height: number;
 
-    constructor(context: CanvasRenderingContext2D) {
+    constructor(context: CanvasRenderingContext2D, startPosition?: Position) {
         this.c = context;
         const image = new Image();
         image.src = enemyImg;
@@ -208,7 +276,7 @@ class Enemy {
         this.width = image.width * 0.10;
         this.height = image.height * 0.10;
         this.velocity = { x: 0, y: 0 };
-        this.position = { x: 300, y: 300};
+        this.position = startPosition || { x: 300, y: 300};
 
     }
     draw(): void {
