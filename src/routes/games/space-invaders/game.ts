@@ -16,6 +16,9 @@ export class SpaceInvaders {
     private canvas: HTMLCanvasElement;
     private c: CanvasRenderingContext2D;
 
+    public score: number;
+    private onScoreChange?: (score: number) => void;
+
     private player: Player;
     private animationId: number | null = null;
     private keys: { [key: string]: boolean} = {};
@@ -31,22 +34,26 @@ export class SpaceInvaders {
     private enemyDropDistance: number = 40;
 
     private particles: Particle[] = [];
+    private game = {
+        over: false,
+        active: false
+    }
 
-    private testEnemy: Enemy;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, onScoreChange?: (score: number) => void) {
         this.canvas = canvas;
         const context = canvas.getContext("2d");
+        this.onScoreChange = onScoreChange;
+        this.score = 0;
 
         if (!context) throw new Error("could not get context");
         this.c = context;
 
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.canvas.width = 1024;
+        this.canvas.height = 576;
 
         this.player = new Player(this.c, this.canvas.width, this.canvas.height);
-        this.testEnemy = new Enemy(this.c);
-        this.testEnemy.draw();
+    
         this.player.draw();
         this.spawnEnemyGrid();
         
@@ -65,33 +72,35 @@ export class SpaceInvaders {
     }
 
     private updatePlayerControls(): void {
-        this.player.rotation = 0;
-        this.player.velocity.x = 0;
-        const speed = 5;
-        if (this.keys['ArrowLeft'] || this.keys['a']) {
-            this.player.velocity.x = -speed;
-            this.player.rotation = -.2;
-        }
-        if (this.keys['ArrowRight'] || this.keys['d']) {
-            this.player.velocity.x = speed;
-            this.player.rotation = .2;
-        }
-        if(this.keys[' ']) {
-            const currentTime = Date.now();
-            if (currentTime - this.lastShotTime >= this.shootCooldown){
-                this.lastShotTime = currentTime;
-                this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
-
-
+        if (!(this.game.over)) {
+            this.player.rotation = 0;
+            this.player.velocity.x = 0;
+            const speed = 5;
+            if (this.keys['ArrowLeft'] || this.keys['a']) {
+                this.player.velocity.x = -speed;
+                this.player.rotation = -.2;
             }
-        }
+            if (this.keys['ArrowRight'] || this.keys['d']) {
+                this.player.velocity.x = speed;
+                this.player.rotation = .2;
+            }
+            if(this.keys[' ']) {
+                const currentTime = Date.now();
+                if (currentTime - this.lastShotTime >= this.shootCooldown){
+                    this.lastShotTime = currentTime;
+                    this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
+
+
+                }
+            }
+        }   
 
     }
 
     private spawnEnemyGrid(): void {
         const rows = 4;
         const cols = 15;
-        const enemySpacing = 60;
+        const enemySpacing = 30;
         const startX = 100;
         const startY = 50;
 
@@ -138,12 +147,31 @@ export class SpaceInvaders {
                             this.projectiles.splice(j,1);
 
                             this.createParticles(enemy);
-
+                            this.score += 100;
+                            if (this.onScoreChange) {
+                                this.onScoreChange(this.score)
+                            }
                         } 
 
                     }, 0);
                 }
             });
+            if (
+                enemy.position.x < this.player.position.x + this.player.width &&
+                enemy.position.x + enemy.width  > this.player.position.x  &&
+                enemy.position.y  < this.player.position.y &&
+                enemy.position.y + enemy.height > this.player.position.y
+                ) {
+
+                    console.log("game over type beat");
+                    this.player.isAlive = false;
+                    if (!(this.game.over)){
+                        for (let i = 0; i < 15; i++) {
+                            this.createParticles(this.player, 'grey');
+                        }
+                    }
+                    this.stop()
+                }
             enemy.update();
         });
     }
@@ -166,8 +194,14 @@ export class SpaceInvaders {
         this.c.fillStyle = 'black';
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
-        this.player.update();
-        //this.testEnemy.update();
+        if (this.game.over) {
+            setTimeout(() => {
+                return;
+            }, 40)
+        } else {
+            this.player.update();
+
+        }
         this.updateEnemies();
 
         this.particles.forEach((particle, i) => {
@@ -191,7 +225,7 @@ export class SpaceInvaders {
                 projectile.update()
             }
             
-        });    
+        });     
 
         for (let i = 0; i < 1; i++) {
             this.particles.push(new Particle(
@@ -201,23 +235,29 @@ export class SpaceInvaders {
             Math.random() * 3,
             'white'
             ));
-        }
-            
-        console.log(this.particles.length)
+        
+    }
 
 
     }
     start(): void {
+        this.game.over = false;
         this.animate();
     }
     stop(): void {
-        if (this.animationId != null) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
+        this.game.over = true;
 
-        window.removeEventListener('keydown', this.handleKeyDown);
-        window.removeEventListener('keyup', this.handleKeyUp);
+        setTimeout(() => {
+
+        
+            if (this.animationId != null) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+            }
+
+            window.removeEventListener('keydown', this.handleKeyDown);
+            window.removeEventListener('keyup', this.handleKeyUp);
+        }, 2000);
     }
 
 }
@@ -230,11 +270,13 @@ class Player {
     private c: CanvasRenderingContext2D;
     private image: HTMLImageElement;
     public rotation: number;
+    public isAlive: boolean;
 
 
     constructor(context: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) {
         this.c = context;
         this.rotation = 0;
+        this.isAlive = true;
 
         const image = new Image();
         image.src = playerImageUrl
@@ -243,8 +285,8 @@ class Player {
             console.log('Player image loaded!');
         };
         this.image = image;
-        this.width = image.width * 0.15;
-        this.height = image.height * 0.15;
+        this.width = image.width * 0.1;
+        this.height = image.height * 0.1;
 
         this.position = { x: canvasWidth / 2 - this.width / 2, y: canvasHeight - this.height - 20 };
         this.velocity = { x: 0, y: 0 };
@@ -263,8 +305,11 @@ class Player {
     }
     update(): void {
         this.position.x += this.velocity.x;
-        this.position.y += this.velocity.y;   
+        this.position.y += this.velocity.y; 
+        
         this.draw();
+    
+    
     }
     
 }
@@ -355,8 +400,8 @@ class Enemy {
 
         this.image = image;
 
-        this.width = image.width * 0.10;
-        this.height = image.height * 0.10;
+        this.width = image.width * 0.05;
+        this.height = image.height * 0.05;
         this.velocity = { x: 0, y: 0 };
         this.position = startPosition || { x: 300, y: 300};
 
