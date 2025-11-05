@@ -30,6 +30,8 @@ export class SpaceInvaders {
     private enemyVelocity: Velocity = {x:3, y:0};
     private enemyDropDistance: number = 40;
 
+    private particles: Particle[] = [];
+
     private testEnemy: Enemy;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -78,7 +80,7 @@ export class SpaceInvaders {
             const currentTime = Date.now();
             if (currentTime - this.lastShotTime >= this.shootCooldown){
                 this.lastShotTime = currentTime;
-                this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -3  }));
+                this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
 
 
             }
@@ -134,13 +136,29 @@ export class SpaceInvaders {
                         if (invaderFound && projectileFound){
                             this.enemies.splice(i, 1);
                             this.projectiles.splice(j,1);
-                        }
+
+                            this.createParticles(enemy);
+
+                        } 
 
                     }, 0);
                 }
             });
             enemy.update();
         });
+    }
+
+    createParticles(object: Enemy | Player , color: string = 'purple'){
+        for (let i = 0; i < 15; i++) {
+            this.particles.push(new Particle(
+            this.c,
+            {x: object.position.x + object.width / 2, y: object.position.y + object.height / 2}, 
+            { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2},
+            Math.random() * 3,
+            color
+            ));
+        }
+
     }
     
     animate = (): void => {
@@ -152,6 +170,17 @@ export class SpaceInvaders {
         //this.testEnemy.update();
         this.updateEnemies();
 
+        this.particles.forEach((particle, i) => {
+            if (particle.opacity <= 0) {
+                setTimeout(() => {
+                    this.particles.splice(i,1);
+
+                }, 0);
+            } else {
+                particle.update();
+            }
+        });
+
         this.projectiles.forEach((projectile, idx) => {
             if (projectile.position.y + projectile.radius <= 0 ) {
                 setTimeout(() => {
@@ -162,7 +191,19 @@ export class SpaceInvaders {
                 projectile.update()
             }
             
-        });
+        });    
+
+        for (let i = 0; i < 1; i++) {
+            this.particles.push(new Particle(
+            this.c,
+            {x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height}, 
+            { x: 0, y: 1},
+            Math.random() * 3,
+            'white'
+            ));
+        }
+            
+        console.log(this.particles.length)
 
 
     }
@@ -233,13 +274,16 @@ class Projectile {
     public velocity: Velocity;
     public radius: number;
     private c: CanvasRenderingContext2D;
+    private speed: number;
 
     constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity ) {
         this.position = position;
         this.velocity = velocity;
         this.c = context;
-
+        
+        this.speed = 5;
         this.radius = 3;
+
     }
     draw() {
         this.c.beginPath();
@@ -252,10 +296,48 @@ class Projectile {
 
     update() {
         this.draw()
-        this.position.x += this.velocity.x;
-        this.position.y += this.velocity.y;  
+        this.position.x += this.velocity.x * this.speed;
+        this.position.y += this.velocity.y * this.speed;  
     }
 
+}
+
+class Particle {
+    public position: Position;
+    public velocity: Velocity;
+    public radius: number;
+    private c: CanvasRenderingContext2D;
+    public color: string;
+    public opacity: number;
+
+    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity, radius: number, color: string ) {
+        this.position = position;
+        this.velocity = velocity;
+        this.c = context;
+
+        this.radius = radius;
+        this.color = color;
+
+        this.opacity = 1;
+    }
+    draw() {
+        this.c.save()
+        this.c.globalAlpha = this.opacity;
+        this.c.beginPath();
+        this.c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+
+        this.c.fillStyle = this.color;
+        this.c.fill();
+        this.c.closePath();
+        this.c.restore()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y; 
+        this.opacity -= 0.01; 
+    }
 }
 
 class Enemy {
