@@ -1,5 +1,7 @@
 <script lang="ts">
     import './games.css'
+    import { X } from "lucide-svelte"
+
     const games = [
         {
             title: "Space Invaders",
@@ -26,6 +28,9 @@
 </div> -->
 
 <div class="games-section"> 
+    <a href="/" class="exit-button" aria-label="Exit games">
+        <X size={24} />
+    </a>
     <h1>Games & Projects</h1>
 
     <div class="games-grid">
@@ -122,6 +127,31 @@
         padding: 0.5rem 1rem;
         border-radius: 6px;
         font-size: 0.9rem;
+    }
+
+    .exit-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #f0f6fc;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .exit-button:hover {
+        background: rgba(0, 212, 170, 0.2);
+        border-color: #00d4aa;
+        transform: rotate(90deg);
+
     }
 
 

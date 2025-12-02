@@ -19,7 +19,7 @@ export class SpaceInvaders {
     public score: number;
     private onScoreChange?: (score: number) => void;
 
-    private player: Player;
+    private player!: Player;
     private animationId: number | null = null;
     private keys: { [key: string]: boolean} = {};
 
@@ -30,7 +30,7 @@ export class SpaceInvaders {
 
     //variables for the enemies
     private enemies: Enemy[] = [];
-    private enemyVelocity: Velocity = {x:3, y:0};
+    private enemyVelocity: Velocity = {x:2, y:0};
     private enemyDropDistance: number = 40;
 
     private particles: Particle[] = [];
@@ -38,6 +38,11 @@ export class SpaceInvaders {
         over: false,
         active: false
     }
+
+
+    public static playerImage: HTMLImageElement;
+    public static enemyImage: HTMLImageElement;
+    private imagesLoaded: Promise<void>;
 
 
     constructor(canvas: HTMLCanvasElement, onScoreChange?: (score: number) => void) {
@@ -52,12 +57,44 @@ export class SpaceInvaders {
         this.canvas.width = 1024;
         this.canvas.height = 576;
 
-        this.player = new Player(this.c, this.canvas.width, this.canvas.height);
-    
-        this.player.draw();
-        this.spawnEnemyGrid();
+        this.imagesLoaded = this.loadAllImages().then(() => {
+            this.player = new Player(this.c, this.canvas.width, this.canvas.height);
+
+        });
         
         this.setupEventListeners();
+    }
+
+    private async loadAllImages(): Promise<void> {
+
+        SpaceInvaders.playerImage = new Image();
+        SpaceInvaders.enemyImage = new Image();
+
+
+        const playerPromise = new Promise<void>((resolve, reject) => {
+            SpaceInvaders.playerImage.onload = () => {
+                console.log('player image loaded');
+                resolve();
+            };
+            SpaceInvaders.playerImage.onerror = () => reject(new Error('failed to load player'))
+            SpaceInvaders.playerImage.src = playerImageUrl;
+        });
+
+        const enemyPromise = new Promise<void>((resolve, reject) => {
+            SpaceInvaders.enemyImage.onload = () => {
+                console.log('enemy image loaded');
+                resolve();
+            };
+            SpaceInvaders.enemyImage.onerror = () => reject(new Error('failed to load enemy'))
+            SpaceInvaders.enemyImage.src = enemyImg;
+        });
+
+        await Promise.all([playerPromise, enemyPromise]);
+        console.log('images loaded success!')
+    }
+
+    public async waitForImages(): Promise<void> {
+        await this.imagesLoaded;
     }
 
     private setupEventListeners(): void {
@@ -98,8 +135,8 @@ export class SpaceInvaders {
     }
 
     private spawnEnemyGrid(): void {
-        const rows = 4;
-        const cols = 15;
+        const rows = 3;
+        const cols = 13;
         const enemySpacing = 30;
         const startX = 100;
         const startY = 50;
@@ -243,6 +280,7 @@ export class SpaceInvaders {
     start(): void {
         this.game.over = false;
         this.animate();
+        this.spawnEnemyGrid();
     }
     stop(): void {
         this.game.over = true;
@@ -278,15 +316,10 @@ class Player {
         this.rotation = 0;
         this.isAlive = true;
 
-        const image = new Image();
-        image.src = playerImageUrl
-        image.onload = () => {
-            //this.imageLoaded = true;
-            console.log('Player image loaded!');
-        };
-        this.image = image;
-        this.width = image.width * 0.1;
-        this.height = image.height * 0.1;
+        this.image = SpaceInvaders.playerImage;
+
+        this.width = this.image.width * 0.1;
+        this.height = this.image.height * 0.1;
 
         this.position = { x: canvasWidth / 2 - this.width / 2, y: canvasHeight - this.height - 20 };
         this.velocity = { x: 0, y: 0 };
@@ -299,8 +332,9 @@ class Player {
         this.c.translate(-this.position.x - this.width / 2, -this.position.y - this.height / 2);
 
 
-        if (this.image) this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
-
+        if (this.image && this.image.complete) {
+            this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        }
         this.c.restore()
     }
     update(): void {
@@ -395,13 +429,11 @@ class Enemy {
 
     constructor(context: CanvasRenderingContext2D, startPosition?: Position) {
         this.c = context;
-        const image = new Image();
-        image.src = enemyImg;
 
-        this.image = image;
+        this.image = SpaceInvaders.enemyImage;
 
-        this.width = image.width * 0.05;
-        this.height = image.height * 0.05;
+        this.width = this.image.width * 0.05;
+        this.height = this.image.height * 0.05;
         this.velocity = { x: 0, y: 0 };
         this.position = startPosition || { x: 300, y: 300};
 
@@ -409,7 +441,9 @@ class Enemy {
     draw(): void {
         this.c.save();
         this.c.filter = 'hue-rotate(300deg) saturate(2) brightness(1.1)';
-        this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        if (this.image && this.image.complete) {
+            this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        }
         this.c.restore();
     }
     update(): void {
