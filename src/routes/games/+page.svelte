@@ -1,6 +1,5 @@
 <script lang="ts">
-    import './games.css'
-    import { X } from "lucide-svelte"
+    import { X } from "lucide-svelte";
 
     const games = [
         {
@@ -55,18 +54,23 @@
 </div>
 
 <style>
-
-    
     .games-section {
+        position: relative;
         margin: 0 auto;
         padding: 4rem 2rem;
-        background-size: 400% 400%;
+        min-height: 100vh;
+        background-color: #161b22;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     h1 {
         font-size: 3rem;
         margin-bottom: 2rem;
         text-align: center;
         color: #00d4aa;
+        width: 100%;
     }
     .games-grid {
         display: grid;

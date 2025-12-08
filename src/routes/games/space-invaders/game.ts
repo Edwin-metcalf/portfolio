@@ -2,6 +2,7 @@ import { Play } from "lucide-svelte";
 import playerImageUrl from './imgs/player.png';
 import { siVelocity } from "simple-icons";
 import enemyImg from './imgs/enemy.png';
+import hunterImg from './imgs/enemyHunter.png'
 
 interface Position {
     x: number;
@@ -12,6 +13,8 @@ interface Velocity {
     x: number;
     y: number;
 }
+type EnemyType = Enemy | HunterEnemy
+
 export class SpaceInvaders {
     private canvas: HTMLCanvasElement;
     private c: CanvasRenderingContext2D;
@@ -29,7 +32,7 @@ export class SpaceInvaders {
     private shootCooldown: number = 250;
 
     //variables for the enemies
-    private enemies: Enemy[] = [];
+    private enemies: EnemyType[] = [];
     private enemyVelocity: Velocity = {x:2, y:0};
     private enemyDropDistance: number = 40;
 
@@ -42,6 +45,7 @@ export class SpaceInvaders {
 
     public static playerImage: HTMLImageElement;
     public static enemyImage: HTMLImageElement;
+    public static hunterImage: HTMLImageElement;
     private imagesLoaded: Promise<void>;
 
 
@@ -69,6 +73,7 @@ export class SpaceInvaders {
 
         SpaceInvaders.playerImage = new Image();
         SpaceInvaders.enemyImage = new Image();
+        SpaceInvaders.hunterImage = new Image();
 
 
         const playerPromise = new Promise<void>((resolve, reject) => {
@@ -76,7 +81,7 @@ export class SpaceInvaders {
                 console.log('player image loaded');
                 resolve();
             };
-            SpaceInvaders.playerImage.onerror = () => reject(new Error('failed to load player'))
+            SpaceInvaders.playerImage.onerror = () => reject(new Error('failed to load player'));
             SpaceInvaders.playerImage.src = playerImageUrl;
         });
 
@@ -85,11 +90,23 @@ export class SpaceInvaders {
                 console.log('enemy image loaded');
                 resolve();
             };
-            SpaceInvaders.enemyImage.onerror = () => reject(new Error('failed to load enemy'))
+            SpaceInvaders.enemyImage.onerror = () => reject(new Error('failed to load enemy'));
             SpaceInvaders.enemyImage.src = enemyImg;
+
+
         });
 
-        await Promise.all([playerPromise, enemyPromise]);
+        const hunterPromise = new Promise<void>((resolve, reject) => {
+            SpaceInvaders.hunterImage.onload = () => {
+                console.log('hunter enemy loaded');
+                resolve();
+            };
+            SpaceInvaders.hunterImage.onerror = () => reject(new Error('failed to load hunter enemy'));
+            SpaceInvaders.hunterImage.src = hunterImg;
+
+        });
+
+        await Promise.all([playerPromise, enemyPromise, hunterPromise]);
         console.log('images loaded success!')
     }
 
@@ -135,16 +152,29 @@ export class SpaceInvaders {
     }
 
     private spawnEnemyGrid(): void {
-        const rows = 3;
-        const cols = 13;
-        const enemySpacing = 30;
-        const startX = 100;
-        const startY = 50;
+        const rows: number = 3;
+        const cols: number = 13;
+        const enemySpacing: number = 30;
+        const startX: number = 100;
+        const startY: number = 50;
 
         for (let row = 0; row < rows; row++){
             for (let col = 0; col < cols; col++) {
                 this.enemies.push(new Enemy(this.c, {x: startX + col * enemySpacing, y: startY + row * enemySpacing}));
             }
+        }
+    }
+    private spawnHunters(): void {
+        const min: number = 1;
+        const max = 3;
+        const spawnBoxWidth = 1024; //this is the canvas width as well
+        let total = 0;
+
+        total = Math.floor(Math.random() * (max - min + 1) + min);
+        for (let count = 0; count < total; count++){
+            let xPostiion = Math.random() * spawnBoxWidth;
+            this.enemies.push(new HunterEnemy(this.c, {x: xPostiion, y: 0}, this.player))
+            console.log('hunter spaned at:' , xPostiion)
         }
 
 
@@ -154,19 +184,25 @@ export class SpaceInvaders {
         let hitEdge = false;
 
         this.enemies.forEach(enemy => {
-            if ((enemy.position.x + enemy.width >= this.canvas.width && this.enemyVelocity.x > 0) || (enemy.position.x <= 0 && this.enemyVelocity.x < 0)) {
-                hitEdge = true;
+            if (enemy instanceof Enemy) {
+                if ((enemy.position.x + enemy.width >= this.canvas.width && this.enemyVelocity.x > 0) || (enemy.position.x <= 0 && this.enemyVelocity.x < 0)) {
+                    hitEdge = true;
+                }
             }
         });
 
         if (hitEdge) {
             this.enemyVelocity.x *= -1;
             this.enemies.forEach(enemy => {
-                enemy.position.y += this.enemyDropDistance;
-            })
+                if(enemy instanceof Enemy) {
+                    enemy.position.y += this.enemyDropDistance;
+                }
+            });
         }
         this.enemies.forEach((enemy, i) => {
-            enemy.velocity = {...this.enemyVelocity};
+            if (enemy instanceof Enemy) {
+                enemy.velocity = {...this.enemyVelocity};
+            }
             this.projectiles.forEach((projectile, j) => {
                 if (
                     projectile.position.y - projectile.radius <= enemy.position.y + enemy.height && 
@@ -213,7 +249,7 @@ export class SpaceInvaders {
         });
     }
 
-    createParticles(object: Enemy | Player , color: string = 'purple'){
+    createParticles(object: EnemyType | Player , color: string = 'purple'){
         for (let i = 0; i < 15; i++) {
             this.particles.push(new Particle(
             this.c,
@@ -281,6 +317,7 @@ export class SpaceInvaders {
         this.game.over = false;
         this.animate();
         this.spawnEnemyGrid();
+        this.spawnHunters();
     }
     stop(): void {
         this.game.over = true;
@@ -447,6 +484,91 @@ class Enemy {
         this.c.restore();
     }
     update(): void {
+        this.draw()
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
+}
+class HunterEnemy {
+    private c: CanvasRenderingContext2D;
+    public position: Position;
+    public velocity: Velocity;
+    private image: HTMLImageElement;
+    public readonly width: number;
+    public readonly height: number;
+
+    //state properties
+    private state: 'hovering' | 'attacking' = 'hovering';
+    private stateTimer: number = 0;
+    private hoverDuration: number = 2000;
+    private attackDuration: number = 500;
+    private playerRef?: Player;
+    private hoverSpeed: number = 1;
+    private attackSpeed: number = 3;
+    private rotation: number = 0;
+
+    constructor(context: CanvasRenderingContext2D, startPosition?: Position, player?: Player) {
+        this.c = context;
+        this.image = SpaceInvaders.hunterImage;
+        this.playerRef = player;
+        this.stateTimer = Date.now();
+        
+        this.width = this.image.width * 0.05;
+        this.height = this.image.height * 0.05;
+        this.velocity = { x: 0, y: 0 };
+        this.position = startPosition || { x: 200, y: 200}
+    }
+
+    draw(): void {
+        this.c.save();
+        this.c.translate( 
+            this.position.x + this.width / 2,
+            this.position.y + this.height / 2
+        );
+        if (this.state === 'attacking') {
+            this.c.rotate(this.rotation);
+        }
+
+        this.c.translate(
+            -this.position.x - this.width / 2, 
+            -this.position.y - this.height / 2
+        );
+
+        if (this.image && this.image.complete) {
+            this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        }
+        this.c.restore();
+    }
+    update(): void {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - this.stateTimer;
+
+        if (this.state === 'hovering') {
+            this.velocity.x = Math.random() * Math.sin(currentTime * 0.002) * this.hoverSpeed;
+            this.velocity.y = Math.random() * Math.cos(currentTime * 0.003) * this.hoverSpeed;
+
+            if (elapsedTime >= this.hoverDuration) {
+                this.state = 'attacking';
+                this.stateTimer = currentTime;
+
+                if (this.playerRef) {
+                    const dx = this.playerRef.position.x - this.position.x;
+                    const dy = this.playerRef.position.y - this.position.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    this.velocity.x = (dx / distance) * this.attackSpeed;
+                    this.velocity.y = (dy / distance) * this.attackSpeed;
+                }
+            }
+        } else if (this.state === "attacking") {
+            if (elapsedTime >= this.attackDuration) {
+                this.state = 'hovering';
+                this.stateTimer = currentTime;
+            }
+        }
+
+        this.rotation = Math.atan2(this.velocity.y, this.velocity.x) - Math.PI / 2;
+
         this.draw()
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
