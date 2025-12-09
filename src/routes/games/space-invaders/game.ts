@@ -21,6 +21,7 @@ export class SpaceInvaders {
 
     public score: number;
     private onScoreChange?: (score: number) => void;
+    private onGameOver?: () => void;
 
     private player!: Player;
     private animationId: number | null = null;
@@ -40,7 +41,7 @@ export class SpaceInvaders {
     private game = {
         over: false,
         active: false
-    }
+    };
 
 
     public static playerImage: HTMLImageElement;
@@ -49,10 +50,11 @@ export class SpaceInvaders {
     private imagesLoaded: Promise<void>;
 
 
-    constructor(canvas: HTMLCanvasElement, onScoreChange?: (score: number) => void) {
+    constructor(canvas: HTMLCanvasElement, onScoreChange?: (score: number) => void, onGameOver?: () => void) {
         this.canvas = canvas;
         const context = canvas.getContext("2d");
         this.onScoreChange = onScoreChange;
+        this.onGameOver = onGameOver;
         this.score = 0;
 
         if (!context) throw new Error("could not get context");
@@ -323,7 +325,6 @@ export class SpaceInvaders {
         this.game.over = true;
 
         setTimeout(() => {
-
         
             if (this.animationId != null) {
                 cancelAnimationFrame(this.animationId);
@@ -332,7 +333,36 @@ export class SpaceInvaders {
 
             window.removeEventListener('keydown', this.handleKeyDown);
             window.removeEventListener('keyup', this.handleKeyUp);
+
+            if (this.onGameOver) {
+                this.onGameOver();
+            }
         }, 2000);
+    }
+    
+    restart(): void {
+        this.score = 0;
+        this.game.over = false;
+        this.game.active = true;
+
+        this.projectiles = [];
+        this.enemies = [];
+        this.particles = [];
+
+        this.player = new Player(this.c, this.canvas.width, this.canvas.height);
+
+        this.keys = {};
+
+        this.lastShotTime = 0;
+
+        this.enemyVelocity = {x: 2, y: 0};
+
+        if (this.onScoreChange) {
+            this.onScoreChange(this.score);
+        }
+        this.setupEventListeners();
+        this.start();
+
     }
 
 }
@@ -516,7 +546,7 @@ class HunterEnemy {
         this.width = this.image.width * 0.05;
         this.height = this.image.height * 0.05;
         this.velocity = { x: 0, y: 0 };
-        this.position = startPosition || { x: 200, y: 200}
+        this.position = startPosition || { x: 200, y: 200};
     }
 
     draw(): void {
@@ -569,7 +599,7 @@ class HunterEnemy {
 
         this.rotation = Math.atan2(this.velocity.y, this.velocity.x) - Math.PI / 2;
 
-        this.draw()
+        this.draw();
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
     }
