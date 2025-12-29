@@ -22,6 +22,7 @@ export class SpaceInvaders {
     public score: number;
     private onScoreChange?: (score: number) => void;
     private onGameOver?: () => void;
+    private onMessage: (message: string) => void;
 
     private player!: Player;
     private animationId: number | null = null;
@@ -30,7 +31,7 @@ export class SpaceInvaders {
     //variables for the shooting 
     private projectiles: Projectile[] = [];
     private lastShotTime: number = 0;
-    private shootCooldown: number = 250;
+    private shootCooldown: number = 10;// was 250
 
     //variables for the enemies
     private enemies: EnemyType[] = [];
@@ -43,6 +44,13 @@ export class SpaceInvaders {
         active: false
     };
 
+    //variables for the game play loop
+    //this needs to be a hashmap idk how to do that lmao
+    private levelSpawntimes = new Map<number, number>([[0,0],[1,5000]]); // come back to this how to properly type cast this 
+
+    private currentLevel: number = 0;
+    private isSpawning: boolean = false;
+
 
     public static playerImage: HTMLImageElement;
     public static enemyImage: HTMLImageElement;
@@ -50,11 +58,12 @@ export class SpaceInvaders {
     private imagesLoaded: Promise<void>;
 
 
-    constructor(canvas: HTMLCanvasElement, onScoreChange?: (score: number) => void, onGameOver?: () => void) {
+    constructor(canvas: HTMLCanvasElement, onMessage: (message: string) => void, onScoreChange?: (score: number) => void, onGameOver?: () => void) {
         this.canvas = canvas;
         const context = canvas.getContext("2d");
         this.onScoreChange = onScoreChange;
         this.onGameOver = onGameOver;
+        this.onMessage = onMessage;
         this.score = 0;
 
         if (!context) throw new Error("could not get context");
@@ -131,6 +140,7 @@ export class SpaceInvaders {
         if (!(this.game.over)) {
             this.player.rotation = 0;
             this.player.velocity.x = 0;
+            this.player.velocity.y = 0;
             const speed = 5;
             if (this.keys['ArrowLeft'] || this.keys['a']) {
                 this.player.velocity.x = -speed;
@@ -149,6 +159,27 @@ export class SpaceInvaders {
 
                 }
             }
+            // full controls I need to add a full mouse following as well
+
+            if (this.score >= 3900) {
+                if (this.keys['ArrowUp'] || this.keys['w']) {
+                    this.player.velocity.y = -speed;
+                    //this.player.rotation = -.2;
+                }
+                if (this.keys['ArrowDown'] || this.keys['s']) {
+                    this.player.velocity.y = speed;
+                    //this.player.rotation = .2;
+                }
+                if(this.keys[' ']) { // change this to take in click 
+                    const currentTime = Date.now();
+                    if (currentTime - this.lastShotTime >= this.shootCooldown){
+                        this.lastShotTime = currentTime;
+                        this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
+
+
+                    }
+                }
+            }
         }   
 
     }
@@ -165,6 +196,11 @@ export class SpaceInvaders {
                 this.enemies.push(new Enemy(this.c, {x: startX + col * enemySpacing, y: startY + row * enemySpacing}));
             }
         }
+        //testing
+        //for (let i = 0; i < 5; i++){
+          //  setTimeout(() => this.onMessage('INCOMING HOSTILES DETECTED'), 1500);
+        //}
+
     }
     private spawnHunters(): void {
         const min: number = 1;
@@ -265,10 +301,12 @@ export class SpaceInvaders {
     }
     
     animate = (): void => {
+
         this.animationId = requestAnimationFrame(this.animate);
         this.c.fillStyle = 'black';
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
+
         if (this.game.over) {
             setTimeout(() => {
                 return;
@@ -311,15 +349,37 @@ export class SpaceInvaders {
             'white'
             ));
         
-    }
+        }
+
+        //enemy spawing tying to make a game play loop and its fucking me 
+        if (this.score >= 3800 && this.isSpawning == false) {
+            this.isSpawning = true;
+            if (this.currentLevel == 0){
+                this.onMessage("well maybe not the classic, try WASD and moving the mouse");
+
+                setTimeout(() => this.onMessage('Alright good luck!'), 3000);
+            }
+            setTimeout(() => this.spawnEnemies(), 6000);
+            //setTimeout(() => this.spawnHunters(), spawnInterval);
+            this.currentLevel = 1;
+
+            setTimeout(() => this.isSpawning = false, this.levelSpawntimes.get(this.currentLevel));// come back this need to be a hash map
+        }
 
 
     }
     start(): void {
         this.game.over = false;
+        //testing 
         this.animate();
         this.spawnEnemyGrid();
-        this.spawnHunters();
+        //this.spawnHunters();
+        this.onMessage("Welcome to the classic Space Invaders");
+
+
+        
+        //this.gamePlayLoop();
+                    
     }
     stop(): void {
         this.game.over = true;
@@ -362,6 +422,23 @@ export class SpaceInvaders {
         }
         this.setupEventListeners();
         this.start();
+
+    }
+
+    private spawnEnemies(): void {
+        this.spawnEnemyGrid();
+        this.spawnHunters();
+
+        //this is being dealt with in the animate section now
+        /*if (this.score >= 3900) {
+            this.onMessage("well maybe not the classic, try WASD and moving the mouse");
+
+            setTimeout(() => this.onMessage('Alright good luck!'), 3000);
+
+            timeInterval = 5000;
+        }
+        return timeInterval; */
+
 
     }
 

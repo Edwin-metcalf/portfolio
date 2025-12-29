@@ -11,9 +11,16 @@
     let gameOver = $state(false);
     let finalScore = $state(0);
 
+    let consoleMessages = $state<string[]>([]);
+    const MAX_MESSAGES = 3;
+
 
     onMount(() => {
-        game = new SpaceInvaders(canvas, (newScore) => {
+        game = new SpaceInvaders(canvas, 
+        (message) => {
+            addMessage(message)
+        }, 
+        (newScore) => {
             score = newScore;
         }, () => {
             gameOver = true;
@@ -30,12 +37,22 @@
             gameStarted = true;
             gameOver = false;
             game.start();
+
+            consoleMessages = ['SYSTEM ONLINE'];
+
         }
     }
     function restartGame() {
         gameOver = false;
         score = 0;
         game.restart();
+    }
+    function addMessage(msg: string) {
+        if (consoleMessages.length >= MAX_MESSAGES) {
+            consoleMessages.shift();
+        }
+        consoleMessages.push(msg);
+        consoleMessages = consoleMessages;
     }
 
 </script>
@@ -74,6 +91,15 @@
         </div>
     {/if}
     <canvas bind:this={canvas}></canvas>
+
+    <!-- I should do more comments this is the console area-->
+    {#if gameStarted && !gameOver}
+        <div class="terminal-console">
+            {#each consoleMessages as message}
+                <div class="terminal-message">{message}</div>
+            {/each}
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -83,6 +109,7 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
+        padding-bottom: 10px;
     }
     canvas {
         image-rendering: pixelated;
@@ -168,90 +195,122 @@
 
     }
     .game-over-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 30;
-    animation: fadeIn 0.3s ease;
-}
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        animation: fadeIn 0.3s ease;
+    }
 
-@keyframes fadeIn {
-    from {
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    .game-over-modal {
+        background: rgba(22, 27, 34, 0.95);
+        border: 1px solid rgba(0, 212, 170, 0.3);
+        border-radius: 12px;
+        padding: 50px 70px;
+        text-align: center;
+        animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .game-over-title {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #f0f6fc;
+        margin: 0 0 15px 0;
+    }
+
+    .final-score {
+        font-size: 1.3rem;
+        color: #8b949e;
+        margin: 0 0 35px 0;
+        font-weight: 500;
+    }
+
+    .final-score::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 2px;
+        background: rgba(0, 212, 170, 0.4);
+        margin: 0 auto 15px;
+    }
+
+    .restart-button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: transparent;
+        color: #00d4aa;
+        border: 1px solid #00d4aa;
+        border-radius: 8px;
+        padding: 12px 28px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0 auto;
+    }
+
+    .restart-button:hover {
+        background: rgba(0, 212, 170, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .terminal-console {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1024px; 
+        max-width: calc(100vw - 40px);
+        max-height: 80px;
+        background: rgba(0, 0, 0, 0.85);
+        border: 1px solid rgba(0, 212, 170, 0.3);
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        color: #00d4aa;
+        overflow: hidden;
+        z-index: 15;
+    }
+
+    .terminal-message {
+        line-height: 1.4;
+        margin: 2px 0;
         opacity: 0;
+        animation: fadeIn 0.3s ease forwards;
     }
-    to {
-        opacity: 1;
+
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+        }
     }
-}
-
-.game-over-modal {
-    background: rgba(22, 27, 34, 0.95);
-    border: 1px solid rgba(0, 212, 170, 0.3);
-    border-radius: 12px;
-    padding: 50px 70px;
-    text-align: center;
-    animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(30px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.game-over-title {
-    font-size: 2.5rem;
-    font-weight: 600;
-    color: #f0f6fc;
-    margin: 0 0 15px 0;
-}
-
-.final-score {
-    font-size: 1.3rem;
-    color: #8b949e;
-    margin: 0 0 35px 0;
-    font-weight: 500;
-}
-
-.final-score::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 2px;
-    background: rgba(0, 212, 170, 0.4);
-    margin: 0 auto 15px;
-}
-
-.restart-button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: transparent;
-    color: #00d4aa;
-    border: 1px solid #00d4aa;
-    border-radius: 8px;
-    padding: 12px 28px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0 auto;
-}
-
-.restart-button:hover {
-    background: rgba(0, 212, 170, 0.1);
-    transform: translateY(-2px);
-}
 
 </style>
