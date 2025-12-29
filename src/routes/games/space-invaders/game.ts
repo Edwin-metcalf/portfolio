@@ -27,6 +27,8 @@ export class SpaceInvaders {
     private player!: Player;
     private animationId: number | null = null;
     private keys: { [key: string]: boolean} = {};
+    private mouseDown: boolean = false;
+    private mousePosition: Position = { x:0, y:0};
 
     //variables for the shooting 
     private projectiles: Projectile[] = [];
@@ -37,6 +39,7 @@ export class SpaceInvaders {
     private enemies: EnemyType[] = [];
     private enemyVelocity: Velocity = {x:2, y:0};
     private enemyDropDistance: number = 40;
+    private spawnRate: number = 1;
 
     private particles: Particle[] = [];
     private game = {
@@ -128,12 +131,26 @@ export class SpaceInvaders {
     private setupEventListeners(): void {
         window.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('keyup', this.handleKeyUp);
+        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mouseup', this.handleMouseUp);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
     }
     private handleKeyDown = (event: KeyboardEvent): void => {
         this.keys[event.key] = true;
     }
     private handleKeyUp = (event: KeyboardEvent): void => {
         this.keys[event.key] = false;
+    }
+    private handleMouseDown = (): void => {
+        this.mouseDown = true;
+    }
+    private handleMouseUp = (): void => {
+        this.mouseDown = false;
+    }
+    private handleMouseMove = (event: MouseEvent): void => {
+        const rect = this.canvas.getBoundingClientRect();
+        this.mousePosition.x = event.clientX - rect.left;
+        this.mousePosition.y = event.clientY - rect.top;
     }
 
     private updatePlayerControls(): void {
@@ -142,6 +159,8 @@ export class SpaceInvaders {
             this.player.velocity.x = 0;
             this.player.velocity.y = 0;
             const speed = 5;
+            
+
             if (this.keys['ArrowLeft'] || this.keys['a']) {
                 this.player.velocity.x = -speed;
                 this.player.rotation = -.2;
@@ -162,6 +181,11 @@ export class SpaceInvaders {
             // full controls I need to add a full mouse following as well
 
             if (this.score >= 3900) {
+                const dx = this.mousePosition.x - (this.player.position.x + this.player.width / 2);
+                const dy = this.mousePosition.y - (this.player.position.y + this.player.height / 2);
+                const angleToMouse = Math.atan2(dy, dx);
+
+                this.player.rotation = angleToMouse + Math.PI / 2; 
                 if (this.keys['ArrowUp'] || this.keys['w']) {
                     this.player.velocity.y = -speed;
                     //this.player.rotation = -.2;
@@ -170,11 +194,14 @@ export class SpaceInvaders {
                     this.player.velocity.y = speed;
                     //this.player.rotation = .2;
                 }
-                if(this.keys[' ']) { // change this to take in click 
+                if(this.keys[' '] || this.mouseDown) { // change this to take in click 
                     const currentTime = Date.now();
                     if (currentTime - this.lastShotTime >= this.shootCooldown){
                         this.lastShotTime = currentTime;
-                        this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
+                        const shootAngle = this.player.rotation - Math.PI / 2;
+
+                        //const shootVelocity = { x: Math.cos(shootAngle), y: Math.sin(shootAngle) };
+                        this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, { x: Math.cos(shootAngle), y: Math.sin(shootAngle) }));
 
 
                     }
@@ -184,12 +211,21 @@ export class SpaceInvaders {
 
     }
 
-    private spawnEnemyGrid(): void {
-        const rows: number = 3;
-        const cols: number = 13;
+    private spawnEnemyGrid(spawnRate: number = 1): void {
+        let rows: number = Math.round(3 * spawnRate);
+        let cols: number = Math.round(13 * spawnRate);
+
+        const spawnBoxWidth = 1024 //this is the canvas width
+
         const enemySpacing: number = 30;
-        const startX: number = 100;
         const startY: number = 50;
+
+        const gridWidth = cols * enemySpacing;
+
+        let maxStartX = spawnBoxWidth - gridWidth - 20;
+        let minStartX = 20;
+
+        let startX: number = Math.random() * (maxStartX - minStartX) + minStartX;
 
         for (let row = 0; row < rows; row++){
             for (let col = 0; col < cols; col++) {
@@ -202,9 +238,9 @@ export class SpaceInvaders {
         //}
 
     }
-    private spawnHunters(): void {
-        const min: number = 1;
-        const max = 3;
+    private spawnHunters(spawnRate: number = 1): void {
+        let min: number = Math.round(1 * spawnRate);
+        let max: number = Math.round(3 * spawnRate);
         const spawnBoxWidth = 1024; //this is the canvas width as well
         let total = 0;
 
@@ -359,7 +395,7 @@ export class SpaceInvaders {
 
                 setTimeout(() => this.onMessage('Alright good luck!'), 3000);
             }
-            setTimeout(() => this.spawnEnemies(), 6000);
+            setTimeout(() => this.spawnEnemies(this.spawnRate), 6000);
             //setTimeout(() => this.spawnHunters(), spawnInterval);
             this.currentLevel = 1;
 
@@ -393,6 +429,10 @@ export class SpaceInvaders {
 
             window.removeEventListener('keydown', this.handleKeyDown);
             window.removeEventListener('keyup', this.handleKeyUp);
+            this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+            this.canvas.removeEventListener('mouseup', this.handleMouseUp);
+            this.canvas.removeEventListener('mousemove', this.handleMouseMove); 
+
 
             if (this.onGameOver) {
                 this.onGameOver();
@@ -425,9 +465,9 @@ export class SpaceInvaders {
 
     }
 
-    private spawnEnemies(): void {
-        this.spawnEnemyGrid();
-        this.spawnHunters();
+    private spawnEnemies(spawnRate: number): void {
+        this.spawnEnemyGrid(spawnRate);
+        this.spawnHunters(spawnRate);
 
         //this is being dealt with in the animate section now
         /*if (this.score >= 3900) {
