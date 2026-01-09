@@ -16,8 +16,6 @@
         }
     ];
 
-
-
 </script>
 <!-- what the fuck was that bro it changed the whole home screen as well???
 <div class="game-header">

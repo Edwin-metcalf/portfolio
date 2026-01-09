@@ -1,12 +1,28 @@
 node_modules
+frontend/node_modules
+
+#backend please work as well
+backend/tmp/
+backend/*.exe
+backend/*.test
+backend/vendor/
+backend/server
+
+#frontend I hope this works pleas
+frontend/.output
+frontend/.vercel
+frontend/.netlify
+frontend/.wrangler
+frontend/.svelte-kit
+frontend/build
 
 # Output
-.output
-.vercel
-.netlify
-.wrangler
-/.svelte-kit
-/build
+#.output
+#.vercel
+#.netlify
+#.wrangler
+#/.svelte-kit
+#/build
 
 # OS
 .DS_Store
@@ -21,3 +37,5 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+
