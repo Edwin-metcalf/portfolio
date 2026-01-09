@@ -33,13 +33,13 @@ export class SpaceInvaders {
     //variables for the shooting 
     private projectiles: Projectile[] = [];
     private lastShotTime: number = 0;
-    private shootCooldown: number = 10;// was 250
+    private shootCooldown: number = 250;// was 250
 
     //variables for the enemies
     private enemies: EnemyType[] = [];
     private enemyVelocity: Velocity = {x:2, y:0};
     private enemyDropDistance: number = 40;
-    private spawnRate: number = 1;
+    private spawnRate: number = 1; // this is what is controling how hard the game is I believe
 
     private particles: Particle[] = [];
     private game = {
@@ -49,7 +49,7 @@ export class SpaceInvaders {
 
     //variables for the game play loop
     //this needs to be a hashmap idk how to do that lmao
-    private levelSpawntimes = new Map<number, number>([[0,0],[1,5000]]); // come back to this how to properly type cast this 
+    private levelSpawntimes = new Map<number, number>([[0,0],[1,10000]]); // come back to this how to properly type cast this 
 
     private currentLevel: number = 0;
     private isSpawning: boolean = false;
@@ -59,6 +59,10 @@ export class SpaceInvaders {
     public static enemyImage: HTMLImageElement;
     public static hunterImage: HTMLImageElement;
     private imagesLoaded: Promise<void>;
+
+    // debugging frames per second type shit
+    private lastFrameTime = performance.now();
+    private fps = 0;
 
 
     constructor(canvas: HTMLCanvasElement, onMessage: (message: string) => void, onScoreChange?: (score: number) => void, onGameOver?: () => void) {
@@ -169,7 +173,7 @@ export class SpaceInvaders {
                 this.player.velocity.x = speed;
                 this.player.rotation = .2;
             }
-            if(this.keys[' ']) {
+            if(this.keys[' '] || this.mouseDown && this.score <= 3000) {
                 const currentTime = Date.now();
                 if (currentTime - this.lastShotTime >= this.shootCooldown){
                     this.lastShotTime = currentTime;
@@ -178,9 +182,9 @@ export class SpaceInvaders {
 
                 }
             }
-            // full controls I need to add a full mouse following as well
+            // full controls 
 
-            if (this.score >= 3900) {
+            if (this.score >= 3000) {
                 const dx = this.mousePosition.x - (this.player.position.x + this.player.width / 2);
                 const dy = this.mousePosition.y - (this.player.position.y + this.player.height / 2);
                 const angleToMouse = Math.atan2(dy, dx);
@@ -194,7 +198,7 @@ export class SpaceInvaders {
                     this.player.velocity.y = speed;
                     //this.player.rotation = .2;
                 }
-                if(this.keys[' '] || this.mouseDown) { // change this to take in click 
+                if(this.keys[' '] || this.mouseDown) {
                     const currentTime = Date.now();
                     if (currentTime - this.lastShotTime >= this.shootCooldown){
                         this.lastShotTime = currentTime;
@@ -213,12 +217,12 @@ export class SpaceInvaders {
 
     private spawnEnemyGrid(spawnRate: number = 1): void {
         let rows: number = Math.round(3 * spawnRate);
-        let cols: number = Math.round(13 * spawnRate);
+        let cols: number = Math.round(10 * spawnRate);
 
         const spawnBoxWidth = 1024 //this is the canvas width
 
         const enemySpacing: number = 30;
-        const startY: number = 50;
+        const startY: number = 20;
 
         const gridWidth = cols * enemySpacing;
 
@@ -338,10 +342,20 @@ export class SpaceInvaders {
     
     animate = (): void => {
 
+        // stuff for debugging FPS 
+        const now = performance.now();
+        this.fps = Math.round(1000 / (now - this.lastFrameTime));
+        this.lastFrameTime = now;
+
         this.animationId = requestAnimationFrame(this.animate);
         this.c.fillStyle = 'black';
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
+
+        // FPS is stuff 
+        this.c.fillStyle = 'white';
+        this.c.font = '20px Arial';
+        this.c.fillText(`FPS: ${this.fps}`, 10, 30);
 
         if (this.game.over) {
             setTimeout(() => {
@@ -388,14 +402,14 @@ export class SpaceInvaders {
         }
 
         //enemy spawing tying to make a game play loop and its fucking me 
-        if (this.score >= 3800 && this.isSpawning == false) {
+        if (this.score >= 3000 && this.isSpawning == false) {
             this.isSpawning = true;
             if (this.currentLevel == 0){
                 this.onMessage("well maybe not the classic, try WASD and moving the mouse");
 
                 setTimeout(() => this.onMessage('Alright good luck!'), 3000);
             }
-            setTimeout(() => this.spawnEnemies(this.spawnRate), 6000);
+            setTimeout(() => this.spawnEnemies(this.spawnRate), this.levelSpawntimes.get(this.currentLevel));
             //setTimeout(() => this.spawnHunters(), spawnInterval);
             this.currentLevel = 1;
 
@@ -466,6 +480,7 @@ export class SpaceInvaders {
     }
 
     private spawnEnemies(spawnRate: number): void {
+        this.spawnRate *= 1.05
         this.spawnEnemyGrid(spawnRate);
         this.spawnHunters(spawnRate);
 

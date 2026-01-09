@@ -1,7 +1,14 @@
 <script lang="ts">
+    import { fetchAPI } from "$lib/api";
     import { onMount } from "svelte";
     import { SpaceInvaders } from "./game";
     import { Play, X, RotateCcw } from "lucide-svelte"
+
+    interface leaderboardEntry {
+        name: string,
+        score: number
+    }
+    
 
     let canvas: HTMLCanvasElement;
     let game: SpaceInvaders;
@@ -13,7 +20,9 @@
 
     let consoleMessages = $state<string[]>([]);
     const MAX_MESSAGES = 3;
-
+    let scoreSubmitted: boolean = $state(false)
+    let entry = $state<leaderboardEntry>({name: "", score: 0})
+    let leaderboard: Array<leaderboardEntry>  | undefined = $state()
 
     onMount(() => {
         game = new SpaceInvaders(canvas, 
@@ -30,6 +39,20 @@
         game.waitForImages().then(() => {
             imagesLoaded = true;
         });
+
+        getLeaderboard()
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Space' && gameStarted && !gameOver) {
+                e.preventDefault();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+        }
+
     });
 
     function startGame() {
@@ -45,6 +68,7 @@
     function restartGame() {
         gameOver = false;
         score = 0;
+        scoreSubmitted = false
         game.restart();
     }
     function addMessage(msg: string) {
@@ -53,6 +77,44 @@
         }
         consoleMessages.push(msg);
         consoleMessages = consoleMessages;
+    }
+
+    //database stuff here
+
+
+    async function SubmitScore(name: string, score: number) {
+        entry.score = score
+        entry.name = name
+        try {
+            const result = await fetchAPI('/api/space-invaders/entry', {
+                method: 'POST',
+                body: JSON.stringify(entry)
+
+            });
+
+        } catch (err) {
+            console.error('Error: ', err);
+        }
+    }
+
+    async function getLeaderboard() {
+        try {
+            const result = await fetchAPI('/api/space-invaders/leaderboard',{
+                method: 'GET',
+            });
+            leaderboard = result
+        } catch (err) {
+            console.error('Error ', err);
+        }
+    }
+    async function getAndSubmitScore(name: string, score: number) {
+        try {
+            await SubmitScore(name, score)
+            await getLeaderboard()
+            scoreSubmitted = true
+        } catch (err) {
+            console.error('failed to submit score:', err)
+        }
     }
 
 </script>
@@ -81,6 +143,15 @@
             <div class="game-over-modal">
                 <h2 class="game-over-title">Game Over</h2>
                 <p class="final-score">Final Score: {finalScore}</p>
+
+
+
+                <div class="score-submission">
+                    <input type="text" bind:value={entry.name} placeholder="enter name" class="name-input"/>
+                    {#if !scoreSubmitted}
+                        <button class="submit-button" onclick={() => getAndSubmitScore(entry.name, finalScore)} disabled={!entry.name.trim()}> Submit</button>
+                    {/if}
+                </div>
                 <button class="restart-button" onclick={restartGame}>
                     <RotateCcw size={24}/>
                     <span>Play Again</span>
@@ -100,7 +171,35 @@
             {/each}
         </div>
     {/if}
+
 </div>
+<!--this is the leaderboard area for real type beat-->
+    <div class="leaderboard-section">
+        <h2 class="leaderboard-title">Leaderboard</h2>
+        {#if leaderboard && leaderboard.length > 0}
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each leaderboard as entryLeaderboard, index}
+                        <tr class="rank-{index + 1}">
+                            <td class="rank-cell">#{index + 1}</td>
+                            <td class="name-cell">{entryLeaderboard.name}</td>
+                            <td class="score-cell">{entryLeaderboard.score}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {:else}
+            <p class="no-entries">No entries yet... be the first!</p>
+
+        {/if}
+    </div>
 
 <style>
     .game-container {
@@ -260,6 +359,57 @@
         margin: 0 auto 15px;
     }
 
+    .score-submission {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 25px;
+        width: 100%;
+    }
+
+    .name-input {
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 212, 170, 0.3);
+        border-radius: 6px;
+        color: #f0f6fc;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        outline: none;
+    }
+
+    .name-input::placeholder {
+        color: #8b949e;
+    }
+
+    .name-input:focus {
+        border-color: #00d4aa;
+        background: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.1);
+    }
+    .submit-button {
+        padding: 12px 24px;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .submit-button:hover:not(:disabled) {
+        background: #00e6bb;
+        transform: translateY(-2px);
+    }
+
+    .submit-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
     .restart-button {
         display: flex;
         align-items: center;
@@ -311,6 +461,112 @@
         to {
             opacity: 1;
         }
+    }
+    .leaderboard-section {
+        width: 100%;
+        max-width: 600px;
+        margin: 60px auto 40px;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 5px solid rgba(0, 212, 170, 0.3);
+        border-radius: 8px;
+    }
+
+    .leaderboard-title {
+        text-align: center;
+        color: #f0f6fc;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 0 0 25px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Courier New', monospace;
+    }
+
+    .leaderboard-table thead {
+        border-bottom: 2px solid rgba(0, 212, 170, 0.3);
+    }
+
+    .leaderboard-table th {
+        padding: 12px 8px;
+        text-align: left;
+        color: #00d4aa;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .leaderboard-table td {
+        padding: 12px 8px;
+        color: #9299a5;
+        border-bottom: 1px solid rgba(139, 148, 158, 0.1);
+    }
+
+    .leaderboard-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    .leaderboard-table tbody tr:hover {
+        background: rgba(0, 212, 170, 0.05);
+    }
+
+    /* Top 3 special styling */
+    .leaderboard-table .rank-1 .rank-cell {
+        color: #ffd700;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .leaderboard-table .rank-1 .name-cell,
+    .leaderboard-table .rank-1 .score-cell {
+        color: #f0f6fc;
+        font-weight: 700;
+    }
+
+    .leaderboard-table .rank-2 .rank-cell {
+        color: #c0c0c0;
+        font-weight: 600;
+    }
+
+    .leaderboard-table .rank-2 .name-cell,
+    .leaderboard-table .rank-2 .score-cell {
+        color: #c9d1d9;
+        font-weight: 500;
+    }
+
+    .leaderboard-table .rank-3 .rank-cell {
+        color: #cd7f32;
+        font-weight: 600;
+    }
+
+    .leaderboard-table .rank-3 .name-cell,
+    .leaderboard-table .rank-3 .score-cell {
+        color: #b1bac4;
+        font-weight: 500;
+    }
+
+    .rank-cell {
+        width: 60px;
+        text-align: center;
+    }
+
+    .score-cell {
+        text-align: right;
+        font-weight: 500;
+    }
+
+    .no-entries {
+        text-align: center;
+        color: #8b949e;
+        font-style: italic;
+        padding: 20px;
+        margin: 0;
     }
 
 </style>
