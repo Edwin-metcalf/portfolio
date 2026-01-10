@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'https://edwin-portfolio-backend-5b6131ea9512.herokuapp.com';
+//this is what i had for local development
+// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     const response = await fetch(`${API_URL}${endpoint}`, {
