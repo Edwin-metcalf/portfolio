@@ -15,22 +15,24 @@ import (
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		/* this is for production
 
-		allowedOrigins := []string {
+		allowedOrigins := []string{
 			"https://edwinmetcalf.com",
 			"https://www.edwinmetcalf.com",
 		}
 
-		origin := r.HeaderGet("Origin")
+		origin := r.Header.Get("Origin")
 		for _, allowed := range allowedOrigins {
 			if origin == allowed {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				break
 			}
 		}
-		*/
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if origin == "" || w.Header().Get("Access-Control-Allow-Origin") == "" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if r.Method == "OPTIONS" {
@@ -118,5 +120,5 @@ func main() {
 	}
 
 	fmt.Printf("server up on god @ port %s\n", port)
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, handler))
 }
