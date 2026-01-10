@@ -30,9 +30,14 @@
                     <h1 class="name-title" in:fly={{ x: -50, duration: 1000, delay: 400, easing: quintOut}}>
                         Edwin Metcalf
                     </h1>
-                    <a href="/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
-                        Resume
-                    </a>
+                    <div class="button-holder">
+                        <a href="/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                            Resume
+                        </a>
+                        <a href="/games" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                            Games and Projects
+                        </a>
+                    </div>
                     <!--<p class="name-subtitle">Check out what I am working on</p>-->
                     <!-- prolly want to replace with cool buttons -->
                 {/if}
@@ -75,7 +80,7 @@
     .name-title {
         font-size: 4rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #f0f6fc, #00d4aa, #58a6ff);
+        background: linear-gradient(135deg, #8bf0dc, #00d4aa, #02614e);
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -129,7 +134,6 @@
     .resume-btn:hover {
         background: rgba(0, 212, 170, 0.15);
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 212, 170, 0.2);
     }
 
     .resume-btn:active {
@@ -151,6 +155,11 @@
         gap: 8px;
         text-decoration: none;
         margin-top: 20px; 
+    }
+    .button-holder {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
     }
 
     :global(body) {

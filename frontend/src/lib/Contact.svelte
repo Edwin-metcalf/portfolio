@@ -121,11 +121,20 @@
     .contact-title {
         font-size: 3rem;
         font-weight: 600;
-        background: linear-gradient(135deg, #f0f6fc, #00d4aa, #58a6ff);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 20px;
+        color: #f0f6fc;
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
+    }
+    
+    .contact-title::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #00d4aa;
+        margin: 20px auto;
+        border-radius: 2px;
     }
 
     .contact-content {
