@@ -14,6 +14,7 @@ import (
 //there is some reference stuff in the golearn you know this
 
 func corsMiddleware(next http.Handler) http.Handler {
+	//this is cors middleware to give some security
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		allowedOrigins := []string{
@@ -43,6 +44,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// here down are stuff for the space invaders game the handlers and what not
 type SpaceInvadersEntry struct {
 	Name  string `json:"name"`
 	Score int    `json:"score"`
@@ -101,6 +103,7 @@ func healthHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	testing()
 	var err error
 	DB, err = initDB()
 	if err != nil {

@@ -195,12 +195,16 @@ export class SpaceInvaders {
 
                 this.player.rotation = angleToMouse + Math.PI / 2; 
                 if (this.keys['ArrowUp'] || this.keys['w']) {
-                    this.player.velocity.y = -speed;
-                    //this.player.rotation = -.2;
+                    if (this.player.position.y > 0 - (this.player.height / 1.75)) {
+                        this.player.velocity.y = -speed;
+                        //this.player.rotation = -.2;
+                    }
                 }
                 if (this.keys['ArrowDown'] || this.keys['s']) {
-                    this.player.velocity.y = speed;
-                    //this.player.rotation = .2;
+                    if (this.player.position.y < this.canvas.height - (this.player.height / 1.75)) {
+                        this.player.velocity.y = speed;
+                        //this.player.rotation = .2;
+                    }
                 }
                 if(this.keys[' '] || this.mouseDown) {
                     const currentTime = Date.now();
