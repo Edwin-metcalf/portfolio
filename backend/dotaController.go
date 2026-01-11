@@ -3,21 +3,34 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
-//this is my key dc232eae-bfbd-47b7-bf60-cb98d99ea235
+//check appflowy for your stuff
 
-// this is the link I need to call https://api.opendota.com/api/matches/271145478?api_key=dc232eae-bfbd-47b7-bf60-cb98d99ea235
-// this link goes to all the matches of my id
-// that does not go to my steam id that is a random match my steam id 64 is: 76561198248148870
-// however my account id is 287883142
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
+
 func testing() {
+	apikey := os.Getenv("OPENDOTA_API_KEY")
 
-	response, err := http.Get("https://api.opendota.com/api/players/287883142?api_key=dc232eae-bfbd-47b7-bf60-cb98d99ea235")
+	if apikey == "" {
+		log.Fatal("OPENDOTA_API_KEY not set")
+	}
+	//good tempelate for calling information from the api
+	url := fmt.Sprintf("https://api.opendota.com/api/players/287883142?api_key=%s", apikey)
+	response, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	defer response.Body.Close()
 
 	responseData, err := io.ReadAll(response.Body)
 
