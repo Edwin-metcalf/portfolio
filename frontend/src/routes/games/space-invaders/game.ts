@@ -61,8 +61,12 @@ export class SpaceInvaders {
     private imagesLoaded: Promise<void>;
 
     // debugging frames per second type shit
-    private lastFrameTime = performance.now();
     private fps = 0;
+
+    //for throttling the game at 60 fps
+    private targetFPS = 100;
+    private frameInterval = 1000 / this.targetFPS;
+    private lastFrameTime = 0;
 
 
     constructor(canvas: HTMLCanvasElement, onMessage: (message: string) => void, onScoreChange?: (score: number) => void, onGameOver?: () => void) {
@@ -348,19 +352,23 @@ export class SpaceInvaders {
 
     }
     
-    animate = (): void => {
+    animate = (currentTime: number = 0): void => {
 
-        // stuff for debugging FPS 
-        const now = performance.now();
-        this.fps = Math.round(1000 / (now - this.lastFrameTime));
-        this.lastFrameTime = now;
 
         this.animationId = requestAnimationFrame(this.animate);
+        const deltaTime = currentTime - this.lastFrameTime;
+        if (deltaTime < this.frameInterval) {
+            return
+        }
+        this.lastFrameTime = currentTime - (deltaTime % this.frameInterval)
+
+
         this.c.fillStyle = 'black';
         this.c.fillRect(0,0, this.canvas.width, this.canvas.height);
         this.updatePlayerControls();
 
         // FPS is stuff 
+        this.fps = Math.round(1000 / deltaTime)
         this.c.fillStyle = 'white';
         this.c.font = '20px Arial';
         this.c.fillText(`FPS: ${this.fps}`, 10, 30);

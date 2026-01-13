@@ -68,9 +68,17 @@
     function restartGame() {
         gameOver = false;
         score = 0;
-        scoreSubmitted = false
+        scoreSubmitted = false;
         game.restart();
     }
+
+    function returnToGame() {
+        gameOver = false;
+        score = 0;
+        scoreSubmitted = false;
+        window.location.reload();
+    }
+
     function addMessage(msg: string) {
         if (consoleMessages.length >= MAX_MESSAGES) {
             consoleMessages.shift();
@@ -141,6 +149,9 @@
     {#if gameOver}
         <div class="game-over-overlay">
             <div class="game-over-modal">
+                <a href="/games/space-invaders" class="exit-button" aria-label="return to game" onclick={returnToGame}>
+                    <X size={24} />
+                </a>
                 <h2 class="game-over-title">Game Over</h2>
                 <p class="final-score">Final Score: {finalScore}</p>
 
