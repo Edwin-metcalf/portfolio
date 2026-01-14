@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks } from 'lucide-svelte';
+    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks, BrainCircuit } from 'lucide-svelte';
 
     interface Project {
         id: number;
@@ -47,7 +47,16 @@
             tools: ["Java"],
             longDescription: "Created software that processes CSV files of students and their class selections along with classes and their openings. Then puts students in classes depending on factors like grade or draw number.",
             highlights: ["Ability to load courses and students from CSV", "Return a CSV with all the students schedules with the correct classes enrolled"]
-        }
+        },
+        {
+            id: 5,
+            title: "NLP paper: Fan Sentiment Correlation with MLB team success",
+            description: "Temporal Analysis of sentiment of MLB fans",
+            icon: BrainCircuit,
+            tools: ["Python", "Scikit","Pandas"],
+            longDescription: "Conducted research on sentiment analysis. We used VADER classifier to train a logistic regression model that was then used to conduct a temporal analysis of the SF Giants and the NY Yankees fanbases.",
+            highlights: ["finding, processing, and cleaning of reddit data", "logistic regression model trained and tested", "temporal analysis of correlation of teams success and fan sentiment","Wrote a paper showing our results of Yankee fans being more volitile through the 2017 season"]
+        } 
 
     ];
 

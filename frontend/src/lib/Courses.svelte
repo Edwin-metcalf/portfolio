@@ -6,8 +6,9 @@
         {name: "Foundations of Computer science", icon: SquareTerminal, courseNum: "CMPU 145"},
         {name: "Analysis of Algorithms", icon: BrainCircuit, courseNum: "CMPU 241"},
         {name: "Theory of Computation", icon: Code, courseNum: "CMPU 240"},
-        {name: "Natural Language Processing", icon: FileText, courseNum: "CMPU 166"},
-        {name: "Problem Solving and abstraction", icon: Search, courseNum: "CMPU 101"}
+        {name: "Natural Language Processing", icon: FileText, courseNum: "CMPU 366"},
+        {name: "Problem Solving and abstraction", icon: Search, courseNum: "CMPU 101"},
+        {name: "Compilers", icon: Cpu, courseNum: "CMPU 331"}
     ];
 
     const berkeleyCourses = [
