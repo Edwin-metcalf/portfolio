@@ -4,6 +4,7 @@
 
     let healthStatus = 'Loading...';
     let leaderboard: Array<{name: string, score: number}> = [];
+    let winLose: number;
 
     onMount(async () => {
         try {

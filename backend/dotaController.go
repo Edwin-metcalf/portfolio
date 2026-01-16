@@ -17,9 +17,17 @@ import (
 
 var APIKEY string
 
+// for the api
 type winLose struct {
 	Win  int `json:"win"`
 	Lose int `json:"lose"`
+}
+
+// for the return
+type winLossRate struct {
+	wins    int
+	losses  int
+	winRate float32
 }
 
 func init() {
@@ -28,7 +36,7 @@ func init() {
 	}
 	APIKEY = os.Getenv("OPENDOTA_API_KEY")
 }
-func getWinLose(playerID string) {
+func getWinLose(playerID string) (*winLossRate, error) {
 	if APIKEY == "" {
 		log.Fatal("OPENDOTA API KEY NOT SET")
 	}
@@ -38,17 +46,30 @@ func getWinLose(playerID string) {
 	response, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return nil, err
 	}
 	defer response.Body.Close()
 	err = json.NewDecoder(response.Body).Decode(&winLosePull)
 
 	if err != nil {
 		fmt.Println("Error decoding JSON:", err)
-		return
+		return nil, err
 	}
 	fmt.Printf("Wins: %d, Losses: %d\n", winLosePull.Win, winLosePull.Lose)
-
+	winPercentage := winLosePull.Win / (winLosePull.Win + winLosePull.Lose)
+	winLossPercentage := winLossRate{
+		wins:    winLosePull.Win,
+		losses:  winLosePull.Lose,
+		winRate: float32(winPercentage),
+	}
+	/* there  must be a better way to initalize and declare a struct like this
+	winLossPercentage {
+		wins: winLosePull.Win,
+		losses: winLosePull.Lose,
+		winRate: winPercentage,
+	}
+	*/
+	return &winLossPercentage, nil
 }
 
 func testing() {

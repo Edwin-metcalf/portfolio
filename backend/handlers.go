@@ -11,6 +11,7 @@ type SpaceInvadersEntry struct {
 	Score int    `json:"score"`
 }
 
+// space invader handlers
 func addSpaceInvadersEntry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -55,10 +56,28 @@ func getSpaceInvadersLeaderboard(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(leaderboard)
 }
 
+// a handler to check if the backend is running
 func healthHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status":  "ok",
 		"message": "Somehow the server is running",
 	})
+}
+
+func dotaWinLoseHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not aloud", http.StatusMethodNotAllowed)
+		return
+	}
+	winLossPercentage, err := getWinLose("287883142")
+
+	if err != nil {
+		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(winLossPercentage)
+
 }

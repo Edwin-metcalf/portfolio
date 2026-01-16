@@ -181,7 +181,7 @@ export class SpaceInvaders {
                     this.player.rotation = .2;
                 }
             }
-            if(this.keys[' '] || this.mouseDown && this.score <= 3000) {
+            if(this.keys[' '] || this.mouseDown && this.score < 3000) {
                 const currentTime = Date.now();
                 if (currentTime - this.lastShotTime >= this.shootCooldown){
                     this.lastShotTime = currentTime;
@@ -255,8 +255,8 @@ export class SpaceInvaders {
 
     }
     private spawnHunters(spawnRate: number = 1): void {
-        let min: number = Math.round(1 * spawnRate);
-        let max: number = Math.round(3 * spawnRate);
+        let min: number = Math.round((2 * spawnRate) + this.currentLevel);
+        let max: number = Math.round((5 * spawnRate) + this.currentLevel);
         const spawnBoxWidth = 1024; //this is the canvas width as well
         let total = 0;
 
@@ -273,7 +273,12 @@ export class SpaceInvaders {
     private updateEnemies(): void {
         let hitEdge = false;
 
-        this.enemies.forEach(enemy => {
+        this.enemies.forEach((enemy, i) => {
+            if (enemy instanceof Enemy && enemy.position.y > this.canvas.height) {
+                this.enemies.splice(i, 1);
+                //var enemies_test = this.enemies.length
+                console.log("enemy deleted total enemies left: %d", this.enemies.length)
+            }
             if (enemy instanceof Enemy) {
                 if ((enemy.position.x + enemy.width >= this.canvas.width && this.enemyVelocity.x > 0) || (enemy.position.x <= 0 && this.enemyVelocity.x < 0)) {
                     hitEdge = true;
@@ -334,7 +339,7 @@ export class SpaceInvaders {
                         }
                     }
                     this.stop()
-                }
+            }
             enemy.update();
         });
     }
@@ -501,7 +506,7 @@ export class SpaceInvaders {
     }
 
     private spawnEnemies(spawnRate: number): void {
-        this.spawnRate *= 1.05
+        this.spawnRate *= 1.03
         this.spawnEnemyGrid(spawnRate);
         this.spawnHunters(spawnRate);
 

@@ -35,7 +35,7 @@
             <a
                 href={game.url}
                 class="game-card"
-                class:coming-soon={game.status === "comingssoon"}
+                class:coming-soon={game.status === "coming-soon"}
             >
                 <div class="game-content">
                     <h2>{game.title}</h2>
