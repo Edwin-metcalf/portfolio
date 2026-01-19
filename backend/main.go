@@ -17,32 +17,25 @@ func corsMiddleware(next http.Handler) http.Handler {
 	//this is cors middleware to give some security
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		allowedOrigins := []string{
-			"https://edwinmetcalf.com",
-			"https://www.edwinmetcalf.com",
+		allowedOrigins := map[string]bool{
+			"https://edwinmetcalf.com":     true,
+			"https://www.edwinmetcalf.com": true,
 		}
 
 		origin := r.Header.Get("Origin")
-		allowed := false
-		for _, originAllowed := range allowedOrigins {
-			if origin == originAllowed {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-				allowed = true
-				break
-			}
-		}
-
-		if !allowed && (strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1")) {
+		if strings.HasPrefix(origin, "http://localhost") ||
+			strings.HasPrefix(origin, "http://127.0.0.1") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
-			allowed = true
+		} else if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
-		if allowed {
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		}
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
+		w.Header().Set("Vary", "Origin")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		next.ServeHTTP(w, r)
