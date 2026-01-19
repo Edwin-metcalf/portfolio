@@ -32,13 +32,13 @@ type winLossRate struct {
 
 func init() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file, using environment variables")
 	}
 	APIKEY = os.Getenv("OPENDOTA_API_KEY")
 }
 func getWinLose(playerID string) (*winLossRate, error) {
 	if APIKEY == "" {
-		log.Fatal("OPENDOTA API KEY NOT SET")
+		log.Println("OPENDOTA API KEY NOT SET")
 	}
 	url := fmt.Sprintf("https://api.opendota.com/api/players/%s/wl?api_key=%s", playerID, APIKEY)
 	var winLosePull winLose
@@ -76,7 +76,7 @@ func testing() {
 	apikey := APIKEY
 
 	if apikey == "" {
-		log.Fatal("OPENDOTA_API_KEY not set")
+		log.Println("OPENDOTA_API_KEY not set")
 	}
 	//good tempelate for calling information from the api
 	url := fmt.Sprintf("https://api.opendota.com/api/players/287883142?api_key=%s", apikey)

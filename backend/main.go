@@ -45,8 +45,8 @@ func corsMiddleware(next http.Handler) http.Handler {
 // handlers are now moved to handlers.go
 
 func main() {
-	testing()
-	getWinLose("287883142")
+	//testing()
+	//getWinLose("287883142")
 	var err error
 	DB, err = initDB()
 	if err != nil {
