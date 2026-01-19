@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 type SpaceInvadersEntry struct {
@@ -55,6 +56,35 @@ func getSpaceInvadersLeaderboard(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(leaderboard)
 }
+func clearLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	apiKey := r.Header.Get("Authorization")
+	secretKey := os.Getenv("ADMIN_API_KEY")
+
+	if secretKey == "" {
+		http.Error(w, "Server Configuration Error", http.StatusInternalServerError)
+		return
+	}
+
+	if apiKey != "Bearer "+secretKey {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err := deleteLeaderboard(DB)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "success",
+		"message": "Leaderboard cleared successfylly",
+	})
+}
 
 // a handler to check if the backend is running
 func healthHandler(w http.ResponseWriter, req *http.Request) {
@@ -65,6 +95,7 @@ func healthHandler(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
+// dota stuff handlers
 func dotaWinLoseHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -79,5 +110,4 @@ func dotaWinLoseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(winLossPercentage)
-
 }

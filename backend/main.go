@@ -59,6 +59,7 @@ func main() {
 	mux.HandleFunc("/api/health", healthHandler)
 	mux.HandleFunc("/api/space-invaders/entry", addSpaceInvadersEntry)
 	mux.HandleFunc("/api/space-invaders/leaderboard", getSpaceInvadersLeaderboard)
+	mux.HandleFunc("/api/space-invaders/clear", clearLeaderboardHandler)
 	handler := corsMiddleware(mux)
 
 	port := os.Getenv("PORT")

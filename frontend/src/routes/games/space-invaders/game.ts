@@ -3,6 +3,7 @@ import playerImageUrl from './imgs/player.png';
 import { siVelocity } from "simple-icons";
 import enemyImg from './imgs/enemy.png';
 import hunterImg from './imgs/enemyHunter.png'
+import rangedImg from './imgs/rangedEnemy.png'
 
 interface Position {
     x: number;
@@ -13,7 +14,7 @@ interface Velocity {
     x: number;
     y: number;
 }
-type EnemyType = Enemy | HunterEnemy
+type EnemyType = Enemy | HunterEnemy | RangedEnemy
 
 export class SpaceInvaders {
     private canvas: HTMLCanvasElement;
@@ -41,6 +42,7 @@ export class SpaceInvaders {
     private enemyDropDistance: number = 40;
     private spawnRate: number = 1; // this is what is controling how hard the game is I believe
 
+    private enemyProjectiles: Projectile[] = [];
     private particles: Particle[] = [];
     private game = {
         over: false,
@@ -49,7 +51,7 @@ export class SpaceInvaders {
 
     //variables for the game play loop
     //this needs to be a hashmap idk how to do that lmao
-    private levelSpawntimes = new Map<number, number>([[0,0],[1,8000]]); // come back to this how to properly type cast this 
+    private levelSpawntimes = new Map<number, number>([[0,0],[1,10000],[2,8000]]); // come back to this how to properly type cast this 
 
     private currentLevel: number = 0;
     private isSpawning: boolean = false;
@@ -58,6 +60,7 @@ export class SpaceInvaders {
     public static playerImage: HTMLImageElement;
     public static enemyImage: HTMLImageElement;
     public static hunterImage: HTMLImageElement;
+    public static rangedImage: HTMLImageElement;
     private imagesLoaded: Promise<void>;
 
     // debugging frames per second type shit
@@ -96,6 +99,7 @@ export class SpaceInvaders {
         SpaceInvaders.playerImage = new Image();
         SpaceInvaders.enemyImage = new Image();
         SpaceInvaders.hunterImage = new Image();
+        SpaceInvaders.rangedImage = new Image();
 
 
         const playerPromise = new Promise<void>((resolve, reject) => {
@@ -127,8 +131,15 @@ export class SpaceInvaders {
             SpaceInvaders.hunterImage.src = hunterImg;
 
         });
+        const rangedPromise = new Promise<void>((resolve, reject) => {
+            SpaceInvaders.rangedImage.onload = () => {
+                resolve();
+            };
+            SpaceInvaders.rangedImage.onerror = () => reject(new Error('failed to load ranged enemy'));
+            SpaceInvaders.rangedImage.src = rangedImg;
+        })
 
-        await Promise.all([playerPromise, enemyPromise, hunterPromise]);
+        await Promise.all([playerPromise, enemyPromise, hunterPromise, rangedPromise]);
         console.log('images loaded success!')
     }
 
@@ -186,8 +197,6 @@ export class SpaceInvaders {
                 if (currentTime - this.lastShotTime >= this.shootCooldown){
                     this.lastShotTime = currentTime;
                     this.projectiles.push(new Projectile(this.c, {x: this.player.position.x + this.player.width / 2 ,y: this.player.position.y + 30 }, {x: 0 ,y: -1  }));
-
-
                 }
             }
             // full controls 
@@ -262,12 +271,33 @@ export class SpaceInvaders {
 
         total = Math.floor(Math.random() * (max - min + 1) + min);
         for (let count = 0; count < total; count++){
-            let xPostiion = Math.random() * spawnBoxWidth;
-            this.enemies.push(new HunterEnemy(this.c, {x: xPostiion, y: 0}, this.player))
-            console.log('hunter spaned at:' , xPostiion)
+            let xPosition = Math.random() * spawnBoxWidth;
+            this.enemies.push(new HunterEnemy(this.c, {x: xPosition, y: 0}, this.player))
+            console.log('hunter spaned at:' , xPosition)
         }
+    }
 
+    private spawnRangedEnemies(spawnRate: number = 1): void {
+        let min: number = Math.round(1 * spawnRate);
+        let max: number = Math.round(3 * spawnRate);
+        let total = 0;
+        total = Math.floor(Math.random() * (max - min + 1) + min);
 
+        for (let count = 0; count < total; count++) {
+            let randomX = Math.random() * this.canvas.width;
+            let randomY = Math.random() * this.canvas.height;
+
+            const chosenSide = Math.random() < 0.5 ? randomX : randomY;
+            if (chosenSide == randomX) {
+                let yPosition = Math.random() < 0.5 ? 0 : this.canvas.height;
+                this.enemies.push(new RangedEnemy(this.c, {x: randomX, y: yPosition}, this.player))
+            } else if (chosenSide == randomY) {
+                let xPosition = Math.random() < 0.5 ? 0 : this.canvas.width;
+                this.enemies.push(new RangedEnemy(this.c, {x: xPosition, y: randomY}, this.player ))
+            }
+            console.log('ranged enemy spawned')
+
+        }
     }
 
     private updateEnemies(): void {
@@ -340,6 +370,20 @@ export class SpaceInvaders {
                     }
                     this.stop()
             }
+            if (enemy instanceof RangedEnemy && enemy.shooting) {
+                const shootAngle = Math.atan2(
+                    this.player.position.y - enemy.position.y,
+                    this.player.position.x - enemy.position.x
+                );
+                this.enemyProjectiles.push(new Projectile(
+                    this.c,
+                    { x: enemy.position.x + enemy.width / 2, y: enemy.position.y + enemy.height / 2},
+                    { x: Math.cos(shootAngle), y: Math.sin(shootAngle) },
+                    'blue'
+                ));
+                this.createParticles(enemy, 'blue')
+                enemy.shooting = false;
+            }
             enemy.update();
         });
     }
@@ -400,16 +444,43 @@ export class SpaceInvaders {
         });
 
         this.projectiles.forEach((projectile, idx) => {
-            if (projectile.position.y + projectile.radius <= 0 ) {
+            if (projectile.position.y > this.canvas.height || 
+                projectile.position.x < 0 || 
+                projectile.position.x > this.canvas.width) {
                 setTimeout(() => {
-                    this.projectiles.splice(idx, 1);
-
-                }, 0);
+                this.enemyProjectiles.splice(idx, 1);
+            }, 0);
             } else {
-                projectile.update()
+                projectile.update();
             }
-            
-        });     
+        });  
+        this.enemyProjectiles.forEach((projectile, idx) => {
+            if (projectile.position.y > this.canvas.height || 
+                projectile.position.x < 0 || 
+                projectile.position.x > this.canvas.width) {
+                setTimeout(() => {
+                this.enemyProjectiles.splice(idx, 1);
+            }, 0);
+            } else {
+                projectile.update();
+            }
+
+            if (
+                projectile.position.y - projectile.radius <= this.player.position.y + this.player.height &&
+                projectile.position.x + projectile.radius >= this.player.position.x &&
+                projectile.position.x - projectile.radius <= this.player.position.x + this.player.width &&
+                projectile.position.y + projectile.radius >= this.player.position.y
+            ) {
+                console.log("Player hit!");
+                this.player.isAlive = false;
+                if (!this.game.over) {
+                    for (let i = 0; i < 15; i++) {
+                        this.createParticles(this.player, 'grey');
+                    }
+                }
+                this.stop();
+            }
+        });   
 
         for (let i = 0; i < 1; i++) {
             this.particles.push(new Particle(
@@ -432,28 +503,27 @@ export class SpaceInvaders {
                 this.currentLevel = 1;
                 setTimeout(() => this.onMessage('See how far you can get! Check the leaderboards below to see the competition'), 6000);
 
+            } else if (this.currentLevel == 1 && this.score >= 8000) {
+                this.onMessage("Nice you are getting the hang of it");
+                setTimeout(() => this.onMessage("See you at the top of the leaderboard"), 3000);
+                this.currentLevel = 2;
             }
+
             setTimeout(() => this.spawnEnemies(this.spawnRate), this.levelSpawntimes.get(this.currentLevel));
             console.log("spawn rate: ", this.spawnRate)
             console.log("spawn time: ", this.levelSpawntimes.get(this.currentLevel))
             //setTimeout(() => this.spawnHunters(), spawnInterval);
             setTimeout(() => this.isSpawning = false, this.levelSpawntimes.get(this.currentLevel));// come back this need to be a hash map
         }
-
-
     }
     start(): void {
         this.game.over = false;
         //testing 
         this.animate();
         this.spawnEnemyGrid();
+        //this.spawnRangedEnemies();
         //this.spawnHunters();
-        this.onMessage("Welcome to the classic Space Invaders");
-
-
-        
-        //this.gamePlayLoop();
-                    
+        this.onMessage("Welcome to the classic Space Invaders");                    
     }
     stop(): void {
         this.game.over = true;
@@ -488,6 +558,7 @@ export class SpaceInvaders {
         this.projectiles = [];
         this.enemies = [];
         this.particles = [];
+        this.enemyProjectiles = [];
 
         this.player = new Player(this.c, this.canvas.width, this.canvas.height);
 
@@ -509,17 +580,9 @@ export class SpaceInvaders {
         this.spawnRate *= 1.03
         this.spawnEnemyGrid(spawnRate);
         this.spawnHunters(spawnRate);
-
-        //this is being dealt with in the animate section now
-        /*if (this.score >= 3900) {
-            this.onMessage("well maybe not the classic, try WASD and moving the mouse");
-
-            setTimeout(() => this.onMessage('Alright good luck!'), 3000);
-
-            timeInterval = 5000;
+        if (this.score >= 8000) {
+            this.spawnRangedEnemies(spawnRate)
         }
-        return timeInterval; */
-
 
     }
 
@@ -543,8 +606,8 @@ class Player {
 
         this.image = SpaceInvaders.playerImage;
 
-        this.width = this.image.width * 0.1;
-        this.height = this.image.height * 0.1;
+        this.width = this.image.width * 1.5;
+        this.height = this.image.height * 1.5;
 
         this.position = { x: canvasWidth / 2 - this.width / 2, y: canvasHeight - this.height - 20 };
         this.velocity = { x: 0, y: 0 };
@@ -558,6 +621,7 @@ class Player {
 
 
         if (this.image && this.image.complete) {
+            this.c.imageSmoothingEnabled = false;
             this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
         }
         this.c.restore()
@@ -579,11 +643,13 @@ class Projectile {
     public radius: number;
     private c: CanvasRenderingContext2D;
     private speed: number;
+    private color: string;
 
-    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity ) {
+    constructor(context: CanvasRenderingContext2D, position: Position, velocity: Velocity, color: string = 'red' ) {
         this.position = position;
         this.velocity = velocity;
         this.c = context;
+        this.color = color
         
         this.speed = 5;
         this.radius = 3;
@@ -592,8 +658,7 @@ class Projectile {
     draw() {
         this.c.beginPath();
         this.c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
-
-        this.c.fillStyle = 'red';
+        this.c.fillStyle = this.color;
         this.c.fill();
         this.c.closePath();
     }
@@ -657,16 +722,16 @@ class Enemy {
 
         this.image = SpaceInvaders.enemyImage;
 
-        this.width = this.image.width * 0.05;
-        this.height = this.image.height * 0.05;
+        this.width = this.image.width;
+        this.height = this.image.height;
         this.velocity = { x: 0, y: 0 };
         this.position = startPosition || { x: 300, y: 300};
 
     }
     draw(): void {
         this.c.save();
-        this.c.filter = 'hue-rotate(300deg) saturate(2) brightness(1.1)';
         if (this.image && this.image.complete) {
+            this.c.imageSmoothingEnabled = false;
             this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
         }
         this.c.restore();
@@ -701,8 +766,8 @@ class HunterEnemy {
         this.playerRef = player;
         this.stateTimer = Date.now();
         
-        this.width = this.image.width * 0.05;
-        this.height = this.image.height * 0.05;
+        this.width = this.image.width * 1.5;
+        this.height = this.image.height * 1.5;
         this.velocity = { x: 0, y: 0 };
         this.position = startPosition || { x: 200, y: 200};
     }
@@ -723,6 +788,7 @@ class HunterEnemy {
         );
 
         if (this.image && this.image.complete) {
+            this.c.imageSmoothingEnabled = false;
             this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
         }
         this.c.restore();
@@ -761,4 +827,101 @@ class HunterEnemy {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
     }
+}
+
+class RangedEnemy {
+    private c: CanvasRenderingContext2D;
+    public position: Position;
+    public velocity: Velocity;
+    private image: HTMLImageElement;
+    public readonly width: number;
+    public readonly height: number;
+
+    private state: 'hovering' | 'attacking' = 'hovering';
+    private stateTimer: number = 0;
+    private hoverDuration: number = 2000;
+    private attackDuration: number = 500;
+    private playerRef?: Player;
+    private hoverSpeed: number = 1;
+    //private attackSpeed: number = 3;
+    private rotation: number = 0;
+    public shooting: boolean = false;
+
+    constructor(context: CanvasRenderingContext2D, startPosition: Position, player: Player) {
+        this.c = context;
+        this.image = SpaceInvaders.rangedImage;
+        this.playerRef = player;
+        this.width = this.image.width * 1.5;
+        this.height = this.image.height * 1.5;
+        this.velocity = { x: 0, y: 0 };
+        this.position = startPosition || { x: 200, y: 200};
+        this.stateTimer = Date.now();
+
+    }
+
+    draw(): void {
+        this.c.save()
+        this.c.translate (
+            this.position.x + this.width / 2,
+            this.position.y + this.height / 2
+        );
+        this.c.rotate(this.rotation)
+
+        this.c.translate(
+            -this.position.x - this.width / 2, 
+            -this.position.y - this.height / 2
+        );
+
+        if (this.image && this.image.complete) {
+            this.c.imageSmoothingEnabled = false;
+            this.c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+        }
+        this.c.restore()
+
+    }
+    update(): void {
+        const currentTime = Date.now()
+        const elapsedTime = currentTime - this.stateTimer;
+        if(this.playerRef){
+            const dx = this.playerRef.position.x - this.position.x;
+            const dy = this.playerRef.position.y - this.position.y;
+            this.rotation = Math.atan2(dy, dx) - Math.PI / 2;
+        }
+
+        if (this.state === 'hovering') {
+            this.velocity.x = Math.random() * Math.sin(currentTime * 0.001) * this.hoverSpeed;
+            this.velocity.y = Math.random() * Math.cos(currentTime * 0.001) * this.hoverSpeed;
+
+            if (elapsedTime >= this.hoverDuration){
+                this.state = 'attacking';
+                this.stateTimer = currentTime;
+                this.shooting = true;
+            }
+        } else if (this.state === 'attacking') {
+            this.velocity.x = 0;
+            this.velocity.y = 0;
+            if (elapsedTime >= this.attackDuration) {
+                this.state = 'hovering';
+                this.stateTimer = currentTime;
+                this.shooting = false;
+            }
+        }
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+        if (this.position.x < 0) {
+            this.position.x = 0;
+        } else if (this.position.x > 1024) {
+            this.position.x = 1024;
+        }
+
+        if (this.position.y < 0)  {
+            this.position.y = 0;
+        } else if (this.position.y > 576) {
+            this.position.y = 576
+        }
+
+        this.draw()
+
+    }
+
 }

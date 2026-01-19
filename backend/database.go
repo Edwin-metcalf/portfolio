@@ -60,3 +60,8 @@ func addScore(db *sql.DB, name string, score int) error {
 
 	return err
 }
+
+func deleteLeaderboard(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM leaderboard")
+	return err
+}

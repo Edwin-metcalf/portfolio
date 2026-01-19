@@ -14,7 +14,10 @@
         siHeroku,
         siRubyonrails,
         siGodotengine,
-        siSvelte
+        siSvelte,
+        siPytorch,
+        siSpacy,
+        siScikitlearn
     } from 'simple-icons';
     const skills = [
     // Languages
@@ -34,7 +37,11 @@
     { icon: siHeroku, name: 'Heroku', color: '#430098' },
     { icon: siRubyonrails, name: 'Rails', color: '#CC0000' },
     { icon: siGodotengine, name: 'Godot', color: '#478CBF' },
-    { icon: siSvelte, name: 'Svelte', color: '#FF3E00'}
+    { icon: siSvelte, name: 'Svelte', color: '#FF3E00'},
+    { icon: siPytorch, name: 'PyTorch', color: ' #EE4C2C'},
+    { icon: siSpacy, name: 'SpaCy', color: '#09A3D5'},
+    { icon: siScikitlearn, name: 'Scitkit-Learn', color: '#F7931E'}
+
 ];
 
 </script>
