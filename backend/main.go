@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	//"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -22,19 +23,24 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 
 		origin := r.Header.Get("Origin")
-		for _, allowed := range allowedOrigins {
-			if origin == allowed {
+		allowed := false
+		for _, originAllowed := range allowedOrigins {
+			if origin == originAllowed {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				allowed = true
 				break
 			}
 		}
-		if origin == "" || w.Header().Get("Access-Control-Allow-Origin") == "" {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
 
+		if !allowed && (strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1")) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			allowed = true
 		}
 
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if allowed {
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
