@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -16,7 +17,15 @@ func initDB() (*sql.DB, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 
 	if databaseURL == "" {
+		log.Println("WARNING: DATABASE_URL not set, using local fallback")
 		databaseURL = "postgres://localhost/space_invaders?sslmode=disable"
+	} else {
+		log.Println("DATABASE_URL found, connecting to Postgres...")
+
+	}
+	//possible fix for heroku postgres issues
+	if strings.HasPrefix(databaseURL, "postgres://") {
+		databaseURL = strings.Replace(databaseURL, "postgres://", "postgresql://", 1)
 	}
 	DB, err = sql.Open("postgres", databaseURL)
 	if err != nil {
@@ -47,8 +56,9 @@ func getTopScores(db *sql.DB, limit int) ([]SpaceInvadersEntry, error) {
 		limit = 20
 	}
 	var entries []SpaceInvadersEntry
-	row, err := db.Query("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT ?", limit)
+	row, err := db.Query("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT $1", limit)
 	if err != nil {
+		log.Printf("ERROR in getTopScores query: %v", err)
 		return nil, err
 	}
 	defer row.Close()
@@ -68,7 +78,7 @@ func getTopScores(db *sql.DB, limit int) ([]SpaceInvadersEntry, error) {
 }
 
 func addScore(db *sql.DB, name string, score int) error {
-	_, err := db.Exec("INSERT INTO leaderboard (name, score) VALUES(?,?)", name, score)
+	_, err := db.Exec("INSERT INTO leaderboard (name, score) VALUES($1,$2)", name, score)
 
 	return err
 }
