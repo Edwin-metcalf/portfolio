@@ -3,22 +3,34 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
 func initDB() (*sql.DB, error) {
 	var err error
-	DB, err = sql.Open("sqlite3", "./space-invaders.db")
+
+	databaseURL := os.Getenv("DATABASE_URL")
+
+	if databaseURL == "" {
+		databaseURL = "postgres://localhost/space_invaders?sslmode=disable"
+	}
+	DB, err = sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	err = DB.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	sqlStmt := `
 	CREATE TABLE IF NOT EXISTS leaderboard (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL, 
 	score INTEGER NOT NULL
 	);`
