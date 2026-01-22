@@ -171,7 +171,6 @@
         visibility: hidden;
         transition: all 0.3s ease;
         pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
     }
 
     .course-tooltip::after {

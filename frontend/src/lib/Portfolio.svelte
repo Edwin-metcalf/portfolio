@@ -26,7 +26,7 @@
             title: "Secure File Sharing Software",
             description: "End to end encypted file sharing software using: ",
             icon: Lock,
-            tools: ["GoLang"],
+            tools: ["Go"],
             longDescription: "Built an end to end encypted secure file sharing Software in Go. Leveraged AES-CTR, HashKDF, HMACs, RSA signatures, and UUID's to ensure Integrity, Confidentiality and Authenticity. Users are able to share and revoke access to files ",
             highlights: ["Employed Cyptographic schemes to securely store, share and send files","used both public key encyption and symetric key encyption"]
         },
@@ -35,9 +35,9 @@
             title: "This Website!",
             description: "My portfolio website",
             icon: UserPlus,
-            tools: ["Svelte", "HTML", "CSS", "TS","Heroku"],
+            tools: ["Svelte", "HTML", "CSS", "TS","Heroku","Go", "SQL"],
             longDescription: "Used Svelte, HTML, CSS, and Type Script. It is all hosted using Heroku",
-            highlights: ["created an informative and good looking website "]
+            highlights: ["created an informative and good looking website", "Built my version of space invaders and used Go and SQL to make a global leaderboard"]
         },
         {
             id: 4,
@@ -116,7 +116,7 @@
                             <p class="project-description">{project.description}</p>
                             <div class="tech-stack">
                                 {#each project.tools as tool}
-                                    {#if tool == "Java" || tool == "Ruby" || tool == "GoLang" || tool == "TS" || tool == "HTML" || tool == "CSS"}
+                                    {#if tool == "Java" || tool == "Ruby" || tool == "GoLang" || tool == "TS" || tool == "HTML" || tool == "CSS" || tool == "Go"}
                                         <span class="tech-button"> <Code size={15}></Code> {tool}</span>
                                     {:else if tool == "SQL"}
                                        <span class="tech-button"> <Database size={15}></Database> {tool}</span>
@@ -231,7 +231,7 @@
     .project-card {
         position: relative;
         width: 100%;
-        max-width: 250px;
+        max-width: 275px;
         min-height: 200px;
         cursor: pointer;
         perspective: 1000px;

@@ -59,15 +59,10 @@
 
 <style>
     .main-page {
-        background: linear-gradient(-45deg, #0d1117, #161b22, #21262d, #00d4aa);
+        background:#21262d;
         background-size: 400% 400%;
         animation: gradient 30s linear infinite;
         min-height: 100vh;
-    }
-    @keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
     }
     .name-header {
         text-align: center;

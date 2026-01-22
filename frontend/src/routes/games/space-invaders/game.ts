@@ -55,6 +55,7 @@ export class SpaceInvaders {
 
     private currentLevel: number = 0;
     private isSpawning: boolean = false;
+    private spawnTimeoutId: any;
 
 
     public static playerImage: HTMLImageElement;
@@ -257,10 +258,6 @@ export class SpaceInvaders {
                 this.enemies.push(new Enemy(this.c, {x: startX + col * enemySpacing, y: startY + row * enemySpacing}));
             }
         }
-        //testing
-        //for (let i = 0; i < 5; i++){
-          //  setTimeout(() => this.onMessage('INCOMING HOSTILES DETECTED'), 1500);
-        //}
 
     }
     private spawnHunters(spawnRate: number = 1): void {
@@ -273,7 +270,7 @@ export class SpaceInvaders {
         for (let count = 0; count < total; count++){
             let xPosition = Math.random() * spawnBoxWidth;
             this.enemies.push(new HunterEnemy(this.c, {x: xPosition, y: 0}, this.player))
-            console.log('hunter spaned at:' , xPosition)
+            //console.log('hunter spaned at:' , xPosition)
         }
     }
 
@@ -494,7 +491,7 @@ export class SpaceInvaders {
         }
 
         //enemy spawing tying to make a game play loop and its fucking me 
-        if (this.score >= 3000 && this.isSpawning == false) {
+        if (this.score >= 3000 && !this.isSpawning) {
             this.isSpawning = true;
             if (this.currentLevel == 0){
                 this.onMessage("well maybe not the classic, try WASD and moving the mouse");
@@ -508,13 +505,17 @@ export class SpaceInvaders {
                 setTimeout(() => this.onMessage("See you at the top of the leaderboard"), 3000);
                 this.currentLevel = 2;
             }
-
-            setTimeout(() => this.spawnEnemies(this.spawnRate), this.levelSpawntimes.get(this.currentLevel));
-            console.log("spawn rate: ", this.spawnRate)
-            console.log("spawn time: ", this.levelSpawntimes.get(this.currentLevel))
-            //setTimeout(() => this.spawnHunters(), spawnInterval);
-            setTimeout(() => this.isSpawning = false, this.levelSpawntimes.get(this.currentLevel));// come back this need to be a hash map
+            this.spawnLoop();
         }
+    }
+    spawnLoop() {
+        this.spawnEnemies(this.spawnRate)
+
+        this.spawnTimeoutId = setTimeout(() =>{
+            this.spawnLoop();
+            console.log("spawing out these johns")
+        }, this.levelSpawntimes.get(this.currentLevel));
+
     }
     start(): void {
         this.game.over = false;
@@ -527,10 +528,14 @@ export class SpaceInvaders {
     }
     stop(): void {
         this.game.over = true;
-        this.spawnRate = 1
-        this.currentLevel = 0
+
 
         setTimeout(() => {
+            this.spawnRate = 1;
+            this.currentLevel = 0;
+            clearTimeout(this.spawnTimeoutId);
+            this.isSpawning = false;
+
         
             if (this.animationId != null) {
                 cancelAnimationFrame(this.animationId);
