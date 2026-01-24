@@ -25,9 +25,9 @@ type winLose struct {
 
 // for the return
 type winLossRate struct {
-	wins    int
-	losses  int
-	winRate float32
+	Wins    int     `json:"wins"`
+	Losses  int     `json:"lose"`
+	WinRate float32 `json:"winRate"`
 }
 
 func init() {
@@ -58,9 +58,9 @@ func getWinLose(playerID string) (*winLossRate, error) {
 	fmt.Printf("Wins: %d, Losses: %d\n", winLosePull.Win, winLosePull.Lose)
 	winPercentage := winLosePull.Win / (winLosePull.Win + winLosePull.Lose)
 	winLossPercentage := winLossRate{
-		wins:    winLosePull.Win,
-		losses:  winLosePull.Lose,
-		winRate: float32(winPercentage),
+		Wins:    winLosePull.Win,
+		Losses:  winLosePull.Lose,
+		WinRate: float32(winPercentage),
 	}
 	/* there  must be a better way to initalize and declare a struct like this
 	winLossPercentage {

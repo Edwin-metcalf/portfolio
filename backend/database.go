@@ -13,21 +13,27 @@ var DB *sql.DB
 
 func initDB() (*sql.DB, error) {
 	var err error
+	var driver, dsn string
 
 	databaseURL := os.Getenv("DATABASE_URL")
 
 	if databaseURL == "" {
-		log.Println("WARNING: DATABASE_URL not set, using local fallback")
-		databaseURL = "postgres://localhost/space_invaders?sslmode=disable"
+		log.Println("using local fallback which is a sqlite")
+		driver = "sqlite3"
+		dsn = "./local.db"
+		//databaseURL = "postgres://localhost/space_invaders?sslmode=disable"
 	} else {
 		log.Println("DATABASE_URL found, connecting to Postgres...")
+		driver = "postgres"
+		dsn = databaseURL
+
+		//possible fix for heroku postgres issues
+		if strings.HasPrefix(dsn, "postgres://") {
+			dsn = strings.Replace(dsn, "postgres://", "postgresql://", 1)
+		}
 
 	}
-	//possible fix for heroku postgres issues
-	if strings.HasPrefix(databaseURL, "postgres://") {
-		databaseURL = strings.Replace(databaseURL, "postgres://", "postgresql://", 1)
-	}
-	DB, err = sql.Open("postgres", databaseURL)
+	DB, err = sql.Open(driver, dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,13 +42,22 @@ func initDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	sqlStmt := `
-	CREATE TABLE IF NOT EXISTS leaderboard (
-	id SERIAL PRIMARY KEY,
-	name TEXT NOT NULL, 
-	score INTEGER NOT NULL
-	);`
+	var sqlStmt string
+	if driver == "postgres" {
+		sqlStmt = `
+		CREATE TABLE IF NOT EXISTS leaderboard (
+		id SERIAL PRIMARY KEY,
+		name TEXT NOT NULL, 
+		score INTEGER NOT NULL
+		);`
+	} else {
+		sqlStmt = `
+		CREATE TABLE IF NOT EXISTS leaderboard (
+		id SERIAL PRIMARY KEY,
+		name TEXT NOT NULL, 
+		score INTEGER NOT NULL
+		);`
+	}
 
 	_, err = DB.Exec(sqlStmt)
 	if err != nil {
