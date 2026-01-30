@@ -53,6 +53,7 @@ func main() {
 		log.Fatal("failed to intialize database: ", err)
 	}
 	defer DB.Close()
+	getRecentGames("287883142")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", healthHandler)
