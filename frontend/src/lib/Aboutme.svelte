@@ -36,9 +36,21 @@
         {#if visable}
             <h1 class="about-title" in:fly={{ y: -50, duration: 1000, delay: 100, easing: quintOut}}>About Me</h1>
             <p class="about-text">
-                Welcome to my Website my name is Edwin, I am an aspiring full stack software developer. I have a strong love of problem solving and video games which continually sends me down rabbit holes of learning new frameworks or languages. Not only do I enjoy programming, I love history and double majored at Vassar College. Through my curiosity I have spent time abroad studying in London and traveling Europe along with taking CS classes at UC Berkeley to not only expand my education but also for new experiences.
+                Hi, I'm Edwin. I'm an entry-level full-stack software developer with a strong focus on building secure, well-designed systems. I enjoy problem solving, video games and love learning new frameworks or languages by building projects.
             </p>
-            <Courses></Courses>
+            <p class="about-text">
+                I have experience developing RESTful APIs and informative, user-friendly front ends, with an emphasis on security and clean system design. I also have hands-on experience with AI models and machine learning through natural language processing.             
+            </p>
+
+            <p class="about-text">
+                Not only do I enjoy programming, I love history and am a double major at Vassar College. Through my curiosity I have spent time abroad studying in London and traveling Europe along with taking classes at UC Berkeley to not only expand my education but also for new experiences. These experiences have strengthened my adaptability, communication skills, and ability with all types of people. 
+            </p>
+            <p class="about-text">
+                In addition to my academic and technical work, I am a varsity lacrosse player which has taught me leadership skills and reinforced the importance of teamwork, discipline, and working toward shared goals.
+            </p>
+            <div style="display: none;">
+                <Courses></Courses>
+            </div>
         {/if}
     </div>
 </div>
@@ -74,6 +86,9 @@
         line-height: 1.8;
         color: #c9d1d9;
         margin: 0;
+        margin-bottom: 0.5rem;
+        text-align: left;
+        text-indent: 8%;
     }
 
     @media (max-width: 768px) {

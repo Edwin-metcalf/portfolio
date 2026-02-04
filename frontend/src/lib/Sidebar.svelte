@@ -8,8 +8,8 @@
 
     const sections = [
         {id: 'about-me', icon: User, label: 'About'},
-        {id: 'skills', icon: Code, label: 'Skills'},
         {id: 'portfolio', icon: Briefcase, label: 'Portfolio'},
+        {id: 'skills', icon: Code, label: 'Skills'},
         {id: 'contact', icon: Mail, label: 'Contact'}
     ];
 

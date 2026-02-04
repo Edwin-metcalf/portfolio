@@ -1,14 +1,15 @@
 <script lang="ts">
-    import { FileCode, BrainCircuit, Shield, Cpu, Code, AppWindow, SquareTerminal, FileText, Search} from 'lucide-svelte'
+    import { FileCode, BrainCircuit, Shield, Cpu, Code, AppWindow, SquareTerminal, FileText, Search, Network} from 'lucide-svelte'
 
     const vassarCourses = [
         {name: "Data Structures", icon: FileCode, courseNum: "CMPU 102"},
-        {name: "Foundations of Computer science", icon: SquareTerminal, courseNum: "CMPU 145"},
+        {name: "Foundations of Computer Science", icon: SquareTerminal, courseNum: "CMPU 145"},
         {name: "Analysis of Algorithms", icon: BrainCircuit, courseNum: "CMPU 241"},
         {name: "Theory of Computation", icon: Code, courseNum: "CMPU 240"},
         {name: "Natural Language Processing", icon: FileText, courseNum: "CMPU 366"},
         {name: "Problem Solving and abstraction", icon: Search, courseNum: "CMPU 101"},
-        {name: "Compilers", icon: Cpu, courseNum: "CMPU 331"}
+        {name: "Compilers", icon: Cpu, courseNum: "CMPU 331"},
+        {name: "Computer Networks", icon: Network, courseNum: "CMPU 375"}
     ];
 
     const berkeleyCourses = [
@@ -29,7 +30,7 @@
                 {#each vassarCourses as course}
                 <div class="course-item">
                     <div class="course-icon">
-                        <svelte:component this={course.icon} size={20}/>
+                        <svelte:component this={course.icon} size={15}/>
                     </div>
                     <span class="course-name">{course.name}</span>
                     <span class="course-tooltip">{course.courseNum}</span>
@@ -44,7 +45,7 @@
                 {#each berkeleyCourses as course}
                 <div class="course-item">
                     <div class="course-icon">
-                        <svelte:component this={course.icon} size={20}/>
+                        <svelte:component this={course.icon} size={15}/>
                     </div>
                     <span class="course-name">{course.name}</span>
                     <span class="course-tooltip">{course.courseNum}</span>
@@ -62,21 +63,26 @@
     .coursework-subsection {
         margin-top: 60px;
         padding-top: 40px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-
     }
 
     .coursework-title {
-        font-size: 1.8rem;
+        font-size: 3rem;
         font-weight: 600;
         color: #f0f6fc;
-        margin-bottom: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
     }
-
+        
+    .coursework-title::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #00d4aa;
+        margin: 20px auto;
+        border-radius: 2px;
+    }
     .schools-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -90,7 +96,7 @@
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 15px;
         max-width: 700px;
-        margin: 0 auto;
+        margin: 5 auto;
     }
 
     .course-grid-berkeley {
@@ -116,28 +122,23 @@
     }
 
     .course-item {
-        display: flex;
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
         align-items: center;
-        gap: 12px;
-        background: rgba(33, 38, 45, 0.4);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        padding: 12px 16px;
-        transition: all 0.3s ease;
-    }
-
-    .course-item:hover {
-        border-color: rgba(0, 212, 170, 0.3);
-        background: rgba(33, 38, 45, 0.6);
-        transform: translateX(5px);
+        gap: 0px;
+        background: none;
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 12px;
+        padding: 5px 0;
     }
 
     .course-icon {
         color: #00d4aa;
         display: flex;
         align-items: center;
+        opacity: 0.8;
     }
 
     .course-name {
@@ -156,37 +157,9 @@
     }
 
     .course-tooltip {
-        position: absolute;
-        top: -35px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 212, 170, 0.95);
-        color: #0d1117;
-        padding: 6px 12px;
-        border-radius: 6px;
+        color: rgba(255,255,255,0.5);
         font-size: 0.85rem;
-        font-weight: 600;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        pointer-events: none;
-    }
-
-    .course-tooltip::after {
-        content: '';
-        position: absolute;
-        bottom: -4px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 5px solid rgba(0, 212, 170, 0.95);
-    }
-    .course-item:hover .course-tooltip {
-        opacity: 1;
-        visibility: visible;
+        font-family: monospace;
+        display: none;
     }
 </style>

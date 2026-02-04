@@ -2,6 +2,7 @@
 	import { fly, scale } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
     import{ onMount } from 'svelte';
+    import { ArrowDown } from 'lucide-svelte';
 
     import Header from '../lib/Header.svelte';
     import Aboutme from '../lib/Aboutme.svelte';
@@ -9,6 +10,9 @@
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
     import Sidebar from '$lib/Sidebar.svelte';
+    import Courses from '$lib/Courses.svelte';
+
+    
 
     let mounted: boolean = false;
 
@@ -34,8 +38,12 @@
                         <a href="/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
                             Resume
                         </a>
-                        <a href="/games" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                        <a style="display: none;" href="/games" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
                             Games and Projects
+                        </a>
+                        <a href="#about-me" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                            scroll down for more!
+                            <ArrowDown size={15}/>
                         </a>
                     </div>
                     <!--<p class="name-subtitle">Check out what I am working on</p>-->
@@ -51,8 +59,9 @@
         </div>
     </div>
     <Aboutme></Aboutme>
-    <Languages></Languages>
     <Portfolio></Portfolio>
+    <Courses></Courses>
+    <Languages></Languages>
     <Contact></Contact>
 
 </div>
@@ -107,8 +116,8 @@
         margin-right: 50px;
     }
     .profile-pic {
-        width: 60vh;
-        height: 60vh;
+        width: 50vh;
+        height: 50vh;
         border-radius: 50%;
         border: 5px solid #0d1117;
         object-fit: cover;

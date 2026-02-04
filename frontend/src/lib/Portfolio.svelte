@@ -36,7 +36,7 @@
             description: "My portfolio website",
             icon: UserPlus,
             tools: ["Svelte", "HTML", "CSS", "TS","Heroku","Go", "SQL"],
-            longDescription: "Used Svelte, HTML, CSS, and Type Script. It is all hosted using Heroku",
+            longDescription: "Used Svelte, HTML, CSS, and Type Script on the front end and Go along with Postgres on the backend. It is hosted using Heroku",
             highlights: ["created an informative and good looking website", "Built my version of space invaders and used Go and SQL to make a global leaderboard"]
         },
         {
@@ -359,11 +359,6 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-    }
-    
-    .tech-button:hover {
-        background: rgba(0, 212, 170, 0.25);
-        transform: scale(1.05);
     }
 
     .modal-overlay {

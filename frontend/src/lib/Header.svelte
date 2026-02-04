@@ -18,9 +18,10 @@
         </a>
         <div class="header-right">
             <a href="#about-me" in:fly={{ y: -50, duration: 800, delay: 200, easing: quintOut}}>About me</a>
-            <a href="#skills" in:fly={{ y: -50, duration: 800, delay: 400, easing: quintOut}}>Skills</a>
-            <a href="#portfolio" in:fly={{ y: -50, duration: 800, delay: 600, easing: quintOut}}>Portfolio</a>
+            <a href="#portfolio" in:fly={{ y: -50, duration: 800, delay: 400, easing: quintOut}}>Portfolio</a>
+            <a href="#skills" in:fly={{ y: -50, duration: 800, delay: 600, easing: quintOut}}>Skills</a>
             <a href="#contact" in:fly={{ y: -50, duration: 800, delay: 800, easing: quintOut}}>Contact</a>
+            <a href="/games" in:fly={{ y: -50, duration: 800, delay: 1000, easing: quintOut}}>Current Projects</a>
         </div>
     {/if}
 
@@ -40,7 +41,7 @@
         text-align: center;
         padding: 12px;
         text-decoration: none;
-        font-size: 18px;
+        font-size: 30px;
         line-height: 25px;
         border-radius: 4px;
     }
@@ -53,7 +54,7 @@
         float: right;
     }
     .logo {
-        width: 50px;
+        width: 65px;
         height: auto;
         display: block;
         transition: filter 0.3s ease;
