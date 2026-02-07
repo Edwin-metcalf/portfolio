@@ -110,18 +110,41 @@ func healthHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // dota stuff handlers
-func dotaWinLoseHandler(w http.ResponseWriter, r *http.Request) {
+type DotaPlayerStats struct {
+	Overall *winLossRate       `json:"overall"`
+	Recent  *recentGameCleaned `json:"recent"`
+}
+
+func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not aloud", http.StatusMethodNotAllowed)
 		return
 	}
-	winLossPercentage, err := getWinLose("287883142")
+	playerID := "287883142"
+	overall, err := getWinLose(playerID)
 
 	if err != nil {
 		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(winLossPercentage)
+
+	recentGames, err := getRecentGames(playerID)
+	if err != nil {
+		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
+		return
+	}
+
+	recent, err := processRawRecentGames(*recentGames)
+
+	if err != nil {
+		http.Error(w, "error processing the recent matches data", http.StatusInternalServerError)
+		return
+	}
+	stats := DotaPlayerStats{
+		Overall: overall,
+		Recent:  recent,
+	}
+	json.NewEncoder(w).Encode(stats)
 }

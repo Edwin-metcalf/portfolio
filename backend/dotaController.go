@@ -91,7 +91,7 @@ type recentGame struct {
 	HeroVariant  int    `json:"hero_variant"`
 }
 
-func getRecentGames(playerID string) ([]recentGame, error) {
+func getRecentGames(playerID string) (*[]recentGame, error) {
 	if APIKEY == "" {
 		log.Println("OPENDOTA API KEY NOT SET")
 	}
@@ -115,14 +115,56 @@ func getRecentGames(playerID string) ([]recentGame, error) {
 
 	fmt.Printf("Number of games fetched: %d\n", len(recentGameList))
 	fmt.Printf("First game: %+v\n", recentGameList[6])
-	return recentGameList, err
+	return &recentGameList, err
 }
 
-/*func processRawRecentGames(rawData []recentGame) { //needs to return struct we want to send to the front end
-	processedData := make([])
-	I need to make a decision on wether this should just return wins loses and winrate or should it be more indepth
-	lowkey maybe all the above then let the front end deal with it
-} */
+type recentGameCleaned struct {
+	Wins    int       `json:"wins"`
+	Loses   int       `json:"loses"`
+	WinRate float32   `json:"win_rate"`
+	AvgKDA  []float32 `json:"avg_KDA"`
+	// could do some cool stuff like getting kills per game and stuff
+
+}
+
+// should maybe call the recent games and the process togehter so the handler only calls one
+func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { //needs to return struct we want to send to the front end
+	var cleanedGames recentGameCleaned
+	positionMap := make(map[int]int)
+	var totalKda [3]int
+	numberOfGames := len(rawData)
+
+	for _, val := range rawData {
+		var team string
+		//process the team and the position
+		if val.PlayerSlot > 6 {
+			team = "radiant"
+			positionMap[val.PlayerSlot] += 1
+		} else {
+			team = "dire"
+			positionMap[val.PlayerSlot-128] += 1 //or whatever the correct bit number is
+		}
+
+		//process if the game was a win
+		if team == "radiant" && val.RadiantWin || team == "dire" && !val.RadiantWin {
+			cleanedGames.Wins += 1
+		} else {
+			cleanedGames.Loses += 1
+		}
+		//get the total KDA
+		totalKda[0] += val.Kills
+		totalKda[1] += val.Deaths
+		totalKda[2] += val.Assists
+
+	}
+	//do some averaging for better return struct
+	cleanedGames.AvgKDA[0] = float32(totalKda[0] / numberOfGames)
+	cleanedGames.AvgKDA[1] = float32(totalKda[1] / numberOfGames)
+	cleanedGames.AvgKDA[2] = float32(totalKda[2] / numberOfGames)
+
+	cleanedGames.WinRate = float32(cleanedGames.Wins) / float32(cleanedGames.Wins+cleanedGames.Loses)
+	return &cleanedGames, nil
+}
 
 func testing() {
 	apikey := APIKEY
