@@ -1,12 +1,16 @@
 import Chart, { type ChartConfiguration } from 'chart.js/auto'
-
-export interface WinLoseData {
+//need to change this to take in the correct now overall and recent data
+export interface DotaStatsReturn {
     wins: number;
-    lose: number;
-    winRate: number
+    losses: number;
+    winRate: number;
+    recentWins: number;
+    recentLosses: number;
+    recentWinRate: number;
+    avgKDA: number[];
 }
 
-export function createWinLoseChart(canvas: HTMLCanvasElement, data: WinLoseData): Chart {
+export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, losses: number): Chart {
     const config: ChartConfiguration<'doughnut'> = {   
         type: 'doughnut',
         data: {
@@ -15,10 +19,10 @@ export function createWinLoseChart(canvas: HTMLCanvasElement, data: WinLoseData)
             'Loses'
             ],
         datasets: [{
-            data: [data.wins, data.lose],
+            data: [wins, losses],
             backgroundColor: [
-                'rgb(24,255,44)',
-                'rgb(255, 15, 60)'
+                'rgb(34, 203, 0)',
+                'rgb(195, 0, 0)'
             ],
             hoverOffset: 5
             }]

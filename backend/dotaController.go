@@ -27,7 +27,7 @@ type winLose struct {
 // for the return
 type winLossRate struct {
 	Wins    int     `json:"wins"`
-	Losses  int     `json:"lose"`
+	Losses  int     `json:"losses"`
 	WinRate float32 `json:"winRate"`
 }
 
@@ -73,22 +73,22 @@ func getWinLose(playerID string) (*winLossRate, error) {
 
 // grab recent games and structs for it
 type recentGame struct {
-	MatchID      int    `json:"match_id"`
-	PlayerSlot   int    `json:"player_slot"`
-	RadiantWin   bool   `json:"radiant_win"`
-	Duration     int    `json:"duration"`
-	GameMode     int    `json:"game_mode"`
-	LobbyType    int    `json:"lobby_type"`
-	HeroID       int    `json:"hero_id"`
-	StartTime    int    `json:"start_time"`
-	Version      string `json:"version"`
-	Kills        int    `json:"kills"`
-	Deaths       int    `json:"deaths"`
-	Assists      int    `json:"assists"`
-	AverageRank  int    `json:"average_rank"`
-	LeaverStatus int    `json:"leaver_status"`
-	PartySize    int    `json:"party_size"`
-	HeroVariant  int    `json:"hero_variant"`
+	MatchID      int  `json:"match_id"`
+	PlayerSlot   int  `json:"player_slot"`
+	RadiantWin   bool `json:"radiant_win"`
+	Duration     int  `json:"duration"`
+	GameMode     int  `json:"game_mode"`
+	LobbyType    int  `json:"lobby_type"`
+	HeroID       int  `json:"hero_id"`
+	StartTime    int  `json:"start_time"`
+	Version      int  `json:"version"`
+	Kills        int  `json:"kills"`
+	Deaths       int  `json:"deaths"`
+	Assists      int  `json:"assists"`
+	AverageRank  int  `json:"average_rank"`
+	LeaverStatus int  `json:"leaver_status"`
+	PartySize    int  `json:"party_size"`
+	HeroVariant  int  `json:"hero_variant"`
 }
 
 func getRecentGames(playerID string) (*[]recentGame, error) {
@@ -96,7 +96,7 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 		log.Println("OPENDOTA API KEY NOT SET")
 	}
 	numberOfGames := 7
-	url := fmt.Sprintf("https://api.opendota.com/api/players/%s/matches?api_key=%s&limit=%s", playerID, APIKEY, numberOfGames)
+	url := fmt.Sprintf("https://api.opendota.com/api/players/%s/matches?api_key=%s&limit=%d", playerID, APIKEY, numberOfGames)
 
 	var recentGameList []recentGame
 
@@ -120,9 +120,9 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 
 type recentGameCleaned struct {
 	Wins    int       `json:"wins"`
-	Loses   int       `json:"loses"`
-	WinRate float32   `json:"win_rate"`
-	AvgKDA  []float32 `json:"avg_KDA"`
+	Losses  int       `json:"losses"`
+	WinRate float32   `json:"winRate"`
+	AvgKDA  []float32 `json:"avgKDA"`
 	// could do some cool stuff like getting kills per game and stuff
 
 }
@@ -130,6 +130,7 @@ type recentGameCleaned struct {
 // should maybe call the recent games and the process togehter so the handler only calls one
 func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { //needs to return struct we want to send to the front end
 	var cleanedGames recentGameCleaned
+	cleanedGames.AvgKDA = make([]float32, 3)
 	positionMap := make(map[int]int)
 	var totalKda [3]int
 	numberOfGames := len(rawData)
@@ -149,7 +150,7 @@ func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { /
 		if team == "radiant" && val.RadiantWin || team == "dire" && !val.RadiantWin {
 			cleanedGames.Wins += 1
 		} else {
-			cleanedGames.Loses += 1
+			cleanedGames.Losses += 1
 		}
 		//get the total KDA
 		totalKda[0] += val.Kills
@@ -162,8 +163,47 @@ func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { /
 	cleanedGames.AvgKDA[1] = float32(totalKda[1] / numberOfGames)
 	cleanedGames.AvgKDA[2] = float32(totalKda[2] / numberOfGames)
 
-	cleanedGames.WinRate = float32(cleanedGames.Wins) / float32(cleanedGames.Wins+cleanedGames.Loses)
+	cleanedGames.WinRate = float32(cleanedGames.Wins) / float32(cleanedGames.Wins+cleanedGames.Losses)
 	return &cleanedGames, nil
+}
+
+type dotaStatsReturn struct {
+	Wins          int       `json:"wins"`
+	Losses        int       `json:"losses"`
+	WinRate       float32   `json:"winRate"`
+	RecentWins    int       `json:"recentWins"`
+	RecentLosses  int       `json:"recentLosses"`
+	RecentWinRate float32   `json:"recentWinRate"`
+	AvgKDA        []float32 `json:"avgKDA"`
+}
+
+func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
+	winLoss, err := getWinLose(playerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get win/loss stats: %w", err)
+	}
+
+	recentGames, err := getRecentGames(playerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent games: %w", err)
+	}
+
+	recentStats, err := processRawRecentGames(*recentGames)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process recent games: %w", err)
+	}
+
+	stats := &dotaStatsReturn{
+		Wins:          winLoss.Wins,
+		Losses:        winLoss.Losses,
+		WinRate:       winLoss.WinRate,
+		RecentWins:    recentStats.Wins,
+		RecentLosses:  recentStats.Losses,
+		RecentWinRate: recentStats.WinRate,
+		AvgKDA:        recentStats.AvgKDA,
+	}
+
+	return stats, nil
 }
 
 func testing() {

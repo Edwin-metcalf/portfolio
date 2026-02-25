@@ -123,28 +123,13 @@ func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	playerID := "287883142"
-	overall, err := getWinLose(playerID)
+	stats, err := returnGamesSats(playerID)
 
 	if err != nil {
-		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
+		log.Printf("Error fetching dota stats: %v", err)
+		http.Error(w, "Error fetching player stats", http.StatusInternalServerError)
 		return
 	}
 
-	recentGames, err := getRecentGames(playerID)
-	if err != nil {
-		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
-		return
-	}
-
-	recent, err := processRawRecentGames(*recentGames)
-
-	if err != nil {
-		http.Error(w, "error processing the recent matches data", http.StatusInternalServerError)
-		return
-	}
-	stats := DotaPlayerStats{
-		Overall: overall,
-		Recent:  recent,
-	}
 	json.NewEncoder(w).Encode(stats)
 }
