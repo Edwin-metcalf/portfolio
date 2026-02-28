@@ -118,6 +118,86 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 	return &recentGameList, err
 }
 
+// gonna need a struct for the return value of recent heros played
+// need to figure out how we want to send the data to the front end
+// prolly want nested maps tbh
+// ex nestedmap := make(map[string]map[string]int)
+type heroStats struct {
+	Wins    int `json:"wins"`
+	Losses  int `json:"losses"`
+	Games   int `json:"games"`
+	Kills   int `json:"kills"`
+	Deaths  int `json:"deaths"`
+	Assists int `json:"assists"`
+}
+
+func recentHerosPlayed(rawData []recentGame) (*map[string]heroStats, error) {
+	heroMap, err := getHeroes()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get heroes: %w", err)
+	}
+
+	heroMapStats := make(map[string]heroStats)
+
+	for _, game := range rawData {
+		var won bool
+		//Check if the game was won or not and update correctly
+		if game.PlayerSlot < 128 {
+			won = game.RadiantWin
+		} else {
+			won = !game.RadiantWin
+		}
+		heroName := heroMap[game.HeroID]
+		stats := heroMapStats[heroName]
+		stats.Games += 1
+
+		if won {
+			stats.Wins += 1
+		} else {
+			stats.Losses += 1
+		}
+
+		//KDA
+		stats.Kills += game.Kills
+		stats.Deaths += game.Deaths
+		stats.Assists += game.Assists
+
+		heroMapStats[heroName] = stats
+	}
+	return &heroMapStats, nil
+}
+
+type Hero struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	LocalizedName string `json:"localized_name"`
+}
+
+func getHeroes() (map[int]string, error) {
+	url := "https://api.opendota.com/api/heroes"
+
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	var heroes []Hero
+
+	err = json.NewDecoder(response.Body).Decode(&heroes)
+	if err != nil {
+		return nil, err
+	}
+
+	heroMap := make(map[int]string)
+
+	for _, hero := range heroes {
+		heroMap[hero.ID] = hero.LocalizedName
+	}
+	return heroMap, nil
+}
+
 type recentGameCleaned struct {
 	Wins    int       `json:"wins"`
 	Losses  int       `json:"losses"`
@@ -168,13 +248,14 @@ func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { /
 }
 
 type dotaStatsReturn struct {
-	Wins          int       `json:"wins"`
-	Losses        int       `json:"losses"`
-	WinRate       float32   `json:"winRate"`
-	RecentWins    int       `json:"recentWins"`
-	RecentLosses  int       `json:"recentLosses"`
-	RecentWinRate float32   `json:"recentWinRate"`
-	AvgKDA        []float32 `json:"avgKDA"`
+	Wins            int                  `json:"wins"`
+	Losses          int                  `json:"losses"`
+	WinRate         float32              `json:"winRate"`
+	RecentWins      int                  `json:"recentWins"`
+	RecentLosses    int                  `json:"recentLosses"`
+	RecentWinRate   float32              `json:"recentWinRate"`
+	AvgKDA          []float32            `json:"avgKDA"`
+	RecentHeroStats map[string]heroStats `json:"recentHeroStats"`
 }
 
 func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
@@ -193,14 +274,20 @@ func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
 		return nil, fmt.Errorf("failed to process recent games: %w", err)
 	}
 
+	recentHeroStats, err := recentHerosPlayed(*recentGames)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process recent hero stats: %w", err)
+	}
+
 	stats := &dotaStatsReturn{
-		Wins:          winLoss.Wins,
-		Losses:        winLoss.Losses,
-		WinRate:       winLoss.WinRate,
-		RecentWins:    recentStats.Wins,
-		RecentLosses:  recentStats.Losses,
-		RecentWinRate: recentStats.WinRate,
-		AvgKDA:        recentStats.AvgKDA,
+		Wins:            winLoss.Wins,
+		Losses:          winLoss.Losses,
+		WinRate:         winLoss.WinRate,
+		RecentWins:      recentStats.Wins,
+		RecentLosses:    recentStats.Losses,
+		RecentWinRate:   recentStats.WinRate,
+		AvgKDA:          recentStats.AvgKDA,
+		RecentHeroStats: *recentHeroStats,
 	}
 
 	return stats, nil

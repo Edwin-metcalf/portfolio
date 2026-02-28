@@ -114,6 +114,16 @@
                 </div>
             </section>
         </div>
+        <div class="hero-section">
+            {#each Object.entries(winLoseData.recentHeroStats) as [heroName, heroStats]}
+                <div class="hero-card">
+                    <h2>{heroName}</h2>
+                    <p>Wins: {heroStats.wins}</p>
+                    <p>Losses: {heroStats.losses}</p>
+                </div>
+            {/each}
+        </div>
+        
     {/if}
 </div>
 
