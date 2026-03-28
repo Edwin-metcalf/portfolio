@@ -2,7 +2,7 @@
     import {onMount, tick} from 'svelte';
     import Chart, { type ChartConfiguration } from 'chart.js/auto'
 	import { fetchAPI } from '$lib/api';
-    import {createWinLoseChart, type DotaStatsReturn} from './stats'
+    import {createWinLoseChart, type DotaStatsReturn, type MatchupStats} from './stats'
 
 
 
@@ -14,6 +14,7 @@
     let loading: boolean = true;
     let data;
     let winLoseData: DotaStatsReturn;
+    let sortBy: 'winRate' | 'games' = 'winRate';
 
     async function getDotaWinLose(): Promise<DotaStatsReturn | null> {
         try {
@@ -34,6 +35,8 @@
             if (!data) return;
 
             winLoseData = data 
+            console.log('Matchup Stats:', winLoseData.matchupStats); // DEBUG
+            console.log('All data:', winLoseData); // DEBUG
             loading = false;
             await tick();
             
@@ -60,6 +63,33 @@
 
     function formatPercentage(decimal: number) {
         return "%"+ (decimal*100).toFixed(2);
+    }
+
+    function getSortedMatchups(): [string, MatchupStats][] {
+        if (!winLoseData?.matchupStats) return [];
+        
+        const matchups = Object.entries(winLoseData.matchupStats);
+
+        if (sortBy === 'winRate') {
+            return matchups.sort((a,b) => b[1].winRate - a[1].winRate);
+        } else {
+            const top_games_matchups = matchups.sort((a,b) => b[1].games - a[1].games).slice(0,10)
+            return top_games_matchups.sort((a,b) => b[1].winRate - a[1].winRate)
+
+        }
+    }
+    function getBestMatchups(): [string, MatchupStats][] {
+        return getSortedMatchups().slice(0,5);
+    }
+    function getWorstMatchups(): [string, MatchupStats][] {
+        return getSortedMatchups().slice(-5).reverse();
+    }
+
+    function getMatchupColor(winRate: number): string {
+        if (winRate >= 0.6) return '#22CB00';
+        if (winRate >= 0.5) return '#429E9D';
+        if (winRate >= 0.4) return '#FFA500';
+        return '#C30000';
     }
 
 </script>
@@ -114,14 +144,81 @@
                 </div>
             </section>
         </div>
+        <!--recent hero sections played-->
         <div class="hero-section">
-            {#each Object.entries(winLoseData.recentHeroStats) as [heroName, heroStats]}
-                <div class="hero-card">
-                    <h2>{heroName}</h2>
-                    <p>Wins: {heroStats.wins}</p>
-                    <p>Losses: {heroStats.losses}</p>
+            <h2 class="section-title">Recent Hero Stats</h2>
+            <div class="hero-cards-container">
+                {#each Object.entries(winLoseData.recentHeroStats) as [heroName, heroStats]}
+                    <div class="hero-card">
+                        <h2 class="hero-name">{heroName}</h2>
+                        <p>Wins: {heroStats.wins}</p>
+                        <p>Losses: {heroStats.losses}</p>
+                        <p>
+                            Average KDA: {heroStats.avgKDA[0]} / {heroStats.avgKDA[1]} / {heroStats.avgKDA[2]}
+                        </p>
+                    </div>
+                {/each}
+            </div>
+        </div>
+
+        <!-- matchup stats area -->
+
+        <div class="matchup-section">
+            <h2 class="section-title">Enemy Matchups</h2>
+
+            <div class="matchup-controls">
+                <button class="sort-btn" class:active={sortBy === 'winRate'} on:click={() => sortBy = 'winRate'}>
+                    Sort by Win Rate
+                </button>
+
+                <button class="sort-btn" class:active={sortBy === 'games'} on:click={() => sortBy = 'games'}>
+                    Sort by Games Played
+                </button>
+
+            </div>
+
+            <div class="matchup-grid">
+                <div class="matchup-subsection">
+                    <h3 class="subsection-title">Best Matchups</h3>
+
+                    <div class="matchup-list">
+                        {#each getBestMatchups() as [heroName, stats]}
+                            <div class="matchup-card" style="border-left: 4px solid {getMatchupColor(stats.winRate)};">
+                                <div class="matchup-hero-name">{heroName}</div>
+                                <div class="matchup-stats">
+                                    <span class="matchup-stat">{stats.wins}W - {stats.losses}L</span>
+                                    <span class="matchup-winrate" style="color: {getMatchupColor(stats.winRate)};">
+                                        {formatPercentage(stats.winRate)}
+                                    </span>
+                                </div>
+                                <div class="matchup-games">{stats.games} games</div>
+                            </div>
+                        {/each}
+                    </div>
                 </div>
-            {/each}
+
+                <div class="matchup-subsection">
+                    <h3 class="subsection-title">Worst Matchups</h3>
+
+                    <div class="matchup-list">
+                        {#each getWorstMatchups() as [heroName, stats]}
+                            <div class="matchup-card" style="border-left: 4px solid {getMatchupColor(stats.winRate)};">
+                                <div class="matchup-hero-name">{heroName}</div>
+                                <div class="matchup-stats">
+                                    <span class="matchup-stat">{stats.wins}W - {stats.losses}L</span>
+                                    <span class="matchup-winrate" style="color: {getMatchupColor(stats.winRate)};">
+                                        {formatPercentage(stats.winRate)}
+                                    </span>
+                                </div>
+                                <div class="matchup-games">{stats.games} games</div>
+                            </div>
+                        {/each}
+                    </div>
+
+
+                </div>
+
+            </div>
         </div>
         
     {/if}
@@ -155,7 +252,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
-        margin: 2rem 0;
+        margin: 4rem 0;
     }
     .chart-container {
         position: relative;
@@ -203,6 +300,205 @@
         font-size: 1.2rem;
         font-weight: bold;
         color: #fff;
+    }
+    .hero-section {
+        display: flex;
+        justify-content: center;
+        gap: .5rem;
+        margin-top: 4rem;
+        margin-bottom: 4rem;
+    }
+    .hero-card {
+        flex: 1 1 calc(25% - 1rem);
+        min-width: 180px;
+        max-width: 250px;
+        color: #fff;
+        background: rgba(66, 158, 157, 0.15);
+        border: 1px solid rgba(66, 158, 157, 0.3);
+        border-radius: 6px;
+        padding: 1rem;
+    }
+    .matchup-section {
+        margin: 4rem 0;
+        padding: 2rem;
+        background: rgba(66, 158, 157, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(66, 158, 157, 0.2);
+    }
+ 
+    .matchup-controls {
+        display: flex;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        justify-content: center;
+    }
+ 
+    .sort-btn {
+        background: rgba(66, 158, 157, 0.3);
+        border: 1px solid #429E9D;
+        color: #fff;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+ 
+    .sort-btn:hover {
+        background: rgba(66, 158, 157, 0.5);
+    }
+ 
+    .sort-btn.active {
+        background: #429E9D;
+        color: #181818;
+    }
+ 
+    .matchup-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+ 
+    .matchup-subsection {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+ 
+    .subsection-title {
+        font-size: 1.1rem;
+        color: #30d5c8;
+        margin: 0;
+        padding-left: 0.5rem;
+    }
+ 
+    .matchup-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+ 
+    .matchup-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+ 
+    .matchup-card:hover {
+        background: rgba(0, 0, 0, 0.5);
+        transform: translateX(4px);
+    }
+ 
+    .matchup-hero-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        min-width: 120px;
+    }
+ 
+    .matchup-stats {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        flex: 1;
+        justify-content: center;
+    }
+ 
+    .matchup-stat {
+        color: #ccc;
+        font-size: 0.95rem;
+    }
+ 
+    .matchup-winrate {
+        font-weight: bold;
+        font-size: 1.1rem;
+        min-width: 60px;
+        text-align: right;
+    }
+ 
+    .matchup-games {
+        font-size: 0.85rem;
+        color: #999;
+        min-width: 90px;
+        text-align: right;
+    }
+ 
+    /* HERO SECTION */
+    .hero-section {
+        margin-top: 3rem;
+    }
+ 
+    .hero-cards-container {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+ 
+    .hero-card {
+        flex: auto;
+        color: #fff;
+        background: rgba(66, 158, 157, 0.15);
+        border: 1px solid rgba(66, 158, 157, 0.3);
+        border-radius: 6px;
+        padding: 1rem;
+        min-width: 150px;
+    }
+ 
+    .hero-name {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+        color: #30d5c8;
+    }
+ 
+    .hero-card p {
+        margin: 0.25rem 0;
+        font-size: 0.9rem;
+    }
+ 
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+ 
+        .matchup-grid {
+            grid-template-columns: 1fr;
+        }
+ 
+        .matchup-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+ 
+        .matchup-stats {
+            justify-content: flex-start;
+            width: 100%;
+        }
+ 
+        .matchup-games {
+            text-align: left;
+        }
+        .hero-card {
+            flex: 1 1 calc(50% - 0.5rem);
+        }
+    }
+    @media (max-width: 1024px) {
+        .hero-card {
+            flex: 1 1 calc(33% - 1rem);
+        }
+    }
+    @media (max-width: 480px) {
+        .hero-card {
+            flex: 1 1 100%;
+            max-width: none;
+        }
     }
 </style>
 

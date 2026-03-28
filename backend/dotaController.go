@@ -95,7 +95,7 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 	if APIKEY == "" {
 		log.Println("OPENDOTA API KEY NOT SET")
 	}
-	numberOfGames := 7
+	numberOfGames := 10
 	url := fmt.Sprintf("https://api.opendota.com/api/players/%s/matches?api_key=%s&limit=%d", playerID, APIKEY, numberOfGames)
 
 	var recentGameList []recentGame
@@ -123,12 +123,13 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 // prolly want nested maps tbh
 // ex nestedmap := make(map[string]map[string]int)
 type heroStats struct {
-	Wins    int `json:"wins"`
-	Losses  int `json:"losses"`
-	Games   int `json:"games"`
-	Kills   int `json:"kills"`
-	Deaths  int `json:"deaths"`
-	Assists int `json:"assists"`
+	Wins    int       `json:"wins"`
+	Losses  int       `json:"losses"`
+	Games   int       `json:"games"`
+	Kills   int       `json:"kills"`
+	Deaths  int       `json:"deaths"`
+	Assists int       `json:"assists"`
+	AvgKDA  []float32 `json:"avgKDA"`
 }
 
 func recentHerosPlayed(rawData []recentGame) (*map[string]heroStats, error) {
@@ -150,6 +151,9 @@ func recentHerosPlayed(rawData []recentGame) (*map[string]heroStats, error) {
 		}
 		heroName := heroMap[game.HeroID]
 		stats := heroMapStats[heroName]
+		if stats.Games == 0 {
+			stats.AvgKDA = make([]float32, 3)
+		}
 		stats.Games += 1
 
 		if won {
@@ -165,6 +169,13 @@ func recentHerosPlayed(rawData []recentGame) (*map[string]heroStats, error) {
 
 		heroMapStats[heroName] = stats
 	}
+	// avg it out I know thing a list mighta been better but oh well iterate through this guy
+	for _, stats := range heroMapStats {
+		stats.AvgKDA[0] = float32(stats.Kills / stats.Games)
+		stats.AvgKDA[1] = float32(stats.Deaths / stats.Games)
+		stats.AvgKDA[2] = float32(stats.Assists / stats.Games)
+	}
+
 	return &heroMapStats, nil
 }
 
@@ -174,6 +185,7 @@ type Hero struct {
 	LocalizedName string `json:"localized_name"`
 }
 
+// this is for getting the hero names just hit the website for them
 func getHeroes() (map[int]string, error) {
 	url := "https://api.opendota.com/api/heroes"
 
@@ -247,15 +259,116 @@ func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { /
 	return &cleanedGames, nil
 }
 
+type MatchDetail struct {
+	Players []struct {
+		HeroID     int `json:"hero_id"`
+		PlayerSlot int `json:"player_slot"`
+	} `json:"players"`
+}
+
+func getMatchDetails(matchID int) (*MatchDetail, error) {
+	url := fmt.Sprintf("https://api.opendota.com/api/matches/%d", matchID)
+
+	response, err := http.Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	var matchDetail MatchDetail
+	err = json.NewDecoder(response.Body).Decode(&matchDetail)
+	if err != nil {
+		return nil, err
+	}
+
+	return &matchDetail, nil
+}
+
+func getEnemyHeroes(match *MatchDetail, yourTeam string, heroMap map[int]string) []string {
+	var enemyHeroes []string
+
+	for _, player := range match.Players {
+		playerTeam := "radiant"
+		if player.PlayerSlot > 128 {
+			playerTeam = "dire"
+		}
+
+		if playerTeam != yourTeam {
+			enemyHeroes = append(enemyHeroes, heroMap[player.HeroID])
+		}
+	}
+	return enemyHeroes
+}
+
+type matchupStats struct {
+	EnemyHeroName string  `json:"enemyHeroName"`
+	Wins          int     `json:"wins"`
+	Losses        int     `json:"losses"`
+	Games         int     `json:"games"`
+	WinRate       float32 `json:"winRate"`
+}
+
+func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]matchupStats, error) {
+	matchupMap := make(map[string]matchupStats)
+
+	for _, game := range rawData {
+		var won bool
+		var yourTeam string
+		if game.PlayerSlot < 128 {
+			won = game.RadiantWin
+			yourTeam = "radiant"
+
+		} else {
+			won = !game.RadiantWin
+			yourTeam = "dire"
+		}
+
+		//yourHero := heroMap[game.HeroID]
+
+		matchDetails, err := getMatchDetails(game.MatchID)
+		if err != nil {
+			log.Printf("Failed to get match details for %d: %v", game.MatchID, err)
+			continue
+		}
+
+		enemyHeroes := getEnemyHeroes(matchDetails, yourTeam, heroMap)
+
+		for _, enemyHero := range enemyHeroes {
+			stats := matchupMap[enemyHero]
+			stats.EnemyHeroName = enemyHero
+			stats.Games += 1
+
+			if won {
+				stats.Wins += 1
+			} else {
+				stats.Losses += 1
+			}
+
+			matchupMap[enemyHero] = stats
+		}
+	}
+
+	for key, stats := range matchupMap {
+		if stats.Games > 0 {
+			stats.WinRate = float32(stats.Wins) / float32(stats.Games)
+		}
+		matchupMap[key] = stats
+	}
+
+	return &matchupMap, nil
+}
+
 type dotaStatsReturn struct {
-	Wins            int                  `json:"wins"`
-	Losses          int                  `json:"losses"`
-	WinRate         float32              `json:"winRate"`
-	RecentWins      int                  `json:"recentWins"`
-	RecentLosses    int                  `json:"recentLosses"`
-	RecentWinRate   float32              `json:"recentWinRate"`
-	AvgKDA          []float32            `json:"avgKDA"`
-	RecentHeroStats map[string]heroStats `json:"recentHeroStats"`
+	Wins            int                     `json:"wins"`
+	Losses          int                     `json:"losses"`
+	WinRate         float32                 `json:"winRate"`
+	RecentWins      int                     `json:"recentWins"`
+	RecentLosses    int                     `json:"recentLosses"`
+	RecentWinRate   float32                 `json:"recentWinRate"`
+	AvgKDA          []float32               `json:"avgKDA"`
+	RecentHeroStats map[string]heroStats    `json:"recentHeroStats"`
+	MatchupStats    map[string]matchupStats `json:"matchupStats"`
 }
 
 func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
@@ -279,6 +392,17 @@ func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
 		return nil, fmt.Errorf("failed to process recent hero stats: %w", err)
 	}
 
+	//for the enemy stuff
+	heroMap, err := getHeroes()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get heroes: %w", err)
+	}
+
+	matchupStats, err := getMatchupStats(*recentGames, heroMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get matchup stats: %w", err)
+
+	}
 	stats := &dotaStatsReturn{
 		Wins:            winLoss.Wins,
 		Losses:          winLoss.Losses,
@@ -288,6 +412,7 @@ func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
 		RecentWinRate:   recentStats.WinRate,
 		AvgKDA:          recentStats.AvgKDA,
 		RecentHeroStats: *recentHeroStats,
+		MatchupStats:    *matchupStats,
 	}
 
 	return stats, nil

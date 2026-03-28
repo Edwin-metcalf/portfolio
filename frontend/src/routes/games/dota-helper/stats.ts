@@ -7,6 +7,14 @@ export interface HeroStats {
     kills: number;
     deaths: number;
     assists: number;
+    avgKDA: number[];
+}
+export interface MatchupStats {
+    enemyHeroName: string;
+    wins: number;
+    losses: number;
+    games: number;
+    winRate: number;
 }
 export interface DotaStatsReturn {
     wins: number;
@@ -16,7 +24,8 @@ export interface DotaStatsReturn {
     recentLosses: number;
     recentWinRate: number;
     avgKDA: number[];
-    recentHeroStats: Record<string, HeroStats>
+    recentHeroStats: Record<string, HeroStats>;
+    matchupStats:   Record<string, MatchupStats>;
 }
 
 export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, losses: number): Chart {
