@@ -11,7 +11,7 @@
             const health = await fetchAPI('/api/health');
             healthStatus = health.message;
 
-            const data = await fetchAPI('/api/space-invaders/leaderboard');
+            const data = await fetchAPI('/api/games/space-invaders/leaderboard');
             leaderboard = data;
         } catch (err) {
             healthStatus = 'Error: ' + (err as Error).message;
@@ -20,7 +20,7 @@
 
     async function updateScores() {
         try {
-            const data = await fetchAPI('/api/space-invaders/leaderboard');
+            const data = await fetchAPI('/api/games/space-invaders/leaderboard');
             leaderboard = data;
         }
         catch (err) {
@@ -30,7 +30,7 @@
 
     async function submitScore() {
         try {
-            const result = await fetchAPI('/api/space-invaders/entry', {
+            const result = await fetchAPI('/api/games/space-invaders/entry', {
                 method: 'POST',
                 body: JSON.stringify({ name: 'test player', score: 1000})
             });

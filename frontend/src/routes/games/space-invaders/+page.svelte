@@ -94,7 +94,7 @@
         entry.score = score
         entry.name = name
         try {
-            const result = await fetchAPI('/api/space-invaders/entry', {
+            const result = await fetchAPI('/api/games/space-invaders/entry', {
                 method: 'POST',
                 body: JSON.stringify(entry)
 
@@ -107,7 +107,7 @@
 
     async function getLeaderboard() {
         try {
-            const result = await fetchAPI('/api/space-invaders/leaderboard',{
+            const result = await fetchAPI('/api/games/space-invaders/leaderboard',{
                 method: 'GET',
             });
             leaderboard = result

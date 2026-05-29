@@ -27,6 +27,14 @@ export interface DotaStatsReturn {
     recentHeroStats: Record<string, HeroStats>;
     matchupStats:   Record<string, MatchupStats>;
 }
+//stuff for the clash royale
+export interface ClashRoyaleStatsReturn {
+    wins: number;
+    losses: number;
+    winRate: number;
+    currentTrophies: number;
+    trophyProgress: number[];
+}
 
 export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, losses: number): Chart {
     const config: ChartConfiguration<'doughnut'> = {   
@@ -55,5 +63,40 @@ export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, loss
             }
         }
     };
+    return new Chart(canvas, config);
+}
+
+//will have to see what the data comes back as could do it by time
+// or could do it like this where its just all games 
+export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: number[]){
+    const maxTrophies = Math.max(...trophyData);
+
+    const labels = [];
+    for (let i = 0; i <= maxTrophies; i += 1000){
+        labels.push(i)
+    }
+    const config: ChartConfiguration<'line'> = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Trophy Progression',
+                data: trophyData,
+                fill: true,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+
+    };
+
     return new Chart(canvas, config);
 }

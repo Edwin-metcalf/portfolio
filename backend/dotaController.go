@@ -3,18 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 	//"golang.org/x/tools/playground"
 )
 
 //check appflowy for your stuff
-// what are next steps i need to define structs to take in the JSON
-//then handle the data and turn it into meaningful stuff I believe
 
 var APIKEY string
 
@@ -251,9 +249,9 @@ func processRawRecentGames(rawData []recentGame) (*recentGameCleaned, error) { /
 
 	}
 	//do some averaging for better return struct
-	cleanedGames.AvgKDA[0] = float32(totalKda[0] / numberOfGames)
-	cleanedGames.AvgKDA[1] = float32(totalKda[1] / numberOfGames)
-	cleanedGames.AvgKDA[2] = float32(totalKda[2] / numberOfGames)
+	cleanedGames.AvgKDA[0] = float32(totalKda[0]) / float32(numberOfGames)
+	cleanedGames.AvgKDA[1] = float32(totalKda[1]) / float32(numberOfGames)
+	cleanedGames.AvgKDA[2] = float32(totalKda[2]) / float32(numberOfGames)
 
 	cleanedGames.WinRate = float32(cleanedGames.Wins) / float32(cleanedGames.Wins+cleanedGames.Losses)
 	return &cleanedGames, nil
@@ -372,14 +370,44 @@ type dotaStatsReturn struct {
 }
 
 func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
-	winLoss, err := getWinLose(playerID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get win/loss stats: %w", err)
+	var wg sync.WaitGroup
+
+	var winLoss *winLossRate
+	var recentGames *[]recentGame
+	var heroMap map[int]string
+	var winLossErr, recentGamesErr, heroMapErr error
+
+	wg.Go(func() {
+		var err error
+		winLoss, err = getWinLose(playerID)
+		winLossErr = err
+	})
+
+	wg.Go(func() {
+		var err error
+		recentGames, err = getRecentGames(playerID)
+		recentGamesErr = err
+	})
+
+	wg.Go(func() {
+		var err error
+		heroMap, err = getHeroes()
+		heroMapErr = err
+	})
+
+	wg.Wait()
+
+	if winLossErr != nil {
+		return nil, fmt.Errorf("failed to get win/loss stats: %w", winLossErr)
 	}
 
-	recentGames, err := getRecentGames(playerID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get recent games: %w", err)
+	if recentGamesErr != nil {
+		return nil, fmt.Errorf("failed to get recent games: %w", recentGamesErr)
+	}
+
+	//for the enemy stuff
+	if heroMapErr != nil {
+		return nil, fmt.Errorf("Failed to get heroes: %w", heroMapErr)
 	}
 
 	recentStats, err := processRawRecentGames(*recentGames)
@@ -390,12 +418,6 @@ func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
 	recentHeroStats, err := recentHerosPlayed(*recentGames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process recent hero stats: %w", err)
-	}
-
-	//for the enemy stuff
-	heroMap, err := getHeroes()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get heroes: %w", err)
 	}
 
 	matchupStats, err := getMatchupStats(*recentGames, heroMap)
@@ -418,6 +440,7 @@ func returnGamesSats(playerID string) (*dotaStatsReturn, error) {
 	return stats, nil
 }
 
+/*
 func testing() {
 	apikey := APIKEY
 
@@ -439,3 +462,4 @@ func testing() {
 	}
 	fmt.Println(string(responseData))
 }
+*/
