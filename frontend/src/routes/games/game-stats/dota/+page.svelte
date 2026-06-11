@@ -3,10 +3,9 @@
     import Chart from 'chart.js/auto'
 	import { fetchAPI } from '$lib/api';
     import {createWinLoseChart, type DotaStatsReturn, type MatchupStats} from '../stats'
-	import { color } from 'chart.js/helpers';
+    import { gameStatsCache } from '$lib/store/GameStatsCache.svelte';
 
-
-
+    let data: DotaStatsReturn | null;
     let chartCanvasOverall: HTMLCanvasElement;
     let chartCanvasRecent: HTMLCanvasElement;
 
@@ -31,7 +30,15 @@
 
     onMount(() => {
         (async () => {
-            dotaData = await getDotaWinLose();
+            if (!gameStatsCache.dotaData.fetched) {
+                const data = await getDotaWinLose();
+                if (!data) {
+                    console.log('api call failed')
+                } else {
+                    gameStatsCache.setDotaData(data);
+                }
+            } else console.log('used the cache')
+            dotaData = gameStatsCache.dotaData.data;
             if (!dotaData) return;
 
             
@@ -98,7 +105,7 @@
         <h1>My Dota Stats</h1>
             <button class="tab-btn">
                 <a href="./clash-royale">
-                                    Clash Royale
+                    Clash Royale
                 </a>
             </button>
     </header>

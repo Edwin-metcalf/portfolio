@@ -3,6 +3,7 @@
     import Chart from 'chart.js/auto'
     import { fetchAPI } from '$lib/api';
     import {onMount, tick} from 'svelte';
+    import { gameStatsCache } from '$lib/store/GameStatsCache.svelte';
 
 
 
@@ -11,6 +12,7 @@
 
     let chartInstanceOverall: Chart | null  = null;
     let loading: boolean = true;
+    let data: ClashRoyaleStatsReturn | null;
 
      async function getClashRoyaleData(): Promise<ClashRoyaleStatsReturn | null> {
         try {
@@ -26,7 +28,16 @@
 
     onMount(() => {
         (async () => {
-            clashRoyaleData = await getClashRoyaleData();
+            if (!gameStatsCache.clashRoyaleData.fetched) {
+                const data = await getClashRoyaleData();
+                if(!data) {
+                    console.log('api call failed')
+                } else {
+                    gameStatsCache.setClashRoyaleData(data);
+                }
+            } else console.log('used the cache')
+            clashRoyaleData = gameStatsCache.clashRoyaleData.data;
+
             if (!clashRoyaleData) return;
 
             loading = false;
@@ -51,7 +62,14 @@
         return "%"+ (decimal*100).toFixed(2);
     }
 </script>
-
+<header class="stats-header">
+        <h1>My Dota Stats</h1>
+            <button class="tab-btn">
+                <a href="./dota">
+                    Dota
+                </a>
+            </button>
+    </header>
 {#if loading}
            <p style="font-size: 1.5rem; color: #fff;">Loading stats...</p>
 {:else}
