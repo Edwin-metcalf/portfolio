@@ -1,8 +1,8 @@
 <script lang="ts">
     import {onMount, tick} from 'svelte';
-    import Chart, { type ChartConfiguration } from 'chart.js/auto'
+    import Chart from 'chart.js/auto'
 	import { fetchAPI } from '$lib/api';
-    import {createWinLoseChart, type ClashRoyaleStatsReturn, type DotaStatsReturn, type MatchupStats} from './stats'
+    import {createWinLoseChart, type DotaStatsReturn, type MatchupStats} from '../stats'
 	import { color } from 'chart.js/helpers';
 
 
@@ -13,18 +13,14 @@
     let chartInstanceOverall: Chart | null  = null;
     let chartInstanceRecent: Chart | null = null;
     let loading: boolean = true;
-    let data;
     let dotaData: DotaStatsReturn | null = null;
-    let clashRoyaleData: ClashRoyaleStatsReturn | null = null;
     let sortBy: 'winRate' | 'games' = 'winRate';
-    let currentGameShowing: string = 'dota'; //currently can be dota or clash royale
 
     async function getDotaWinLose(): Promise<DotaStatsReturn | null> {
         try {
             const result = await fetchAPI('/api/games/dota', {
                 method: 'GET'
             });
-            console.log(data)
             return result as DotaStatsReturn;
         } catch (err) {
             console.error('Error fetching Dota stats', err);
@@ -32,36 +28,13 @@
         }
     }
 
-    async function getClashRoyaleData(): Promise<ClashRoyaleStatsReturn | null> {
-        try {
-            const result = await fetchAPI('/api/games/clash-royale', {
-                method: 'GET'
-            });
-            return result as ClashRoyaleStatsReturn;
-        } catch (err) {
-            console.error('Error fetching Clash Royale stats', err);
-            return null;
-        }
-    }
-
-    async function switchGames(game: string) {
-        currentGameShowing = game;
-        loading = true;
-        
-        if (game === 'dota' && !dotaData) {
-            dotaData = await getDotaWinLose();
-        } else if (game === "clashRoyale" && !clashRoyaleData) {
-            clashRoyaleData = await getClashRoyaleData();
-        }
-        loading = false;
-    }
 
     onMount(() => {
         (async () => {
-            const data = await getDotaWinLose();
-            if (!data) return;
+            dotaData = await getDotaWinLose();
+            if (!dotaData) return;
 
-            dotaData = data;
+            
             console.log('Matchup Stats:', dotaData.matchupStats); // DEBUG
             console.log('All data:', dotaData); // DEBUG
             loading = false;
@@ -78,7 +51,7 @@
         })();
         
 
-        return () => {
+        return() => {
             if (chartInstanceOverall) {
                 chartInstanceOverall.destroy();
             }
@@ -122,24 +95,14 @@
 </script>
 <div class="game-stat-helper-page">
     <header class="stats-header">
-        <h1>My Games Stats</h1>
-        <div class="tabs">
-            <button class="tab-btn" 
-                class:active={currentGameShowing === 'dota'}
-                on:click={() => switchGames('dota')}
-            >
-                Dota
+        <h1>My Dota Stats</h1>
+            <button class="tab-btn">
+                <a href="./clash-royale">
+                                    Clash Royale
+                </a>
             </button>
-            <button class="tab-btn"
-                class:active={currentGameShowing === 'clashRoyale'}
-                on:click={() => switchGames('clashRoyale')}
-            >
-                Clash Royale
-            </button>
-        </div>
     </header>
 
-    {#if currentGameShowing == 'dota'}
         {#if loading}
             <p style="font-size: 1.5rem; color: #fff;">Loading stats...</p>
         {:else if dotaData}
@@ -263,41 +226,6 @@
         {:else}
             <h2 style="color: white;">Something broke... Maybe internet issues?? then its not my fault</h2>
         {/if}
-    {:else if currentGameShowing === 'clashRoyale'}
-        {#if loading}
-           <p style="font-size: 1.5rem; color: #fff;">Loading stats...</p>
-        {:else if clashRoyaleData}
-            <h1>Clash Royal </h1>
-            <div class= "CR-section">
-                <section class="win-lose-winrate">
-                    <h2 class="section-title">All Time</h2>
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-label">Wins</div>
-                            <div class="stat-value">{clashRoyaleData.wins}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Loses</div>
-                            <div class="stat-value">{clashRoyaleData.losses}</div>
-                        </div>
-                        <div class="stat-card highlight">
-                            <div class="stat-label">Win Rate</div>
-                            <div class="stat-value">{formatPercentage(clashRoyaleData.winRate)}</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas bind:this={chartCanvasOverall}></canvas>
-                    </div>
-                </section>
-            </div>
-
-        {:else}
-            <h2 style="color: white;">Something is very very broken</h2>
-        {/if}
-
-    {:else}
-        <h2 style="color: white;">Something is very very broken</h2>
-    {/if}
 </div>
 
 
@@ -310,11 +238,6 @@
         background-color: #181818;
         margin: 0 auto;
         padding: 2rem;
-    }
-    .tabs {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
     }
     .tab-btn {
         background: rgba(66, 158, 157, 0.3);
@@ -332,10 +255,6 @@
         background: rgba(66, 158, 157, 0.5);
     }
 
-    .tab-btn.active {
-        background: #429E9D;
-        color: #181818;
-    }
     .stats-header {
         text-align: center;
         margin-bottom: 2rem;

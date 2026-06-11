@@ -133,13 +133,35 @@ func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(stats)
 }
-func clashRoyaleHandler(w http.ResponseWriter, r *http.Request) {
+func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	//current place holder this should prolly put all the necessary stats on load togther and return it
+	//then have another helper for grabbing matchups if users select
+	//this prolly has to change as well I should be calling this in the handler
+	myPlayerId := "#P9L0U88GQ"
+	CRclient := newClashRoyaleClient()
+	playerInfo, err := CRclient.getPlayerProfile(myPlayerId)
+	if err != nil {
+		log.Printf("Error fetching clash Royale stats: %v", err)
+		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(playerInfo)
 	//gonna need my clash id
 	//stats, err := ClashRoyaleStatsReturn(playerID)
+}
+
+func clashRoyaleMatchupHandler(w http.ResponseWriter, r *http.Request, player1 string, player2 string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 }
