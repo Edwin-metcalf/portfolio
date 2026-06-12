@@ -7,12 +7,11 @@
 
 
 
-    let clashRoyaleData: ClashRoyaleStatsReturn | null = null;
-    let chartCanvasOverall: HTMLCanvasElement;
+    let clashRoyaleData = $state<ClashRoyaleStatsReturn | null>(null);
+    let chartCanvasOverall = $state<HTMLCanvasElement | null>(null);
 
     let chartInstanceOverall: Chart | null  = null;
-    let loading: boolean = true;
-    let data: ClashRoyaleStatsReturn | null;
+    let loading = $state<boolean>(true);
 
      async function getClashRoyaleData(): Promise<ClashRoyaleStatsReturn | null> {
         try {
@@ -31,10 +30,11 @@
             if (!gameStatsCache.clashRoyaleData.fetched) {
                 const data = await getClashRoyaleData();
                 if(!data) {
-                    console.log('api call failed')
-                } else {
-                    gameStatsCache.setClashRoyaleData(data);
+                    loading = false;
+                    return;
                 }
+                gameStatsCache.setClashRoyaleData(data);
+                
             } else console.log('used the cache')
             clashRoyaleData = gameStatsCache.clashRoyaleData.data;
 
@@ -63,12 +63,11 @@
     }
 </script>
 <header class="stats-header">
-        <h1>My Dota Stats</h1>
-            <button class="tab-btn">
-                <a href="./dota">
-                    Dota
-                </a>
-            </button>
+        <h1>My Clash Royale Stats</h1>
+            <a href="./dota">
+                Dota
+            </a>
+
     </header>
 {#if loading}
            <p style="font-size: 1.5rem; color: #fff;">Loading stats...</p>

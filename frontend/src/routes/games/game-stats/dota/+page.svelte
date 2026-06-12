@@ -5,15 +5,19 @@
     import {createWinLoseChart, type DotaStatsReturn, type MatchupStats} from '../stats'
     import { gameStatsCache } from '$lib/store/GameStatsCache.svelte';
 
-    let data: DotaStatsReturn | null;
-    let chartCanvasOverall: HTMLCanvasElement;
-    let chartCanvasRecent: HTMLCanvasElement;
+    let chartCanvasOverall = $state<HTMLCanvasElement | null>(null);
+    let chartCanvasRecent = $state<HTMLCanvasElement | null>(null);
 
     let chartInstanceOverall: Chart | null  = null;
     let chartInstanceRecent: Chart | null = null;
-    let loading: boolean = true;
-    let dotaData: DotaStatsReturn | null = null;
-    let sortBy: 'winRate' | 'games' = 'winRate';
+
+    let loading = $state<boolean>(true);
+    let dotaData = $state<DotaStatsReturn | null>(null);
+    let sortBy = $state<'winRate' | 'games'>('winRate');
+
+    const sortedMatchups = $derived(getSortedMatchups());
+    const bestMatchups = $derived(sortedMatchups.slice(0,5));
+    const worstMatchups = $derived(sortedMatchups.slice(-5).reverse());
 
     async function getDotaWinLose(): Promise<DotaStatsReturn | null> {
         try {
@@ -33,10 +37,11 @@
             if (!gameStatsCache.dotaData.fetched) {
                 const data = await getDotaWinLose();
                 if (!data) {
-                    console.log('api call failed')
-                } else {
-                    gameStatsCache.setDotaData(data);
+                    loading = false;
+                    return;
                 }
+                gameStatsCache.setDotaData(data);
+                
             } else console.log('used the cache')
             dotaData = gameStatsCache.dotaData.data;
             if (!dotaData) return;
@@ -85,12 +90,6 @@
 
         }
     }
-    function getBestMatchups(): [string, MatchupStats][] {
-        return getSortedMatchups().slice(0,5);
-    }
-    function getWorstMatchups(): [string, MatchupStats][] {
-        return getSortedMatchups().slice(-5).reverse();
-    }
 
     function getMatchupColor(winRate: number): string {
         if (winRate >= 0.6) return '#22CB00';
@@ -103,11 +102,9 @@
 <div class="game-stat-helper-page">
     <header class="stats-header">
         <h1>My Dota Stats</h1>
-            <button class="tab-btn">
-                <a href="./clash-royale">
-                    Clash Royale
-                </a>
-            </button>
+            <a href="./clash-royale">
+                Clash Royale
+            </a>
     </header>
 
         {#if loading}
@@ -179,11 +176,11 @@
                 <h2 class="section-title">Enemy Matchups</h2>
 
                 <div class="matchup-controls">
-                    <button class="sort-btn" class:active={sortBy === 'winRate'} on:click={() => sortBy = 'winRate'}>
+                    <button class="sort-btn" class:active={sortBy === 'winRate'} onclick={() => sortBy = 'winRate'}>
                         Sort by Win Rate
                     </button>
 
-                    <button class="sort-btn" class:active={sortBy === 'games'} on:click={() => sortBy = 'games'}>
+                    <button class="sort-btn" class:active={sortBy === 'games'} onclick={() => sortBy = 'games'}>
                         Sort by Games Played
                     </button>
 
@@ -194,7 +191,7 @@
                         <h3 class="subsection-title">Best Matchups</h3>
 
                         <div class="matchup-list">
-                            {#each getBestMatchups() as [heroName, stats]}
+                            {#each bestMatchups as [heroName, stats]}
                                 <div class="matchup-card" style="border-left: 4px solid {getMatchupColor(stats.winRate)};">
                                     <div class="matchup-hero-name">{heroName}</div>
                                     <div class="matchup-stats">
@@ -213,7 +210,7 @@
                         <h3 class="subsection-title">Worst Matchups</h3>
 
                         <div class="matchup-list">
-                            {#each getWorstMatchups() as [heroName, stats]}
+                            {#each worstMatchups as [heroName, stats]}
                                 <div class="matchup-card" style="border-left: 4px solid {getMatchupColor(stats.winRate)};">
                                     <div class="matchup-hero-name">{heroName}</div>
                                     <div class="matchup-stats">
@@ -245,21 +242,6 @@
         background-color: #181818;
         margin: 0 auto;
         padding: 2rem;
-    }
-    .tab-btn {
-        background: rgba(66, 158, 157, 0.3);
-        border: 2px solid #429E9D;
-        color: #fff;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        font-size: 1rem;
-    }
-
-    .tab-btn:hover {
-        background: rgba(66, 158, 157, 0.5);
     }
 
     .stats-header {
@@ -454,11 +436,6 @@
         color: #999;
         min-width: 90px;
         text-align: right;
-    }
- 
-    /* HERO SECTION */
-    .hero-section {
-        margin-top: 3rem;
     }
  
     .hero-cards-container {

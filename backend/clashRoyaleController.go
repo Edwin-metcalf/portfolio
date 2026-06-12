@@ -64,9 +64,14 @@ type GameMode struct {
 }
 
 // ther is a lot more that you can pull out of these dont know yet
+type PlayerBattleData struct {
+	Tag              string `json:"tag"`
+	Name             string `json:"name"`
+	StartingTrophies int    `json:"startingTrophies"`
+	TrophyChange     int    `json:"trophyChange"`
+}
 type PlayerBattleDataList struct {
-	Tag  string `json:"tag"`
-	Name string `json:"name"`
+	List PlayerBattleData `json:"playerBattleData"`
 }
 
 // do not really know how the opponent list works
