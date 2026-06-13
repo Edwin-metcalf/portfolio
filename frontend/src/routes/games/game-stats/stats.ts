@@ -28,6 +28,35 @@ export interface DotaStatsReturn {
     matchupStats:   Record<string, MatchupStats>;
 }
 //stuff for the clash royale
+interface Clan {
+    tag: string;
+    name: string;
+}
+interface Arena {
+    id: number;
+    name: string;
+}
+interface PlayerProfile {
+    tag: string;
+    name: string;
+    trophies: number;
+    bestTrophies: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    battleCount: number;
+    threeCrownWins: number;
+    clan: Clan;
+    arena: Arena;
+}
+interface StringIntPair {
+    text: string;
+    value: number;
+}
+export interface ClashRoyaleLoadReturn {
+    profile: PlayerProfile;
+    battleLog: StringIntPair[];
+}
 export interface ClashRoyaleStatsReturn {
     wins: number;
     losses: number;

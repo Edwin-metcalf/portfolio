@@ -133,6 +133,13 @@ func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(stats)
 }
+
+// struct to return my profile and my battle history
+type ClashRoyaleLoadReturn struct {
+	Profile   *PlayerProfileReturn `json:"profile"`
+	BattleLog DateRankList         `json:"battleLog"`
+}
+
 func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -141,9 +148,6 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//current place holder this should prolly put all the necessary stats on load togther and return it
-	//then have another helper for grabbing matchups if users select
-	//this prolly has to change as well I should be calling this in the handler
 	myPlayerId := "#P9L0U88GQ"
 	CRclient := newClashRoyaleClient()
 	playerInfo, err := CRclient.getPlayerProfile(myPlayerId)
@@ -152,7 +156,19 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(playerInfo)
+
+	playerBattleHistory, err := CRclient.getPlayerBattleLog(myPlayerId)
+	if err != nil {
+		log.Printf("Error fetching Clash Royale stats: %v", err)
+		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		return
+	}
+	result := ClashRoyaleLoadReturn{
+		Profile:   playerInfo,
+		BattleLog: playerBattleHistory.RankList,
+	}
+	json.NewEncoder(w).Encode(result)
+
 	//gonna need my clash id
 	//stats, err := ClashRoyaleStatsReturn(playerID)
 }

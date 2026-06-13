@@ -70,19 +70,32 @@ type PlayerBattleData struct {
 	StartingTrophies int    `json:"startingTrophies"`
 	TrophyChange     int    `json:"trophyChange"`
 }
-type PlayerBattleDataList struct {
-	List PlayerBattleData `json:"playerBattleData"`
-}
+
+//type PlayerBattleDataList struct {
+//	List PlayerBattleData `json:"playerBattleData"`
+//}
 
 // do not really know how the opponent list works
 type Battle struct {
-	GameMode GameMode               `json:"gameMode"`
-	Opponent []PlayerBattleDataList `json:"playerBattleList"`
+	Type       string             `json:"type"`
+	BattleTime string             `json:"battleTime"`
+	GameMode   GameMode           `json:"gameMode"`
+	Team       []PlayerBattleData `json:"team"`
+	Opponent   []PlayerBattleData `json:"opponent"`
 }
-type PlayerBattleLog struct {
-	Battles []Battle `json:"battleList"`
+type BattleList []Battle
+
+// used for date and rank
+type StringIntPair struct {
+	Text  string `json:"text"`
+	Value int    `json:"value"`
 }
+type DateRankList []StringIntPair
+
 type PlayerBattleLogReturn struct {
+	Tag      string       `json:"tag"`
+	Name     string       `json:"name"`
+	RankList DateRankList `json:"rankList"`
 }
 
 // api key stuff is actually a JSON Web Token kinda cool something new
@@ -167,7 +180,22 @@ func (c *ClashRoyaleClient) getPlayerProfile(playerTag string) (*PlayerProfileRe
 
 	return &retProfile, err
 }
-func (c *ClashRoyaleClient) getPlayerBattlelog(playerTag string) (*PlayerBattleLogReturn, error) {
+
+func createDateRankList(battleList BattleList) *DateRankList {
+	var DRList DateRankList
+	for i := 0; i < len(battleList); i++ {
+		battle := battleList[i]
+		if battle.Type == "PVP" {
+			var DR StringIntPair
+			DR.Text = battle.BattleTime
+			DR.Value = battle.Team[0].StartingTrophies
+			DRList = append(DRList, DR)
+		}
+	}
+	return &DRList
+}
+func (c *ClashRoyaleClient) getPlayerBattleLog(playerTag string) (*PlayerBattleLogReturn, error) {
+	//this specifically pulls ladder games ie trophy road
 	encodedTag := url.PathEscape(playerTag)
 	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
 	if err != nil {
@@ -189,13 +217,26 @@ func (c *ClashRoyaleClient) getPlayerBattlelog(playerTag string) (*PlayerBattleL
 		return nil, fmt.Errorf("api error: status %d", resp.StatusCode)
 	}
 
-	var battleLog PlayerBattleLog
+	var battleLog BattleList
 	err = json.NewDecoder(resp.Body).Decode(&battleLog)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	var battleReturn PlayerBattleLogReturn
+	//get the name I dont really know if this is the best way but it does consider ones first game being a 2v2
+	var name string
+	for _, player := range battleLog[0].Team {
+		if player.Tag == playerTag {
+			name = player.Name
+		}
+	}
+
+	battleReturn.Tag = playerTag
+	battleReturn.Name = name
+	battleReturn.RankList = *createDateRankList(battleLog)
+
+	return &battleReturn, nil
 }
 
 // this might not need the player Tag as this could be the on load without input

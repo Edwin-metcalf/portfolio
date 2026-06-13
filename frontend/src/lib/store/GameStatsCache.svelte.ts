@@ -1,4 +1,4 @@
-import type { DotaStatsReturn, ClashRoyaleStatsReturn } from "../../routes/games/game-stats/stats";
+import type { DotaStatsReturn, ClashRoyaleLoadReturn } from "../../routes/games/game-stats/stats";
 interface CacheEntry<T> {
     data: T | null;
     fetched: boolean;
@@ -10,7 +10,7 @@ export class GameStatsCache {
         fetched: false,
         fetchedAt: null,
     });
-    clashRoyaleData = $state<CacheEntry<ClashRoyaleStatsReturn>>({
+    clashRoyaleData = $state<CacheEntry<ClashRoyaleLoadReturn>>({
         data: null,
         fetched: false,
         fetchedAt: null,
@@ -24,7 +24,7 @@ export class GameStatsCache {
         this.dotaData.fetched = true;
         this.dotaData.fetchedAt = Date.now();
     }
-    setClashRoyaleData(data : ClashRoyaleStatsReturn) : void {
+    setClashRoyaleData(data : ClashRoyaleLoadReturn) : void {
         this.clashRoyaleData.data = data;
         this.clashRoyaleData.fetched = true;
         this.clashRoyaleData.fetchedAt = Date.now();

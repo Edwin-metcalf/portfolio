@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type ClashRoyaleStatsReturn, createWinLoseChart, createTrophyLineChart} from "../stats"
+    import {type ClashRoyaleLoadReturn, createWinLoseChart, createTrophyLineChart} from "../stats"
     import Chart from 'chart.js/auto'
     import { fetchAPI } from '$lib/api';
     import {onMount, tick} from 'svelte';
@@ -7,18 +7,22 @@
 
 
 
-    let clashRoyaleData = $state<ClashRoyaleStatsReturn | null>(null);
+    let clashRoyaleData = $state<ClashRoyaleLoadReturn | null>(null);
     let chartCanvasOverall = $state<HTMLCanvasElement | null>(null);
 
     let chartInstanceOverall: Chart | null  = null;
+
+    let chartCanvasTrophies = $state<HTMLCanvasElement | null>(null);
+    let chartInstanceTrophies: Chart | null = null;
+
     let loading = $state<boolean>(true);
 
-     async function getClashRoyaleData(): Promise<ClashRoyaleStatsReturn | null> {
+     async function getClashRoyaleData(): Promise<ClashRoyaleLoadReturn | null> {
         try {
             const result = await fetchAPI('/api/games/clash-royale', {
                 method: 'GET'
             });
-            return result as ClashRoyaleStatsReturn;
+            return result as ClashRoyaleLoadReturn;
         } catch (err) {
             console.error('Error fetching Clash Royale stats', err);
             return null;
@@ -45,8 +49,12 @@
             
             //this is the win loss chart
             if (chartCanvasOverall) {
-                chartInstanceOverall = createWinLoseChart(chartCanvasOverall, clashRoyaleData.wins, clashRoyaleData.losses)
+                chartInstanceOverall = createWinLoseChart(chartCanvasOverall, clashRoyaleData.profile.wins, clashRoyaleData.profile.losses)
             }
+            //gonna have to make this either straight up by date or with an option to switch back and forth
+           // if (chartCanvasTrophies) {
+            //    chartInstanceTrophies = createTrophyLineChart(chartCanvasTrophies,)
+           // }
         
         })();
 
@@ -80,15 +88,15 @@
                     <div class="stats-container">
                         <div class="stat-card">
                             <div class="stat-label">Wins</div>
-                            <div class="stat-value">{clashRoyaleData.wins}</div>
+                            <div class="stat-value">{clashRoyaleData.profile.wins}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Loses</div>
-                            <div class="stat-value">{clashRoyaleData.losses}</div>
+                            <div class="stat-value">{clashRoyaleData.profile.losses}</div>
                         </div>
                         <div class="stat-card highlight">
                             <div class="stat-label">Win Rate</div>
-                            <div class="stat-value">{formatPercentage(clashRoyaleData.winRate)}</div>
+                            <div class="stat-value">{formatPercentage(clashRoyaleData.profile.winRate)}</div>
                         </div>
                     </div>
                     <div class="chart-container">
