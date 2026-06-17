@@ -1,4 +1,5 @@
 import Chart, { type ChartConfiguration } from 'chart.js/auto'
+import 'chartjs-adapter-date-fns'
 //need to change this to take in the correct now overall and recent data
 export interface HeroStats {
     wins: number;
@@ -64,6 +65,11 @@ export interface ClashRoyaleStatsReturn {
     currentTrophies: number;
     trophyProgress: number[];
 }
+//typing for the date object in the line chart
+export type TrophyPoint = {
+    x: Date;
+    y: number;
+};
 
 export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, losses: number): Chart {
     const config: ChartConfiguration<'doughnut'> = {   
@@ -97,20 +103,31 @@ export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, loss
 
 //will have to see what the data comes back as could do it by time
 // or could do it like this where its just all games 
-export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: number[]){
-    const maxTrophies = Math.max(...trophyData);
 
-    const labels = [];
-    for (let i = 0; i <= maxTrophies; i += 1000){
-        labels.push(i)
-    }
-    const config: ChartConfiguration<'line'> = {
+function parseClashRoyaleDate(text: string): Date {
+    //need this function because clash royale sends back a wierd date format
+    const formatted = text.replace(
+        /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,
+        '$1-$2-$3T$4:$5:$6'
+    );
+    return new Date(formatted);
+}
+export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: StringIntPair[]){
+    console.log('raw trohpydata 1: ', trophyData[0])
+    const pointData: TrophyPoint[] = trophyData.map(entry => ({
+        x: parseClashRoyaleDate(entry.text),
+        y: entry.value
+    }));
+
+    console.log('parsed pointdata 1: ', pointData[0])
+
+    const config: ChartConfiguration<'line', TrophyPoint[]> = {
         type: 'line',
         data: {
-            labels: labels,
+            //labels: "trophies",
             datasets: [{
                 label: 'Trophy Progression',
-                data: trophyData,
+                data: pointData,
                 fill: true,
                 tension: 0.1
             }]
@@ -121,6 +138,11 @@ export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: num
             plugins: {
                 legend: {
                     position: 'bottom'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time'
                 }
             }
         }

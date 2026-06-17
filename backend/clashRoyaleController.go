@@ -151,10 +151,16 @@ func (c *ClashRoyaleClient) getPlayerProfile(playerTag string) (*PlayerProfileRe
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("api error: status %d", resp.StatusCode)
+	}
 	var p PlayerProfile
 	err = json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decode failed: %w", err)
 	}
 	// do something with this
 	var retProfile PlayerProfileReturn
@@ -185,7 +191,7 @@ func createDateRankList(battleList BattleList) *DateRankList {
 	var DRList DateRankList
 	for i := 0; i < len(battleList); i++ {
 		battle := battleList[i]
-		if battle.Type == "PVP" {
+		if battle.Type == "PvP" {
 			var DR StringIntPair
 			DR.Text = battle.BattleTime
 			DR.Value = battle.Team[0].StartingTrophies

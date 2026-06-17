@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type ClashRoyaleLoadReturn, createWinLoseChart, createTrophyLineChart} from "../stats"
+    import {type ClashRoyaleLoadReturn, createWinLoseChart, createTrophyLineChart, type TrophyPoint} from "../stats"
     import Chart from 'chart.js/auto'
     import { fetchAPI } from '$lib/api';
     import {onMount, tick} from 'svelte';
@@ -13,7 +13,7 @@
     let chartInstanceOverall: Chart | null  = null;
 
     let chartCanvasTrophies = $state<HTMLCanvasElement | null>(null);
-    let chartInstanceTrophies: Chart | null = null;
+    let chartInstanceTrophies: Chart<'line', TrophyPoint[]> | null = null;
 
     let loading = $state<boolean>(true);
 
@@ -52,15 +52,18 @@
                 chartInstanceOverall = createWinLoseChart(chartCanvasOverall, clashRoyaleData.profile.wins, clashRoyaleData.profile.losses)
             }
             //gonna have to make this either straight up by date or with an option to switch back and forth
-           // if (chartCanvasTrophies) {
-            //    chartInstanceTrophies = createTrophyLineChart(chartCanvasTrophies,)
-           // }
+            if (chartCanvasTrophies) {
+                chartInstanceTrophies = createTrophyLineChart(chartCanvasTrophies,clashRoyaleData.battleLog)
+            }
         
         })();
 
         return () => {
             if (chartInstanceOverall) {
                 chartInstanceOverall.destroy();
+            }
+            if (chartInstanceTrophies) {
+                chartInstanceTrophies.destroy();
             }
         };
     });
@@ -101,6 +104,9 @@
                     </div>
                     <div class="chart-container">
                         <canvas bind:this={chartCanvasOverall}></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas bind:this={chartCanvasTrophies}></canvas>
                     </div>
                 </section>
             </div>
