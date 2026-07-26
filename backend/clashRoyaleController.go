@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -96,6 +97,14 @@ type PlayerBattleLogReturn struct {
 	Tag      string       `json:"tag"`
 	Name     string       `json:"name"`
 	RankList DateRankList `json:"rankList"`
+}
+type FriendyBattleLogReturn struct {
+	Tag        string          `json:"tag"`
+	Name       string          `json:"name"`
+	BattleTime string          `json:"battleTime"`
+	Result     int             `json:"result"`
+	MyDeck     json.RawMessage `json:"myDeck"`
+	EnemyDeck  json.RawMessage `json:"enemyDeck"`
 }
 
 // api key stuff is actually a JSON Web Token kinda cool something new
@@ -243,6 +252,148 @@ func (c *ClashRoyaleClient) getPlayerBattleLog(playerTag string) (*PlayerBattleL
 	battleReturn.RankList = *createDateRankList(battleLog)
 
 	return &battleReturn, nil
+}
+
+// similar to get PlayerBattleLog but more simple want to just get the list
+func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error) {
+	encodedTag := url.PathEscape(playerTag)
+	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.jwt)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("api error: status %d", resp.StatusCode, string(body))
+	}
+
+	var battleLog BattleList
+	err = json.NewDecoder(resp.Body).Decode(&battleLog)
+	if err != nil {
+		return nil, err
+	}
+	return battleLog, nil
+
+}
+
+func SyncLadderGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) error {
+	mostRecentGame, err := getMostRecentCRGame(db, "ladderGames")
+	if err != nil {
+		return fmt.Errorf("failed to get most recent game %w", err)
+	}
+
+	battleLog, err := client.fetchBattleLog(playerTag)
+	if err != nil {
+		return fmt.Errorf("failed to fetch battlelog: %w", err)
+	}
+
+	for _, battle := range battleLog {
+		if battle.Type != "PvP" {
+			continue
+		}
+		if mostRecentGame != "" && battle.BattleTime <= mostRecentGame {
+			continue
+		}
+
+		for _, player := range battle.Team {
+			if player.Tag == playerTag {
+				//calculate win is 1 loss is 0 tie is -1(very rare)
+				result := -1
+				if player.TrophyChange > 0 {
+					result = 1
+				} else if player.TrophyChange < 0 {
+					result = 0
+				}
+				game := CRLadderGame{
+					BattleTime:       battle.BattleTime,
+					StartingTrophies: player.StartingTrophies,
+					TrophyChange:     player.TrophyChange,
+					Result:           result,
+				}
+				if err := addLadderEntry(db, game); err != nil {
+					log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+/*
+	func helperMergelists(list1 []T, list2 []T) []T {
+		seenset := make(map[string]struct{})
+
+		result := []string{}
+
+		addUnique := func(slice []T) {
+			for _, val := range slice {
+				if _, exists := seenset[val]; !exists {
+					seenset[val] = struct{}{}
+					result = append(result, val)
+				}
+			}
+		}
+		addUnique(list1)
+		addUnique(list2)
+
+		return result
+	}
+
+	func (c *ClashRoyaleClient) getPlayersFriendlyBattles(player1 string, player2 string) {
+		encodedTag1 := url.PathEscape(player1)
+		encodedTag2 := url.PathEscape(player2)
+
+		player1Battles := c.getSinglePlayerFriendy(encodedTag1)
+		player2Battles := c.getPlayerBattleLog(encodedTag2)
+		pointer1 := 0
+		pointer2 := 0
+
+		//the lists might be different need to check both lists and check each entry if they
+		// have the right opponents adn then take out duplicates
+		for pointer1 < len(player1Battles) {
+			if player1Battles[pointer1].Id == player2battles
+		}
+
+}
+*/
+func (c *ClashRoyaleClient) getSinglePlayerFriendy(encodedTag string) ([]FriendyBattleLogReturn, error) {
+	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
+	if err != nil {
+		log.Println("Error creating request")
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.jwt)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("api error: status %d", resp.StatusCode)
+	}
+	var battleLog BattleList
+	err = json.NewDecoder(resp.Body).Decode(&battleLog)
+
+	var friendlyBattleList []FriendyBattleLogReturn
+	for _, battle := range battleLog {
+		if battle.Type == "friendly" {
+			//friendlyBattleList = append(friendlyBattleList, battle)
+		}
+	}
+	return friendlyBattleList, nil
+
 }
 
 // this might not need the player Tag as this could be the on load without input

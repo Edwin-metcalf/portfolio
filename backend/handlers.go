@@ -135,9 +135,14 @@ func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // struct to return my profile and my battle history
+type CRLadderChartPoint struct {
+	BattleTime string `json:"battleTime"`
+	Trophies   int    `json:"trophies"`
+}
+
 type ClashRoyaleLoadReturn struct {
 	Profile   *PlayerProfileReturn `json:"profile"`
-	BattleLog DateRankList         `json:"battleLog"`
+	BattleLog []CRLadderChartPoint `json:"battleLog"`
 }
 
 func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
@@ -156,16 +161,29 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
 		return
 	}
+	//sync before getting hisotry
+	if err := SyncLadderGames(DB, CRclient, myPlayerId); err != nil {
+		log.Printf("Sync Warning: %v", err)
+		//DB has history if fails dont kill everything
+	}
 
-	playerBattleHistory, err := CRclient.getPlayerBattleLog(myPlayerId)
+	ladderGames, err := getLadderHistory(DB)
 	if err != nil {
-		log.Printf("Error fetching Clash Royale stats: %v", err)
-		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		log.Printf("Error fetching ladder history: %v", err)
+		http.Error(w, "Error fetching ladder history", http.StatusInternalServerError)
 		return
 	}
+	var chartPoints []CRLadderChartPoint
+	for _, game := range ladderGames {
+		chartPoints = append(chartPoints, CRLadderChartPoint{
+			BattleTime: game.BattleTime,
+			Trophies:   game.StartingTrophies + game.TrophyChange,
+		})
+	}
+
 	result := ClashRoyaleLoadReturn{
 		Profile:   playerInfo,
-		BattleLog: playerBattleHistory.RankList,
+		BattleLog: chartPoints,
 	}
 	json.NewEncoder(w).Encode(result)
 
@@ -173,11 +191,50 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	//stats, err := ClashRoyaleStatsReturn(playerID)
 }
 
-func clashRoyaleMatchupHandler(w http.ResponseWriter, r *http.Request, player1 string, player2 string) {
+/*
+func clashRoyaleLadderHistoryHandler(w http.ResponseWriter, r *http.Request, playerId string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	CRclient := newClashRoyaleClient()
+	playerBattleHistory, err  := CRclient.getPlayerBattleLog(playerId)
+	if err != nil {
+		log.Printf("Error fetching Clash Royale stats: %v", err)
+		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		return
+	}
+	// this may cause error I dont know why i need to have a 0 in here i want the whole list
+	result := DateRankList{playerBattleHistory.RankList[0]}
+	json.NewEncoder(w).Encode(result)
+}
+
+// should this function only take 1 player and then compare results latter?
+func clashRoyaleFriendlyHisoryHandler(w http.ResponseWriter, r *http.Request, player1 string, player2 string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	CRclient := newClashRoyaleClient()
+
+}
+*/
+
+// stuff for Clash royale database entries
+type CRLadderDataBaseEntry struct {
+	BattleTime       string `json:"batteTime"`
+	StartingTrophies int    `json:"startingTrophies"`
+	TrophyChange     int    `json:"trophyChange"`
+	Result           int    `json:"result"`
+}
+
+type CRFriendlyDataBaseEntry struct {
+	BattleTime string          `json:"battleTime"`
+	Result     int             `json:"result"`
+	MyDeck     json.RawMessage `json:"myDeck"`
+	EnemyDeck  json.RawMessage `json:"enemyDeck"`
 }

@@ -50,13 +50,13 @@ interface PlayerProfile {
     clan: Clan;
     arena: Arena;
 }
-interface StringIntPair {
-    text: string;
-    value: number;
+interface CRLadderChartPoint {
+    battleTime: string;
+    trophies: number;
 }
 export interface ClashRoyaleLoadReturn {
     profile: PlayerProfile;
-    battleLog: StringIntPair[];
+    battleLog: CRLadderChartPoint[];
 }
 export interface ClashRoyaleStatsReturn {
     wins: number;
@@ -112,11 +112,11 @@ function parseClashRoyaleDate(text: string): Date {
     );
     return new Date(formatted);
 }
-export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: StringIntPair[]){
+export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: CRLadderChartPoint[]){
     console.log('raw trohpydata 1: ', trophyData[0])
     const pointData: TrophyPoint[] = trophyData.map(entry => ({
-        x: parseClashRoyaleDate(entry.text),
-        y: entry.value
+        x: parseClashRoyaleDate(entry.battleTime),
+        y: entry.trophies
     }));
 
     console.log('parsed pointdata 1: ', pointData[0])

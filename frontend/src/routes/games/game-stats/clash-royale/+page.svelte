@@ -70,7 +70,7 @@
 
 
     function formatPercentage(decimal: number) {
-        return "%"+ (decimal*100).toFixed(2);
+        return (decimal*100).toFixed(2) + "%";
     }
 </script>
 <header class="stats-header">
