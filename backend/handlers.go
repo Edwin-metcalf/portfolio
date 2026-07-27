@@ -154,6 +154,7 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	myPlayerId := "#P9L0U88GQ"
+	//friendPlayerId := "#QQCJYR0Y8"
 	CRclient := newClashRoyaleClient()
 	playerInfo, err := CRclient.getPlayerProfile(myPlayerId)
 	if err != nil {
@@ -180,6 +181,8 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 			Trophies:   game.StartingTrophies + game.TrophyChange,
 		})
 	}
+
+	// do stuff for friendlies currently just against friend but then add against whoever
 
 	result := ClashRoyaleLoadReturn{
 		Profile:   playerInfo,

@@ -70,13 +70,13 @@ type PlayerBattleData struct {
 	Name             string `json:"name"`
 	StartingTrophies int    `json:"startingTrophies"`
 	TrophyChange     int    `json:"trophyChange"`
+	Crowns           int    `json:"crowns"`
 }
 
 //type PlayerBattleDataList struct {
 //	List PlayerBattleData `json:"playerBattleData"`
 //}
 
-// do not really know how the opponent list works
 type Battle struct {
 	Type       string             `json:"type"`
 	BattleTime string             `json:"battleTime"`
@@ -326,46 +326,9 @@ func SyncLadderGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) er
 
 	return nil
 }
-
-/*
-	func helperMergelists(list1 []T, list2 []T) []T {
-		seenset := make(map[string]struct{})
-
-		result := []string{}
-
-		addUnique := func(slice []T) {
-			for _, val := range slice {
-				if _, exists := seenset[val]; !exists {
-					seenset[val] = struct{}{}
-					result = append(result, val)
-				}
-			}
-		}
-		addUnique(list1)
-		addUnique(list2)
-
-		return result
-	}
-
-	func (c *ClashRoyaleClient) getPlayersFriendlyBattles(player1 string, player2 string) {
-		encodedTag1 := url.PathEscape(player1)
-		encodedTag2 := url.PathEscape(player2)
-
-		player1Battles := c.getSinglePlayerFriendy(encodedTag1)
-		player2Battles := c.getPlayerBattleLog(encodedTag2)
-		pointer1 := 0
-		pointer2 := 0
-
-		//the lists might be different need to check both lists and check each entry if they
-		// have the right opponents adn then take out duplicates
-		for pointer1 < len(player1Battles) {
-			if player1Battles[pointer1].Id == player2battles
-		}
-
-}
-*/
-func (c *ClashRoyaleClient) getSinglePlayerFriendy(encodedTag string) ([]FriendyBattleLogReturn, error) {
-	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
+func (c *ClashRoyaleClient) getHeadToHeadBattles(myTag string, friendTag string) (BattleList, error) {
+	myEncodedTag := url.PathEscape(myTag)
+	req, err := http.NewRequest("GET", c.baseURL+"/players/"+myEncodedTag+"/battlelog", nil)
 	if err != nil {
 		log.Println("Error creating request")
 		return nil, err
@@ -383,16 +346,102 @@ func (c *ClashRoyaleClient) getSinglePlayerFriendy(encodedTag string) ([]Friendy
 		log.Printf("API returned status %d: %s", resp.StatusCode, string(body))
 		return nil, fmt.Errorf("api error: status %d", resp.StatusCode)
 	}
-	var battleLog BattleList
-	err = json.NewDecoder(resp.Body).Decode(&battleLog)
 
-	var friendlyBattleList []FriendyBattleLogReturn
+	var battleLog BattleList
+	if err := json.NewDecoder(resp.Body).Decode(&battleLog); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var friendlyBattleList BattleList
 	for _, battle := range battleLog {
-		if battle.Type == "friendly" {
-			//friendlyBattleList = append(friendlyBattleList, battle)
+		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
+			continue
+		}
+		if battle.Team[0].Tag == myTag && battle.Opponent[0].Tag == friendTag {
+			friendlyBattleList = append(friendlyBattleList, battle)
 		}
 	}
+
 	return friendlyBattleList, nil
+}
+
+func (c *ClashRoyaleClient) filterHeadToHeadBattles(myTag string, friendTag string) (BattleList, error) {
+	myGamesList, err := c.getHeadToHeadBattles(myTag, friendTag)
+	if err != nil {
+		log.Println("issue getting head to head battles")
+		return nil, err
+	}
+
+	friendsGamesList, err := c.getHeadToHeadBattles(friendTag, myTag)
+	if err != nil {
+		log.Println("issue getting head to head battles")
+		return nil, err
+	}
+
+	combinedGames := append(myGamesList, friendsGamesList...)
+
+	seen := make(map[string]struct{}, len(combinedGames))
+	unique := BattleList{}
+
+	for _, battle := range combinedGames {
+		key := battle.BattleTime
+
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		unique = append(unique, battle)
+	}
+	return unique, nil
+
+}
+
+func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, friendTag string) error {
+	mostRecentGame, err := getMostRecentCRGame(db, "friendlyGames")
+	if err != nil {
+		return fmt.Errorf("failed to get most recent game %w", err)
+	}
+
+	battleLog, err := client.getHeadToHeadBattles(myTag, friendTag)
+	if err != nil {
+		return fmt.Errorf("fauled to fetch battlelog: %w", err)
+	}
+
+	battleLog2, err := client.getHeadToHeadBattles(friendTag, myTag)
+	if err != nil {
+		return fmt.Errorf("fauled to fetch battlelog: %w", err)
+	}
+	battleLog = append(battleLog, battleLog2...)
+
+	for _, battle := range battleLog {
+		if mostRecentGame != "" && battle.BattleTime <= mostRecentGame {
+			continue
+		}
+		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
+			continue
+		}
+
+		result := -1
+
+		if battle.Team[0].Tag == myTag && battle.Team[0].Crowns > battle.Opponent[0].Crowns {
+			result = 1
+		} else if battle.Opponent[0].Tag == myTag && battle.Opponent[0].Crowns > battle.Team[0].Crowns {
+			result = 1
+		} else {
+			result = 0
+		}
+
+		//game := CRFriendlyDataBaseEntry{
+		//	BattleTime: battle.BattleTime,
+		//	Result:     result,
+		//}
+
+		if err := addFriendlyEntry(db, battle.BattleTime, result, json.RawMessage("null"), json.RawMessage("null")); err != nil {
+			log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
+		}
+
+	}
+	return nil
 
 }
 
