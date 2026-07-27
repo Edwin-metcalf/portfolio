@@ -109,6 +109,33 @@
                         <canvas bind:this={chartCanvasTrophies}></canvas>
                     </div>
                 </section>
+
+                <div class="friendly-section" style="background: #222; padding: 1rem;">
+                    <h2>Head to Head against evil Ryan</h2>
+                    <p>My victories: {clashRoyaleData.friendly.wins}</p>
+                    <p>Ryans successes: {clashRoyaleData.friendly.losses}</p>
+                    {#if clashRoyaleData.friendly.ties > 0}
+                        <p>Some how we tied {clashRoyaleData.friendly.ties} times</p>
+                    {/if}
+                    <p>My win rate: {formatPercentage(clashRoyaleData.friendly.winRate)}</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each clashRoyaleData.friendly.games as game}
+                                <tr>
+                                    <td>{game.battleTime}</td>
+                                    <td>{game.result === 1 ? 'Win' : game.result === 0 ? 'Loss' : 'Tie'}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         {:else}
             <h2 style="color: white;">Something is very very broken</h2>

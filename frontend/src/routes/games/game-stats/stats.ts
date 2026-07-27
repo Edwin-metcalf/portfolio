@@ -57,6 +57,7 @@ interface CRLadderChartPoint {
 export interface ClashRoyaleLoadReturn {
     profile: PlayerProfile;
     battleLog: CRLadderChartPoint[];
+    friendly: ClashRoyaleFriendlyLoadReturn
 }
 export interface ClashRoyaleStatsReturn {
     wins: number;
@@ -64,6 +65,23 @@ export interface ClashRoyaleStatsReturn {
     winRate: number;
     currentTrophies: number;
     trophyProgress: number[];
+}
+//friendly game stuff
+interface CRFriendlyGame {
+    battleTime: string;
+    result: number;
+    myDeck: unknown; //this is not implemented yet but ready to be
+    enemyDeck: unknown;
+}
+export interface ClashRoyaleFriendlyLoadReturn {
+    myTag: string;
+    friendTag: string;
+    wins: number;
+    losses: number;
+    ties: number;
+    winRate: number;
+    games: CRFriendlyGame[];
+
 }
 //typing for the date object in the line chart
 export type TrophyPoint = {

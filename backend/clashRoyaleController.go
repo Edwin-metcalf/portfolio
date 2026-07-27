@@ -98,13 +98,14 @@ type PlayerBattleLogReturn struct {
 	Name     string       `json:"name"`
 	RankList DateRankList `json:"rankList"`
 }
-type FriendyBattleLogReturn struct {
-	Tag        string          `json:"tag"`
-	Name       string          `json:"name"`
-	BattleTime string          `json:"battleTime"`
-	Result     int             `json:"result"`
-	MyDeck     json.RawMessage `json:"myDeck"`
-	EnemyDeck  json.RawMessage `json:"enemyDeck"`
+type ClashRoyaleFriendlyLoadReturn struct {
+	MyTag     string                    `json:"myTag"`
+	FriendTag string                    `json:"friendTag"`
+	Wins      int                       `json:"wins"`
+	Losses    int                       `json:"losses"`
+	Ties      int                       `json:"ties"`
+	WinRate   float64                   `json:"winRate"`
+	Games     []CRFriendlyDataBaseEntry `json:"games"`
 }
 
 // api key stuff is actually a JSON Web Token kinda cool something new
@@ -271,7 +272,7 @@ func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error)
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("api error: status %d", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("api error: status %d, body %s", resp.StatusCode, string(body))
 	}
 
 	var battleLog BattleList
@@ -401,17 +402,22 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	if err != nil {
 		return fmt.Errorf("failed to get most recent game %w", err)
 	}
+	/*
+		battleLog, err := client.getHeadToHeadBattles(myTag, friendTag)
+		if err != nil {
+			return fmt.Errorf("fauled to fetch battlelog: %w", err)
+		}
 
-	battleLog, err := client.getHeadToHeadBattles(myTag, friendTag)
+		battleLog2, err := client.getHeadToHeadBattles(friendTag, myTag)
+		if err != nil {
+			return fmt.Errorf("fauled to fetch battlelog: %w", err)
+		}
+		battleLog = append(battleLog, battleLog2...)
+	*/
+	battleLog, err := client.filterHeadToHeadBattles(myTag, friendTag)
 	if err != nil {
-		return fmt.Errorf("fauled to fetch battlelog: %w", err)
+		return fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
 	}
-
-	battleLog2, err := client.getHeadToHeadBattles(friendTag, myTag)
-	if err != nil {
-		return fmt.Errorf("fauled to fetch battlelog: %w", err)
-	}
-	battleLog = append(battleLog, battleLog2...)
 
 	for _, battle := range battleLog {
 		if mostRecentGame != "" && battle.BattleTime <= mostRecentGame {
@@ -444,10 +450,39 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	return nil
 
 }
+func loadFriendlyStats(db *sql.DB, client *ClashRoyaleClient, myTag string, friendTag string) (*ClashRoyaleFriendlyLoadReturn, error) {
+	// helper to load friendly games gonna be more important later on find matchups
+	if err := syncFriendlyGames(db, client, myTag, friendTag); err != nil {
+		log.Printf("friendy Sync warning: %v", err)
+	}
+
+	games, err := getFriendlyHistory(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get friendly history: %w", err)
+	}
+	var result ClashRoyaleFriendlyLoadReturn
+	for _, g := range games {
+		result.Games = append(result.Games, g)
+		switch g.Result {
+		case 1:
+			result.Wins++
+		case 0:
+			result.Losses++
+		default:
+			result.Ties++
+		}
+	}
+	result.MyTag = myTag
+	result.FriendTag = friendTag
+	if len(games) > 0 {
+		result.WinRate = float64(result.Wins) / float64(len(games))
+	}
+	return &result, nil
+}
 
 // this might not need the player Tag as this could be the on load without input
 // the matchups one should need IDs
-func returnClashRoyaleStats(playerTag string) (*ClashRoyaleStatsReturn, error) {
+/*func returnClashRoyaleStats(playerTag string) (*ClashRoyaleStatsReturn, error) {
 	CRclient := newClashRoyaleClient()
 	//maybe pass it in or not hard code it
 	_, err := CRclient.getPlayerProfile(playerTag)
@@ -459,7 +494,7 @@ func returnClashRoyaleStats(playerTag string) (*ClashRoyaleStatsReturn, error) {
 
 	return &CRStatsLoad, nil
 }
-
+*/
 /*
 testign guy if needed
 func testing() {

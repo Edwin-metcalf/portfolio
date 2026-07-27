@@ -141,8 +141,9 @@ type CRLadderChartPoint struct {
 }
 
 type ClashRoyaleLoadReturn struct {
-	Profile   *PlayerProfileReturn `json:"profile"`
-	BattleLog []CRLadderChartPoint `json:"battleLog"`
+	Profile   *PlayerProfileReturn          `json:"profile"`
+	BattleLog []CRLadderChartPoint          `json:"battleLog"`
+	Friendly  ClashRoyaleFriendlyLoadReturn `json:"friendly"`
 }
 
 func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +155,7 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	myPlayerId := "#P9L0U88GQ"
-	//friendPlayerId := "#QQCJYR0Y8"
+	friendPlayerId := "#QQCJYR0Y8"
 	CRclient := newClashRoyaleClient()
 	playerInfo, err := CRclient.getPlayerProfile(myPlayerId)
 	if err != nil {
@@ -183,49 +184,40 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// do stuff for friendlies currently just against friend but then add against whoever
-
+	friendlyStats, err := loadFriendlyStats(DB, CRclient, myPlayerId, friendPlayerId)
+	if err != nil {
+		log.Printf("Error loading friendly stats: %v", err)
+		http.Error(w, "Error fetching friendly stats", http.StatusInternalServerError)
+		return
+	}
 	result := ClashRoyaleLoadReturn{
 		Profile:   playerInfo,
 		BattleLog: chartPoints,
+		Friendly:  *friendlyStats,
 	}
 	json.NewEncoder(w).Encode(result)
-
-	//gonna need my clash id
-	//stats, err := ClashRoyaleStatsReturn(playerID)
 }
 
-/*
-func clashRoyaleLadderHistoryHandler(w http.ResponseWriter, r *http.Request, playerId string) {
+func clashRoyaleFriendlyHandler(w http.ResponseWriter, r *http.Request) {
+	//will have to edit this to be able to take arbitrary tags in future
 	w.Header().Set("Content-Type", "application/json")
+
+	myTag := "#P9L0U88GQ"
+	friendTag := "#QQCJYR0Y8"
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	CRclient := newClashRoyaleClient()
-	playerBattleHistory, err  := CRclient.getPlayerBattleLog(playerId)
+	stats, err := loadFriendlyStats(DB, CRclient, myTag, friendTag)
 	if err != nil {
-		log.Printf("Error fetching Clash Royale stats: %v", err)
-		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		http.Error(w, "Error fetching friendly stats", http.StatusInternalServerError)
 		return
 	}
-	// this may cause error I dont know why i need to have a 0 in here i want the whole list
-	result := DateRankList{playerBattleHistory.RankList[0]}
-	json.NewEncoder(w).Encode(result)
+
+	json.NewEncoder(w).Encode(stats)
 }
-
-// should this function only take 1 player and then compare results latter?
-func clashRoyaleFriendlyHisoryHandler(w http.ResponseWriter, r *http.Request, player1 string, player2 string) {
-	w.Header().Set("Content-Type", "application/json")
-
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	CRclient := newClashRoyaleClient()
-
-}
-*/
 
 // stuff for Clash royale database entries
 type CRLadderDataBaseEntry struct {
