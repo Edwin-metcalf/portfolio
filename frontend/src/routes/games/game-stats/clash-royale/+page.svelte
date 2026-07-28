@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type ClashRoyaleLoadReturn, createWinLoseChart, createTrophyLineChart, type TrophyPoint} from "../stats"
+    import {type ClashRoyaleLoadReturn, createWinLoseChart, createTrophyLineChart, type TrophyPoint, createHeadToHeadChart} from "../stats"
     import Chart from 'chart.js/auto'
     import { fetchAPI } from '$lib/api';
     import {onMount, tick} from 'svelte';
@@ -14,6 +14,9 @@
 
     let chartCanvasTrophies = $state<HTMLCanvasElement | null>(null);
     let chartInstanceTrophies: Chart<'line', TrophyPoint[]> | null = null;
+
+    let headToHeadCanvas = $state<HTMLCanvasElement | null>(null);
+    let headToHeadInstance: Chart<'bar'> | null = null;
 
     let loading = $state<boolean>(true);
 
@@ -55,6 +58,10 @@
             if (chartCanvasTrophies) {
                 chartInstanceTrophies = createTrophyLineChart(chartCanvasTrophies,clashRoyaleData.battleLog)
             }
+            //head to head chart
+            if (headToHeadCanvas) {
+                headToHeadInstance = createHeadToHeadChart(headToHeadCanvas, clashRoyaleData.friendly.wins, clashRoyaleData.friendly.losses)
+            }
         
         })();
 
@@ -65,6 +72,9 @@
             if (chartInstanceTrophies) {
                 chartInstanceTrophies.destroy();
             }
+            if (headToHeadInstance) {
+                headToHeadInstance.destroy();
+            }
         };
     });
 
@@ -72,6 +82,7 @@
     function formatPercentage(decimal: number) {
         return (decimal*100).toFixed(2) + "%";
     }
+
 </script>
 <header class="stats-header">
         <h1>My Clash Royale Stats</h1>
@@ -111,30 +122,43 @@
                 </section>
 
                 <div class="friendly-section" style="background: #222; padding: 1rem;">
-                    <h2>Head to Head against evil Ryan</h2>
-                    <p>My victories: {clashRoyaleData.friendly.wins}</p>
-                    <p>Ryans successes: {clashRoyaleData.friendly.losses}</p>
-                    {#if clashRoyaleData.friendly.ties > 0}
-                        <p>Some how we tied {clashRoyaleData.friendly.ties} times</p>
-                    {/if}
-                    <p>My win rate: {formatPercentage(clashRoyaleData.friendly.winRate)}</p>
+                    <header class="section-header">
+                        <h2>Head to Head against evil Ryan</h2>
+                    </header>
+                    <div class="score-banner">
+                        {clashRoyaleData.friendly.wins}
+                        -
+                        {clashRoyaleData.friendly.losses}
+                        {#if clashRoyaleData.friendly.ties > 0}
+                            -
+                            tied {clashRoyaleData.friendly.ties}
+                        {/if}
+                    </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Result</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each clashRoyaleData.friendly.games as game}
+                    
+                    <p>My win rate: {formatPercentage(clashRoyaleData.friendly.winRate)}</p>
+                    <div class="chart-container">
+                        <canvas bind:this={headToHeadCanvas}></canvas>
+                    </div>
+
+                    <div class="match-history">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>{game.battleTime}</td>
-                                    <td>{game.result === 1 ? 'Win' : game.result === 0 ? 'Loss' : 'Tie'}</td>
+                                    <th>Date</th>
+                                    <th>Result</th>
                                 </tr>
-                            {/each}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {#each clashRoyaleData.friendly.games as game}
+                                    <tr>
+                                        <td>{game.battleTime}</td>
+                                        <td>{game.result === 1 ? 'Win' : game.result === 0 ? 'Loss' : 'Tie'}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         {:else}
@@ -155,11 +179,10 @@
     }
 
     .stat-card {
-        background: #429E9D;
-        border-radius: 8px;
-        padding: 1rem 1.5rem;
-        text-align: center;
-        min-width: 80px;
+        background: #2c2c2c;
+        border: 1px solid #3a3a3a;
+        border-radius: 10px;
+        padding: 1rem;
     }
 
     .stat-label {

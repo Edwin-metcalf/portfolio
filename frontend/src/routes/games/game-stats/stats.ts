@@ -130,7 +130,7 @@ function parseClashRoyaleDate(text: string): Date {
     );
     return new Date(formatted);
 }
-export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: CRLadderChartPoint[]){
+export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: CRLadderChartPoint[]): Chart<'line', TrophyPoint[]> {
     console.log('raw trohpydata 1: ', trophyData[0])
     const pointData: TrophyPoint[] = trophyData.map(entry => ({
         x: parseClashRoyaleDate(entry.battleTime),
@@ -168,4 +168,61 @@ export function createTrophyLineChart(canvas: HTMLCanvasElement, trophyData: CRL
     };
 
     return new Chart(canvas, config);
+}
+
+//would be cool to pass names into this for future ability to have a matchup calculator for anyone
+export function createHeadToHeadChart(canvas:  HTMLCanvasElement, wins: number, losses: number): Chart<'bar'> {
+    const winPct = (wins / (wins + losses)) * 100
+    const lossPct = (losses / (wins + losses)) * 100
+    const counts = [wins, losses]
+    const config: ChartConfiguration<'bar'> = {
+        type: 'bar',
+        data: {
+            labels: ['My Wins'],
+            datasets: [
+                {
+                    label: 'Wins',
+                    data: [winPct],
+                    backgroundColor: 'rgba(75, 192, 192, 0.85)',
+                },
+                {
+                    label: 'Losses',
+                    data: [lossPct],
+                    backgroundColor: 'rgba(255, 99, 132, 0.85)'
+                }
+            ]
+        }, 
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    stacked: true,
+                    max: 100, 
+                    ticks: {
+                        callback: (value) => value + '%'
+                    }
+                },
+                y: {
+                    stacked: true
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const dataset = context.dataset;
+                            const dataIndex = context.dataIndex;
+
+                            const label = dataset.label;
+                            const percentage = Number(context.raw).toFixed(1);
+                            const count = counts[context.dataIndex];
+
+                            return `${label}: ${percentage}% (${count} ${label})`;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return new Chart(canvas, config)
 }
