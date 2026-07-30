@@ -402,18 +402,6 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	if err != nil {
 		return fmt.Errorf("failed to get most recent game %w", err)
 	}
-	/*
-		battleLog, err := client.getHeadToHeadBattles(myTag, friendTag)
-		if err != nil {
-			return fmt.Errorf("fauled to fetch battlelog: %w", err)
-		}
-
-		battleLog2, err := client.getHeadToHeadBattles(friendTag, myTag)
-		if err != nil {
-			return fmt.Errorf("fauled to fetch battlelog: %w", err)
-		}
-		battleLog = append(battleLog, battleLog2...)
-	*/
 	battleLog, err := client.filterHeadToHeadBattles(myTag, friendTag)
 	if err != nil {
 		return fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
@@ -433,6 +421,8 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 			result = 1
 		} else if battle.Opponent[0].Tag == myTag && battle.Opponent[0].Crowns > battle.Team[0].Crowns {
 			result = 1
+		} else if battle.Opponent[0].Crowns == battle.Team[0].Crowns {
+			result = -1
 		} else {
 			result = 0
 		}

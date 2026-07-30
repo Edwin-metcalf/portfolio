@@ -214,12 +214,12 @@
 
 <style>
     .game-container {
-        position: relative;
+        margin: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        padding-bottom: 10px;
+        background-color: #161b22;
     }
     canvas {
         image-rendering: pixelated;

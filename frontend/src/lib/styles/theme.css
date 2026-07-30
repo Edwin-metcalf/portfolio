@@ -1,0 +1,15 @@
+:root {
+    --bg: #131215;
+    --panel: #1B1A1F;
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #ECE9E3;
+    --text-muted: #8C8A91;
+    --mint: #3ECFC0;
+    --font-display: Georgia, serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --radius: 3px;
+}
+body {
+    background: var(--bg);
+    color: var(--text);
+}
