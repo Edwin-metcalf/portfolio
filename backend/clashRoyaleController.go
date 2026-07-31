@@ -117,8 +117,7 @@ func init() {
 		log.Println("Error loading .env file, using environment variables")
 	}
 	//set this to the production one when needed now its the dev one this may break a bunch lmao
-	//CR_APIKEY = os.Getenv("CLASH_ROYALE_API_KEY")
-	CR_APIKEY = os.Getenv("CLASH_ROYALE_JWT_DEV")
+	CR_APIKEY = os.Getenv("CLASH_ROYALE_JWT_KEY")
 
 	if CR_APIKEY == "" {
 		log.Fatal("clash royale JWT is empty/not set ")
