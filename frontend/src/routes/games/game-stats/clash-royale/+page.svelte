@@ -10,6 +10,7 @@
 	import { fetchAPI } from '$lib/api';
 	import { onMount, tick } from 'svelte';
 	import { gameStatsCache } from '$lib/store/GameStatsCache.svelte';
+    import { X } from 'lucide-svelte';
 
 	let clashRoyaleData = $state<ClashRoyaleLoadReturn | null>(null);
 	let chartCanvasOverall = $state<HTMLCanvasElement | null>(null);
@@ -100,9 +101,22 @@
 		if (result === 0) return 'loss';
 		return 'tie';
 	}
+
+    function getArenaNumByTrophies(trophies: number): number {
+        //this is kinda a hack solution especially at lower arenas
+        if (trophies < 5000) {
+            if (trophies < 1000) return Math.floor(trophies / 300) + 1;
+            return Math.floor(trophies / 400) + 3;
+        }
+
+        return 15 + Math.floor((trophies - 5000) / 500);
+    }
 </script>
 
 <div class="game-stat-helper-page">
+    <a href="/games" class="exit-button" aria-label="Exit games">
+        <X size={24} />
+    </a>
 	<nav class="game-tabs">
 		<a href="./dota" class="tab">Dota 2</a>
 		<a href="./clash-royale" class="tab active">Clash Royale</a>
@@ -116,7 +130,7 @@
 
 			<p class="player-name">{clashRoyaleData.profile.name}</p>
 			<p class="player-meta">
-				{clashRoyaleData.profile.tag} &middot; {clashRoyaleData.profile.arena.name}
+				{clashRoyaleData.profile.tag} &middot; Arena {getArenaNumByTrophies(clashRoyaleData.profile.trophies)}: {clashRoyaleData.profile.arena.name}
 			</p>
 
 			<div class="profile-stats">
@@ -159,24 +173,27 @@
 		</div>
 
 		<section class="friendly-panel">
-			<h2 class="panel-label">Recent Vs Ryan</h2>
+			<h2 class="panel panel-label">Recent Vs Ryan</h2>
 			<p class="friendly-tally">
 				{clashRoyaleData.friendly.wins}W &middot; {clashRoyaleData.friendly.losses}L &middot; {clashRoyaleData
 					.friendly.ties}T &middot;
 				<span class="accent">{formatPercentage(clashRoyaleData.friendly.winRate)} WR</span>
 			</p>
-			<div class="chart-container">
-				<canvas bind:this={headToHeadCanvas}></canvas>
-			</div>
-
-			<div class="battle-squares">
-				{#each clashRoyaleData.friendly.games as game}
-					{@const outcome = getBattleResult(game.result)}
-					<span class="battle-square {outcome}">
-						{outcome === 'win' ? 'W' : outcome === 'loss' ? 'L' : 'T'}
-					</span>
-				{/each}
-			</div>
+            <div class="friendly-row">
+                <div class="chart-container">
+                    <canvas bind:this={headToHeadCanvas}></canvas>
+                </div>
+                <div class="battle-history">
+                    <div class="battle-squares">
+                        {#each clashRoyaleData.friendly.games as game}
+                            {@const outcome = getBattleResult(game.result)}
+                            <span class="battle-square {outcome}">
+                                {outcome === 'win' ? 'W' : outcome === 'loss' ? 'L' : 'T'}
+                            </span>
+                        {/each}
+                    </div>
+                </div>
+            </div>
 		</section>
 	{:else}
 		<h2 style="color: white;">Something is very very broken</h2>
@@ -184,36 +201,14 @@
 </div>
 
 <style>
-	.game-stat-helper-page {
-		max-width: 960px;
-		margin: 0 auto;
-		padding: 2.5rem 2rem 4rem;
-	}
 	.chart-container {
-		width: 300px;
-		height: 300px;
-		margin-top: 1rem;
-	}
-	.game-tabs {
-		display: flex;
-		gap: 24px;
-		padding-bottom: 14px;
-		border-bottom: 1px solid var(--border);
-		margin-bottom: 2rem;
-	}
-	.tab {
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		letter-spacing: 0.5px;
-		text-transform: uppercase;
-		color: var(--text-muted);
-		text-decoration: none;
-		padding-bottom: 10px;
-	}
-	.tab.active {
-		color: var(--mint);
-		border-bottom: 2px solid var(--mint);
-	}
+        position: relative;
+		width: 100%;
+		height: 100%;
+        max-width: 300px;
+        aspect-ratio: 1 / 1;
+		margin: 0 auto;
+    }
 	.profile-panel,
 	.winloss-panel,
 	.trophy-panel,
@@ -223,21 +218,24 @@
 		padding: 1.5rem;
 		margin-bottom: 1.5rem;
 	}
-	.panel-label {
-		font-family: var(--font-mono);
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		color: var(--text-muted);
-		margin: 0 0 1rem;
-	}
 	.friendly-panel .panel-label {
-		font-family: var(--font-display);
-		font-size: 1.1rem;
-		text-transform: none;
-		letter-spacing: normal;
-		color: var(--text);
+		font-size: 1rem;
 	}
+    .friendly-row .chart-container {
+        aspect-ratio: auto;
+        width: 100%;
+        max-width: 400px;
+        margin: 0;
+    }
+    .friendly-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        align-items: center;
+        justify-items: center;
+        width: 100%;
+        margin-top: 1rem;
+    }
 	.chart-row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -247,11 +245,6 @@
 		.chart-row {
 			grid-template-columns: 1fr;
 		}
-	}
-	.panel {
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		padding: 1.5rem;
 	}
 	.player-name {
 		font-family: var(--font-display);
@@ -271,40 +264,28 @@
 		margin-top: 1.25rem;
 		flex-wrap: wrap;
 	}
-	.stat-label {
-		display: block;
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		color: var(--text-muted);
-	}
-	.stat-value {
-		font-family: var(--font-mono);
-		font-size: 1.1rem;
-		color: var(--text);
-	}
-	.accent {
-		color: var(--mint);
-	}
-	.loading-texts {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.9rem;
-	}
 	.friendly-tally {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: 0.85rem;
 	}
+    .battle-history {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
 	.battle-squares {
 		display: flex;
-		gap: 6px;
-		margin: 0.75rem 0;
+        flex-wrap: wrap;
+		gap: 8px;
+        justify-content: center;
+        max-width: 320px;
 	}
 	.battle-square {
-		width: 22px;
-		height: 22px;
-		border-radius: 2px;
+		width: 24px;
+		height: 24px;
+		border-radius: 4px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
