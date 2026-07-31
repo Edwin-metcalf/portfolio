@@ -94,7 +94,7 @@
         entry.score = score
         entry.name = name
         try {
-            const result = await fetchAPI('/api/space-invaders/entry', {
+            const result = await fetchAPI('/api/games/space-invaders/entry', {
                 method: 'POST',
                 body: JSON.stringify(entry)
 
@@ -107,7 +107,7 @@
 
     async function getLeaderboard() {
         try {
-            const result = await fetchAPI('/api/space-invaders/leaderboard',{
+            const result = await fetchAPI('/api/games/space-invaders/leaderboard',{
                 method: 'GET',
             });
             leaderboard = result
@@ -214,12 +214,12 @@
 
 <style>
     .game-container {
-        position: relative;
+        margin: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        padding-bottom: 10px;
+        background-color: #161b22;
     }
     canvas {
         image-rendering: pixelated;
@@ -278,31 +278,6 @@
         opacity: 0.5;
         cursor: wait;
         background: rgba(100, 100, 100, 0.6);
-    }
-
-    .exit-button {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: #f0f6fc;
-        transition: all 0.3s ease;
-        z-index: 1;
-    }
-    
-    .exit-button:hover {
-        background: rgba(0, 212, 170, 0.2);
-        border-color: #00d4aa;
-        transform: rotate(90deg);
-
     }
     .game-over-overlay {
         position: absolute;

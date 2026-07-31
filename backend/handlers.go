@@ -110,18 +110,126 @@ func healthHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // dota stuff handlers
-func dotaWinLoseHandler(w http.ResponseWriter, r *http.Request) {
+type DotaPlayerStats struct {
+	Overall *winLossRate       `json:"overall"`
+	Recent  *recentGameCleaned `json:"recent"`
+}
+
+func dotaStatsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not aloud", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	winLossPercentage, err := getWinLose("287883142")
+	playerID := "287883142"
+	stats, err := returnGamesSats(playerID)
 
 	if err != nil {
-		http.Error(w, "Error with open dota api", http.StatusInternalServerError)
+		log.Printf("Error fetching dota stats: %v", err)
+		http.Error(w, "Error fetching player stats", http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(winLossPercentage)
+
+	json.NewEncoder(w).Encode(stats)
+}
+
+// struct to return my profile and my battle history
+type CRLadderChartPoint struct {
+	BattleTime string `json:"battleTime"`
+	Trophies   int    `json:"trophies"`
+}
+
+type ClashRoyaleLoadReturn struct {
+	Profile   *PlayerProfileReturn          `json:"profile"`
+	BattleLog []CRLadderChartPoint          `json:"battleLog"`
+	Friendly  ClashRoyaleFriendlyLoadReturn `json:"friendly"`
+}
+
+func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	myPlayerId := "#P9L0U88GQ"
+	friendPlayerId := "#QQCJYR0Y8"
+	CRclient := newClashRoyaleClient()
+	playerInfo, err := CRclient.getPlayerProfile(myPlayerId)
+	if err != nil {
+		log.Printf("Error fetching clash Royale stats: %v", err)
+		http.Error(w, "Error fetching clash royale stats", http.StatusInternalServerError)
+		return
+	}
+	//sync before getting hisotry
+	if err := SyncLadderGames(DB, CRclient, myPlayerId); err != nil {
+		log.Printf("Sync Warning: %v", err)
+		//DB has history if fails dont kill everything
+	}
+
+	ladderGames, err := getLadderHistory(DB)
+	if err != nil {
+		log.Printf("Error fetching ladder history: %v", err)
+		http.Error(w, "Error fetching ladder history", http.StatusInternalServerError)
+		return
+	}
+	var chartPoints []CRLadderChartPoint
+	for _, game := range ladderGames {
+		chartPoints = append(chartPoints, CRLadderChartPoint{
+			BattleTime: game.BattleTime,
+			Trophies:   game.StartingTrophies + game.TrophyChange,
+		})
+	}
+
+	// do stuff for friendlies currently just against friend but then add against whoever
+	friendlyStats, err := loadFriendlyStats(DB, CRclient, myPlayerId, friendPlayerId)
+	if err != nil {
+		log.Printf("Error loading friendly stats: %v", err)
+		http.Error(w, "Error fetching friendly stats", http.StatusInternalServerError)
+		return
+	}
+	result := ClashRoyaleLoadReturn{
+		Profile:   playerInfo,
+		BattleLog: chartPoints,
+		Friendly:  *friendlyStats,
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
+func clashRoyaleFriendlyHandler(w http.ResponseWriter, r *http.Request) {
+	//will have to edit this to be able to take arbitrary tags in future
+	w.Header().Set("Content-Type", "application/json")
+
+	myTag := "#P9L0U88GQ"
+	friendTag := "#QQCJYR0Y8"
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	CRclient := newClashRoyaleClient()
+	stats, err := loadFriendlyStats(DB, CRclient, myTag, friendTag)
+	if err != nil {
+		http.Error(w, "Error fetching friendly stats", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(stats)
+}
+
+// stuff for Clash royale database entries
+type CRLadderDataBaseEntry struct {
+	BattleTime       string `json:"batteTime"`
+	StartingTrophies int    `json:"startingTrophies"`
+	TrophyChange     int    `json:"trophyChange"`
+	Result           int    `json:"result"`
+}
+
+type CRFriendlyDataBaseEntry struct {
+	BattleTime string          `json:"battleTime"`
+	Result     int             `json:"result"`
+	MyDeck     json.RawMessage `json:"myDeck"`
+	EnemyDeck  json.RawMessage `json:"enemyDeck"`
 }
