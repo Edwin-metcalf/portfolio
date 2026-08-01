@@ -62,6 +62,7 @@ func main() {
 	mux.HandleFunc("/api/games/space-invaders/clear", clearLeaderboardHandler)
 	mux.HandleFunc("/api/games/dota", dotaStatsHandler)
 	mux.HandleFunc("/api/games/clash-royale", clashRoyaleLoadHandler)
+	mux.HandleFunc("/api.games/clash-royale/matchup-generator", matchupGeneratorHandler)
 	handler := corsMiddleware(mux)
 
 	port := os.Getenv("PORT")

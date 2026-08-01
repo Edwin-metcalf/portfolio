@@ -91,8 +91,8 @@
 
 
     async function SubmitScore(name: string, score: number) {
-        entry.score = score
-        entry.name = name
+        entry.score = score;
+        entry.name = name;
         try {
             const result = await fetchAPI('/api/games/space-invaders/entry', {
                 method: 'POST',

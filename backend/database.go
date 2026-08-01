@@ -96,7 +96,7 @@ func initDB() (*sql.DB, error) {
 		CRFriendlyStmt = `
 		CREATE TABLE IF NOT EXISTS friendlyGames (
 		id SERIAL PRIMARY KEY,
-		battle_time TIMESTAMP NOT NULL,
+		battle_time TEXT NOT NULL UNIQUE,
 		result SMALLINT,
 		my_deck JSON NOT NULL,
 		enemy_deck JSON NOT NULL
@@ -105,7 +105,7 @@ func initDB() (*sql.DB, error) {
 		CRFriendlyStmt = `
 		CREATE TABLE IF NOT EXISTS friendlyGames (
 		id INTEGER PRIMARY KEY,
-		battle_time TEXT NOT NULL,
+		battle_time TEXT NOT NULL UNIQUE,
 		result TINYINT,
 		my_deck TEXT NOT NULL,
 		enemy_deck TEXT NOT NULL
@@ -238,6 +238,7 @@ func addFriendlyEntry(db *sql.DB, battle_time string, result int, my_deck json.R
 		return fmt.Errorf("result value needs to be 1, 0 or -1, it is: %v", result)
 	}
 	_, err := db.Exec(`INSERT INTO friendlyGames (battle_time, result, my_deck, enemy_deck)
-					VALUES($1, $2, $3, $4);`, battle_time, result, my_deck, enemy_deck)
+					VALUES($1, $2, $3, $4)
+					ON CONFLICT (battle_time) DO NOTHING;`, battle_time, result, my_deck, enemy_deck)
 	return err
 }

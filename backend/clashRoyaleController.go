@@ -469,6 +469,58 @@ func loadFriendlyStats(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	return &result, nil
 }
 
+func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string) (*ClashRoyaleFriendlyLoadReturn, error) {
+	battleLog, err := client.filterHeadToHeadBattles(tag1, tag2)
+	if err != nil {
+		return nil, fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
+	}
+	numGames := len(battleLog)
+	var matchupReturn ClashRoyaleFriendlyLoadReturn
+	gamesList := make([]CRFriendlyDataBaseEntry, numGames)
+	var wins int
+	var losses int
+	var ties int
+
+	for i, battle := range battleLog {
+		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
+			continue
+		}
+		gamesList[i].BattleTime = battle.BattleTime
+		gamesList[i].MyDeck = json.RawMessage("null")
+		gamesList[i].EnemyDeck = json.RawMessage("null")
+
+		result := -1
+
+		if battle.Team[0].Tag == tag1 && battle.Team[0].Crowns > battle.Opponent[0].Crowns {
+			result = 1
+			wins += 1
+		} else if battle.Opponent[0].Tag == tag1 && battle.Opponent[0].Crowns > battle.Team[0].Crowns {
+			result = 1
+			wins += 1
+		} else if battle.Opponent[0].Crowns == battle.Team[0].Crowns {
+			result = -1
+			ties += 1
+		} else {
+			result = 0
+			losses += 1
+		}
+
+		gamesList[i].Result = result
+
+	}
+
+	matchupReturn.MyTag = tag1
+	matchupReturn.FriendTag = tag2
+	matchupReturn.Wins = wins
+	matchupReturn.Losses = losses
+	matchupReturn.Ties = ties
+	matchupReturn.WinRate = float64(wins) / float64(wins+losses)
+	matchupReturn.Games = gamesList
+
+	return &matchupReturn, nil
+
+}
+
 // this might not need the player Tag as this could be the on load without input
 // the matchups one should need IDs
 /*func returnClashRoyaleStats(playerTag string) (*ClashRoyaleStatsReturn, error) {

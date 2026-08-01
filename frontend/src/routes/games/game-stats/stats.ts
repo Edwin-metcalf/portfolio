@@ -88,6 +88,10 @@ export type TrophyPoint = {
     x: Date;
     y: number;
 };
+export interface matchupGeneratorTags {
+    tag1: string;
+    tag2: string;
+}
 
 export function createWinLoseChart(canvas: HTMLCanvasElement, wins: number, losses: number): Chart {
     const config: ChartConfiguration<'doughnut'> = {   

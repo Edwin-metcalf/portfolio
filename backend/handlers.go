@@ -154,6 +154,7 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//me and Ry Guy
 	myPlayerId := "#P9L0U88GQ"
 	friendPlayerId := "#QQCJYR0Y8"
 	CRclient := newClashRoyaleClient()
@@ -217,6 +218,38 @@ func clashRoyaleFriendlyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(stats)
+}
+
+type matchupGeneratorTags struct {
+	Tag1 string `json:"tag1"`
+	Tag2 string `json:"tag2"`
+}
+
+func matchupGeneratorHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var CRTags matchupGeneratorTags
+
+	err := json.NewDecoder(r.Body).Decode(&CRTags)
+
+	if err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	CRclient := newClashRoyaleClient()
+	matchupGeneratorReturn, err := matchupGeneratorhelper(CRclient, CRTags.Tag1, CRTags.Tag2)
+	if err != nil {
+		http.Error(w, "Error fetching matchup stats stats", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(matchupGeneratorReturn)
+
 }
 
 // stuff for Clash royale database entries
