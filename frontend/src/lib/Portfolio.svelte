@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks, BrainCircuit } from 'lucide-svelte';
+    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks, BrainCircuit, FileCode2, Bot, Network, MessageSquare } from 'lucide-svelte';
 
     interface Project {
         id: number;
@@ -56,8 +56,43 @@
             tools: ["Python", "Scikit","Pandas"],
             longDescription: "Conducted research on sentiment analysis. We used VADER classifier to train a logistic regression model that was then used to conduct a temporal analysis of the SF Giants and the NY Yankees fanbases.",
             highlights: ["finding, processing, and cleaning of reddit data", "logistic regression model trained and tested", "temporal analysis of correlation of teams success and fan sentiment","Wrote a paper showing our results of Yankee fans being more volitile through the 2017 season"]
-        } 
-
+        },
+        {
+            id: 6,
+            title: "Compiler",
+            description: "Compiled custom programming language to RISC-V",
+            icon: FileCode2,
+            tools: ["Ocaml", "RISC-V"],
+            longDescription: "Designed and implemented a compiler and a parser that used descent parsing and AST construction to generate RISC-V assembly from a custom .331 programming language ",
+            highlights: ["recursive descent parsing and abstract syntax tree construction", "type checking for expressions, functions, conditions, and control flow", "optimizations: loop-invariant hoisting, constant fold, strength reduction, copy propagation, etc"]
+        },
+        {
+            id: 7,
+            title:  "Automated Evaluation for Vision-Language Models",
+            description: "Isaacsim evaluation platform",
+            icon: Bot,
+            tools: ["Python", "Isaacsim"],
+            longDescription: "Built a headless IsaacSim evaluation platform in Python for a AI model to control a Franka Panda robot arm",
+            highlights: ["Vision-Language model manipulation tasks using automated task execution", "Translating natural language into robot actions", "automated evaluation loop including task execution, success/failure logging, and performance metrics"]
+        },
+        {
+            id: 8,
+            title: "Bit Torrent Client",
+            description: "Client written with POSIX library in C leverages UDP",
+            icon: Network,
+            tools: ["C", "UDP", "Socket Programming"],
+            longDescription: "Implemented concurrent peer downloads and sliding-window reliability protocol on top of UDP for high throughput file transfer",
+            highlights: ["POSIX UDP socket programming", "sliding window reliability on top of UDP protocol", "Download chunks of files concurrently from multiple peers with SHA-1 Verficaiton"]
+        }, 
+        {
+            id: 9,
+            title: "Internet Relay Chat client",
+            description: "Client written with POSIX library in C leverages TCP",
+            icon: MessageSquare,
+            tools: ["C", "TCP", "Socket Programming"],
+            longDescription: "Implemented a client that is in accordance with the IRC protocol with mutiple commnds",
+            highlights: ["POSIX TCP socket programming", "join, part, quit, server, msg, nick, whois and more commands"]
+        }
     ];
 
     let selectedProject: Project|null = null;

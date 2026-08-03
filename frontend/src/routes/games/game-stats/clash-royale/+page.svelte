@@ -166,6 +166,9 @@
 
 			<section class="trophy-panel">
 				<h2 class="panel panel-label">Trophy progression</h2>
+				<div class="stat">
+					<span class="stat-label">{clashRoyaleData.battleLog.length} games included</span>
+				</div>
 				<div class="chart-container">
 					<canvas bind:this={chartCanvasTrophies}></canvas>
 				</div>
@@ -208,6 +211,7 @@
         max-width: 300px;
         aspect-ratio: 1 / 1;
 		margin: 0 auto;
+		margin-top: 1rem;
     }
 	.profile-panel,
 	.winloss-panel,

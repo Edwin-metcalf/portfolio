@@ -276,7 +276,7 @@
 	}
 	.hero-kda {
 		margin: 0.75rem 0 0;
-		font-size: 0.85rem;
+		font-size: 0.4rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 	}
