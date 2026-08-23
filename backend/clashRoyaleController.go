@@ -99,13 +99,15 @@ type PlayerBattleLogReturn struct {
 	RankList DateRankList `json:"rankList"`
 }
 type ClashRoyaleFriendlyLoadReturn struct {
-	MyTag     string                    `json:"myTag"`
-	FriendTag string                    `json:"friendTag"`
-	Wins      int                       `json:"wins"`
-	Losses    int                       `json:"losses"`
-	Ties      int                       `json:"ties"`
-	WinRate   float64                   `json:"winRate"`
-	Games     []CRFriendlyDataBaseEntry `json:"games"`
+	MyTag      string                    `json:"myTag"`
+	FriendTag  string                    `json:"friendTag"`
+	MyName     string                    `json:"myName"`
+	FriendName string                    `json:"friendName"`
+	Wins       int                       `json:"wins"`
+	Losses     int                       `json:"losses"`
+	Ties       int                       `json:"ties"`
+	WinRate    float64                   `json:"winRate"`
+	Games      []CRFriendlyDataBaseEntry `json:"games"`
 }
 
 // api key stuff is actually a JSON Web Token kinda cool something new
@@ -480,6 +482,8 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 	var wins int
 	var losses int
 	var ties int
+	myName := findPlayerName(battleLog[0], tag1)
+	friendName := findPlayerName(battleLog[0], tag2)
 
 	for i, battle := range battleLog {
 		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
@@ -511,6 +515,8 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 
 	matchupReturn.MyTag = tag1
 	matchupReturn.FriendTag = tag2
+	matchupReturn.MyName = myName
+	matchupReturn.FriendName = friendName
 	matchupReturn.Wins = wins
 	matchupReturn.Losses = losses
 	matchupReturn.Ties = ties
@@ -520,22 +526,20 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 	return &matchupReturn, nil
 
 }
-
-// this might not need the player Tag as this could be the on load without input
-// the matchups one should need IDs
-/*func returnClashRoyaleStats(playerTag string) (*ClashRoyaleStatsReturn, error) {
-	CRclient := newClashRoyaleClient()
-	//maybe pass it in or not hard code it
-	_, err := CRclient.getPlayerProfile(playerTag)
-	if err != nil {
-		log.Printf("Error fetching clash Royale stats: %v", err)
-		return nil, err
+func findPlayerName(battle Battle, tag string) string {
+	for _, p := range battle.Team {
+		if p.Tag == tag {
+			return p.Name
+		}
 	}
-	var CRStatsLoad ClashRoyaleStatsReturn
-
-	return &CRStatsLoad, nil
+	for _, p := range battle.Opponent {
+		if p.Tag == tag {
+			return p.Name
+		}
+	}
+	return ""
 }
-*/
+
 /*
 testign guy if needed
 func testing() {

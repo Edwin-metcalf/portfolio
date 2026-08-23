@@ -76,6 +76,8 @@ interface CRFriendlyGame {
 export interface ClashRoyaleFriendlyLoadReturn {
     myTag: string;
     friendTag: string;
+    myName: string;
+    friendName: string;
     wins: number;
     losses: number;
     ties: number;

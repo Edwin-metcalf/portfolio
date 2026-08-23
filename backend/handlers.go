@@ -199,27 +199,6 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func clashRoyaleFriendlyHandler(w http.ResponseWriter, r *http.Request) {
-	//will have to edit this to be able to take arbitrary tags in future
-	w.Header().Set("Content-Type", "application/json")
-
-	myTag := "#P9L0U88GQ"
-	friendTag := "#QQCJYR0Y8"
-
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	CRclient := newClashRoyaleClient()
-	stats, err := loadFriendlyStats(DB, CRclient, myTag, friendTag)
-	if err != nil {
-		http.Error(w, "Error fetching friendly stats", http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(stats)
-}
-
 type matchupGeneratorTags struct {
 	Tag1 string `json:"tag1"`
 	Tag2 string `json:"tag2"`
