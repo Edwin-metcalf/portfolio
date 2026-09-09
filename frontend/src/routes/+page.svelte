@@ -62,11 +62,73 @@
     <Portfolio></Portfolio>
     <Courses></Courses>
     <Languages></Languages>
+    <!-- section here for going to my projects I am currently working on -->
+    <section class="panel explore-section">
+        <h2>Want to check out what I am working on?</h2>
+        <div class="explore-buttons">
+            <a href="/games" class="explore-button">
+                <span class="explore-button-title">Current Projects</span>
+                <span class="explore-button-desc">See what else I've been building</span>
+            </a>
+            <a href="/games/game-stats/clash-royale/matchup-generator" class="explore-button">
+                <span class="explore-button-title">Clash Royale Matchup</span>
+                <span class="explore-button-desc">Check your head-to-head stats against a friend!</span>
+            </a>
+            <a href="/games/space-invaders" class="explore-button">
+                <span class="explore-button-title">Space Invaders</span>
+                <span class="explore-button-desc">A vampire survivors twist on the classic, with a global leaderboard</span>            </a>
+        </div>
+
+    </section>
     <Contact></Contact>
 
 </div>
 
 <style>
+ .explore-section {
+    text-align: center;
+    padding: 2rem;
+    margin: 2rem 8rem 0;
+  }
+
+  .explore-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+  .explore-button {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.2rem 1rem;
+        text-decoration: none;
+        text-align: left;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+  .explore-button:hover {
+        transform: translateY(-2px);
+        border-color: var(--mint);
+    }
+
+    .explore-button-title {
+        color: var(--mint);
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .explore-button-desc {
+        color: var(--border);
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
     .main-page {
         background:#21262d;
         background-size: 400% 400%;

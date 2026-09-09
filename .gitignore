@@ -7,6 +7,7 @@ backend/*.exe
 backend/*.test
 backend/vendor/
 backend/server
+backedn/local.db
 
 #frontend I hope this works pleas
 frontend/.output
@@ -38,5 +39,6 @@ backend/.env
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
 
 

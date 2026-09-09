@@ -198,12 +198,49 @@
                 </div>
             </div>
 		</section>
+
+		<section class="matchup-panel">
+			<p class="matchup-text">Want to see your own matchup against a friend?</p>
+			<a href="/games/game-stats/clash-royale/matchup-generator" class="matchup-button">
+				check your matchup
+			</a>
+
+		</section>
+
 	{:else}
 		<h2 style="color: white;">Something is very very broken</h2>
 	{/if}
 </div>
 
 <style>
+.matchup-panel {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 1.5rem;
+		text-align: center;
+	}
+	.matchup-text {
+		font-family: var(--font-mono);
+		color: var(--text-muted);
+		margin: 0 0 1rem;
+	}
+	.matchup-button {
+		display: inline-block;
+		font-family: var(--font-mono);
+		background: var(--bg);
+		border: 1px solid var(--mint);
+		border-radius: var(--radius);
+		padding: 0.75rem 1.5rem;
+		color: var(--mint);
+		text-decoration: none;
+		font-weight: 500;
+		transition: transform 0.15s ease, background 0.15s ease;
+	}
+	.matchup-button:hover {
+		transform: translateY(-2px);
+		background: var(--mint);
+		color: var(--bg);
+	}
 	.chart-container {
         position: relative;
 		width: 100%;
