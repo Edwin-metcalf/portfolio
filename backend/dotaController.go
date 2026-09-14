@@ -112,7 +112,7 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 	}
 
 	fmt.Printf("Number of games fetched: %d\n", len(recentGameList))
-	fmt.Printf("First game: %+v\n", recentGameList[6])
+	//fmt.Printf("First game: %+v\n", recentGameList[6])
 	return &recentGameList, err
 }
 
