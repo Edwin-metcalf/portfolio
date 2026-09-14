@@ -37,6 +37,11 @@ interface Arena {
     id: number;
     name: string;
 }
+interface PathOfLegendSeasonResult {
+    leagueNumber: number;
+    //see clash royale controller for the other fields that are not supported by the API
+}
+
 interface PlayerProfile {
     tag: string;
     name: string;
@@ -49,6 +54,9 @@ interface PlayerProfile {
     threeCrownWins: number;
     clan: Clan;
     arena: Arena;
+    currentPathOfLegendSeasonResult: PathOfLegendSeasonResult;
+    lastPathOfLegendSeasonResult: PathOfLegendSeasonResult;
+    bestPathOfLegendSeasonResult: PathOfLegendSeasonResult;
 }
 interface CRLadderChartPoint {
     battleTime: string;

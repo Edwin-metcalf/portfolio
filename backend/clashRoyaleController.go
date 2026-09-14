@@ -26,17 +26,27 @@ type ClashRoyaleStatsReturn struct {
 	TrophyProgress  []int `json:"trophyProgress"`
 }
 
+type PathOfLegendSeasonResult struct {
+	LeagueNumber int `json:"leagueNumber"`
+	//tophies 0  int
+	//rank null int
+	//these seem to be set to 0 and null so dont need em
+}
+
 type PlayerProfile struct {
-	Tag            string `json:"tag"`
-	Name           string `json:"name"`
-	Trophies       int    `json:"trophies"`
-	BestTrophies   int    `json:"bestTrophies"`
-	Wins           int    `json:"wins"`
-	Losses         int    `json:"losses"`
-	BattleCount    int    `json:"battleCount"`
-	ThreeCrownWins int    `json:"threeCrownWins"`
-	Clan           Clan   `json:"clan"`
-	Arena          Arena  `json:"arena"`
+	Tag                             string                   `json:"tag"`
+	Name                            string                   `json:"name"`
+	Trophies                        int                      `json:"trophies"`
+	BestTrophies                    int                      `json:"bestTrophies"`
+	Wins                            int                      `json:"wins"`
+	Losses                          int                      `json:"losses"`
+	BattleCount                     int                      `json:"battleCount"`
+	ThreeCrownWins                  int                      `json:"threeCrownWins"`
+	Clan                            Clan                     `json:"clan"`
+	Arena                           Arena                    `json:"arena"`
+	CurrentPathOfLegendSeasonResult PathOfLegendSeasonResult `json:"currentPathOfLegendSeasonResult"`
+	LastPathOfLegendSeasonResult    PathOfLegendSeasonResult `json:"lastPathOfLegendSeasonResult"`
+	BestPathOfLegendSeasonResult    PathOfLegendSeasonResult `json:"bestPathOfLegendSeasonResult"`
 }
 type Clan struct {
 	Tag  string `json:"tag"`
@@ -47,17 +57,20 @@ type Arena struct {
 	Name string `json:"name"`
 }
 type PlayerProfileReturn struct {
-	Tag            string  `json:"tag"`
-	Name           string  `json:"name"`
-	Trophies       int     `json:"trophies"`
-	BestTrophies   int     `json:"bestTrophies"`
-	Wins           int     `json:"wins"`
-	Losses         int     `json:"losses"`
-	WinRate        float64 `json:"winRate"`
-	BattleCount    int     `json:"battleCount"`
-	ThreeCrownWins int     `json:"threeCrownWins"`
-	Clan           Clan    `json:"clan"`
-	Arena          Arena   `json:"arena"`
+	Tag                             string                   `json:"tag"`
+	Name                            string                   `json:"name"`
+	Trophies                        int                      `json:"trophies"`
+	BestTrophies                    int                      `json:"bestTrophies"`
+	Wins                            int                      `json:"wins"`
+	Losses                          int                      `json:"losses"`
+	WinRate                         float64                  `json:"winRate"`
+	BattleCount                     int                      `json:"battleCount"`
+	ThreeCrownWins                  int                      `json:"threeCrownWins"`
+	Clan                            Clan                     `json:"clan"`
+	Arena                           Arena                    `json:"arena"`
+	CurrentPathOfLegendSeasonResult PathOfLegendSeasonResult `json:"currentPathOfLegendSeasonResult"`
+	LastPathOfLegendSeasonResult    PathOfLegendSeasonResult `json:"lastPathOfLegendSeasonResult"`
+	BestPathOfLegendSeasonResult    PathOfLegendSeasonResult `json:"bestPathOfLegendSeasonResult"`
 }
 type GameMode struct {
 	Id   int    `json:"id"`
@@ -194,10 +207,18 @@ func (c *ClashRoyaleClient) getPlayerProfile(playerTag string) (*PlayerProfileRe
 	retProfile.ThreeCrownWins = p.ThreeCrownWins
 	retProfile.Clan = p.Clan
 	retProfile.Arena = p.Arena
+	fmt.Printf("current POL %v", p.CurrentPathOfLegendSeasonResult)
+	fmt.Printf("last POL %v", p.LastPathOfLegendSeasonResult)
+	fmt.Printf("best POL %v", p.BestPathOfLegendSeasonResult)
+
+	retProfile.CurrentPathOfLegendSeasonResult = p.CurrentPathOfLegendSeasonResult
+	retProfile.LastPathOfLegendSeasonResult = p.LastPathOfLegendSeasonResult
+	retProfile.BestPathOfLegendSeasonResult = p.BestPathOfLegendSeasonResult
 
 	return &retProfile, err
 }
 
+/* I think i can safely delete these
 func createDateRankList(battleList BattleList) *DateRankList {
 	var DRList DateRankList
 	for i := 0; i < len(battleList); i++ {
@@ -239,7 +260,6 @@ func (c *ClashRoyaleClient) getPlayerBattleLog(playerTag string) (*PlayerBattleL
 	if err != nil {
 		return nil, err
 	}
-
 	var battleReturn PlayerBattleLogReturn
 	//get the name I dont really know if this is the best way but it does consider ones first game being a 2v2
 	var name string
@@ -255,6 +275,7 @@ func (c *ClashRoyaleClient) getPlayerBattleLog(playerTag string) (*PlayerBattleL
 
 	return &battleReturn, nil
 }
+*/
 
 // similar to get PlayerBattleLog but more simple want to just get the list
 func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error) {

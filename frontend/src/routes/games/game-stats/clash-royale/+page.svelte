@@ -24,6 +24,17 @@
 	let headToHeadInstance: Chart<'bar'> | null = null;
 
 	let loading = $state<boolean>(true);
+	const leagueNumToNameMap = new Map<number, string>([
+		[1, 'Master I'],
+		[2, 'Master II'],
+		[3, 'Master III'],
+		[4, 'Champion'],
+		[5, 'Grand Champion'],
+		[6, 'Royal Champion'],
+		[7, 'Ultimate Champion'],
+	]);
+
+
 
 	async function getClashRoyaleData(): Promise<ClashRoyaleLoadReturn | null> {
 		try {
@@ -130,7 +141,10 @@
 
 			<p class="player-name">{clashRoyaleData.profile.name}</p>
 			<p class="player-meta">
-				{clashRoyaleData.profile.tag} &middot; Arena {getArenaNumByTrophies(clashRoyaleData.profile.trophies)}: {clashRoyaleData.profile.arena.name}
+				{clashRoyaleData.profile.tag} &middot; 
+				Arena {getArenaNumByTrophies(clashRoyaleData.profile.trophies)}: 
+				{clashRoyaleData.profile.arena.name} &middot; 
+				{leagueNumToNameMap.get(clashRoyaleData.profile.currentPathOfLegendSeasonResult.leagueNumber)}
 			</p>
 
 			<div class="profile-stats">
@@ -174,6 +188,10 @@
 				</div>
 			</section>
 		</div>
+
+		<section class="ranked-panel">
+
+		</section>
 
 		<section class="friendly-panel">
 			<h2 class="panel panel-label">Recent Vs Ryan</h2>

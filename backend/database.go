@@ -116,6 +116,31 @@ func initDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	var CRRankedStmt string
+	if driver == "postgres" {
+		CRRankedStmt = `
+		CREATE TABLE IF NOT EXISTS rankedGames (
+		id SERIAL PRIMARY KEY,
+		battle_time TEXT NOT NULL UNIQUE,
+		result SMALLINT,
+		my_deck JSON NOT NULL,
+		enemy_deck JSON NOT NULL
+		);`
+	} else {
+		CRRankedStmt = `
+		CREATE TABLE IF NOT EXISTS rankedGames (
+		id INTEGER PRIMARY KEY,
+		battle_time TEXT NOT NULL UNIQUE,
+		result TINYINT,
+		my_deck TEXT NOT NULL,
+		enemy_deck TEXT NOT NULL
+		);`
+	}
+	_, err = DB.Exec(CRRankedStmt)
+
+	if err != nil {
+		return nil, err
+	}
 	return DB, err
 }
 

@@ -7,7 +7,7 @@ backend/*.exe
 backend/*.test
 backend/vendor/
 backend/server
-backedn/local.db
+backend/local.db
 
 #frontend I hope this works pleas
 frontend/.output
