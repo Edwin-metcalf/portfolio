@@ -168,6 +168,14 @@
 					<span class="stat-label">Current Trophies</span>
 					<span class="stat-value">{clashRoyaleData.profile.trophies}</span>
 				</div>
+				<div class="stat">
+					<span class="stat-label">Current Rank</span>
+					<span class="stat-value">{leagueNumToNameMap.get(clashRoyaleData.profile.currentPathOfLegendSeasonResult.leagueNumber)}</span>
+				</div>
+				<div class="stat">
+					<span class="stat-label">Best Rank</span>
+					<span class="stat-value">{leagueNumToNameMap.get(clashRoyaleData.profile.bestPathOfLegendSeasonResult.leagueNumber)}</span>
+				</div>
 			</div>
 		</section>
 		<div class="chart-row">

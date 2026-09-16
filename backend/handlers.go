@@ -144,6 +144,7 @@ type ClashRoyaleLoadReturn struct {
 	Profile   *PlayerProfileReturn          `json:"profile"`
 	BattleLog []CRLadderChartPoint          `json:"battleLog"`
 	Friendly  ClashRoyaleFriendlyLoadReturn `json:"friendly"`
+	Ranked    CRRankedLoadReturn            `json:"ranked"`
 }
 
 func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +167,7 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//sync before getting hisotry
 	if err := SyncLadderGames(DB, CRclient, myPlayerId); err != nil {
-		log.Printf("Sync Warning: %v", err)
+		log.Printf("ladder SYNC Warning: %v", err)
 		//DB has history if fails dont kill everything
 	}
 
@@ -184,6 +185,13 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	//ranked section to continued to be worked on
+	rankedStats, err := loadRankedStats(DB, CRclient, myPlayerId)
+	if err != nil {
+		log.Printf("Error fetching ranked history: %v", err)
+		http.Error(w, "Error fetching ranked history", http.StatusInternalServerError)
+	}
+
 	// do stuff for friendlies currently just against friend but then add against whoever
 	friendlyStats, err := loadFriendlyStats(DB, CRclient, myPlayerId, friendPlayerId)
 	if err != nil {
@@ -195,6 +203,7 @@ func clashRoyaleLoadHandler(w http.ResponseWriter, r *http.Request) {
 		Profile:   playerInfo,
 		BattleLog: chartPoints,
 		Friendly:  *friendlyStats,
+		Ranked:    *rankedStats,
 	}
 	json.NewEncoder(w).Encode(result)
 }

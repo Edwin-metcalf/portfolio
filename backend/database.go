@@ -267,3 +267,38 @@ func addFriendlyEntry(db *sql.DB, battle_time string, result int, my_deck json.R
 					ON CONFLICT (battle_time) DO NOTHING;`, battle_time, result, my_deck, enemy_deck)
 	return err
 }
+
+type CRRankedDataBaseEntry struct {
+	BattleTime string          `json:"battleTime"`
+	Result     int             `json:"result"`
+	MyDeck     json.RawMessage `json:"myDeck"`
+	EnemyDeck  json.RawMessage `json:"enemyDeck"`
+}
+
+func getRankedHistory(db *sql.DB) ([]CRRankedDataBaseEntry, error) {
+	var rankedGameHistory []CRRankedDataBaseEntry
+	rows, err := db.Query("SELECT battle_time, result, my_deck, enemy_deck FROM rankedGames ORDER BY battle_time")
+	if err != nil {
+		log.Printf("ERROR in get ranked history query %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		item := CRRankedDataBaseEntry{}
+		err := rows.Scan(&item.BattleTime, &item.Result, &item.MyDeck, &item.EnemyDeck)
+		if err != nil {
+			return nil, err
+		}
+		rankedGameHistory = append(rankedGameHistory, item)
+	}
+
+	return rankedGameHistory, nil
+}
+func addRankedEntry(db *sql.DB, battle_time string, result int, my_deck json.RawMessage, enemy_deck json.RawMessage) error {
+	if result < -1 || result > 1 {
+		return fmt.Errorf("result value needs to be 1, 0 or -1, it is: %v", result)
+	}
+	_, err := db.Exec(`INSERT INTO rankedGames (battle_time, result, my_deck, enemy_deck)
+	 					VALUES($1, $2, $3, $4)`, battle_time, result, my_deck, enemy_deck)
+	return err
+}

@@ -122,6 +122,13 @@ type ClashRoyaleFriendlyLoadReturn struct {
 	WinRate    float64                   `json:"winRate"`
 	Games      []CRFriendlyDataBaseEntry `json:"games"`
 }
+type CRRankedLoadReturn struct {
+	Games   []CRRankedDataBaseEntry `json:"games"`
+	Wins    int                     `json:"wins"`
+	Losses  int                     `json:"losses"`
+	Ties    int                     `json:"ties"`
+	WinRate float64                 `json:"winRate"`
+}
 
 // api key stuff is actually a JSON Web Token kinda cool something new
 
@@ -218,65 +225,6 @@ func (c *ClashRoyaleClient) getPlayerProfile(playerTag string) (*PlayerProfileRe
 	return &retProfile, err
 }
 
-/* I think i can safely delete these
-func createDateRankList(battleList BattleList) *DateRankList {
-	var DRList DateRankList
-	for i := 0; i < len(battleList); i++ {
-		battle := battleList[i]
-		if battle.Type == "PvP" {
-			var DR StringIntPair
-			DR.Text = battle.BattleTime
-			DR.Value = battle.Team[0].StartingTrophies
-			DRList = append(DRList, DR)
-		}
-	}
-	return &DRList
-}
-func (c *ClashRoyaleClient) getPlayerBattleLog(playerTag string) (*PlayerBattleLogReturn, error) {
-	//this specifically pulls ladder games ie trophy road
-	encodedTag := url.PathEscape(playerTag)
-	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
-	if err != nil {
-		log.Println("Error creating request")
-		return nil, err
-	}
-
-	req.Header.Add("Authorization", "Bearer "+c.jwt)
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("API returned status %d: %s", resp.StatusCode, string(body))
-		return nil, fmt.Errorf("api error: status %d", resp.StatusCode)
-	}
-
-	var battleLog BattleList
-	err = json.NewDecoder(resp.Body).Decode(&battleLog)
-	if err != nil {
-		return nil, err
-	}
-	var battleReturn PlayerBattleLogReturn
-	//get the name I dont really know if this is the best way but it does consider ones first game being a 2v2
-	var name string
-	for _, player := range battleLog[0].Team {
-		if player.Tag == playerTag {
-			name = player.Name
-		}
-	}
-
-	battleReturn.Tag = playerTag
-	battleReturn.Name = name
-	battleReturn.RankList = *createDateRankList(battleLog)
-
-	return &battleReturn, nil
-}
-*/
-
 // similar to get PlayerBattleLog but more simple want to just get the list
 func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error) {
 	encodedTag := url.PathEscape(playerTag)
@@ -306,6 +254,78 @@ func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error)
 
 }
 
+func syncRankedGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) error {
+	mostRecentGame, err := getMostRecentCRGame(db, "ladderGames")
+	if err != nil {
+		return fmt.Errorf("failed to get most recent game %w", err)
+	}
+
+	battleLog, err := client.fetchBattleLog(playerTag)
+	if err != nil {
+		return fmt.Errorf("failed to fetch battleog: %w", err)
+	}
+
+	for _, battle := range battleLog {
+		if battle.Type != "pathOfLegend" {
+			continue
+		}
+		if mostRecentGame != "" && battle.BattleTime <= mostRecentGame {
+			continue
+		}
+
+		result := -1
+		for _, player := range battle.Team {
+			if player.Tag == playerTag {
+				if player.Crowns > battle.Opponent[0].Crowns {
+					result = 1
+				} else {
+					result = 0
+				}
+			} else if battle.Team[0].Tag == playerTag {
+				if battle.Team[0].Crowns > battle.Opponent[0].Crowns {
+					result = 1
+				} else {
+					result = 0
+				}
+			}
+
+			if err := addRankedEntry(db, battle.BattleTime, result, json.RawMessage("null"), json.RawMessage("null")); err != nil {
+				log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
+			}
+		}
+	}
+
+	return nil
+
+}
+
+func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*CRRankedLoadReturn, error) {
+	if err := syncRankedGames(db, client, playerTag); err != nil {
+		log.Printf("friendy Sync warning: %v", err)
+	}
+
+	games, err := getRankedHistory(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ranked history: %w", err)
+	}
+	var result CRRankedLoadReturn
+	for _, g := range games {
+		result.Games = append(result.Games, g)
+		switch g.Result {
+		case 1:
+			result.Wins++
+		case 0:
+			result.Losses++
+		default:
+			result.Ties++
+		}
+	}
+	if len(games) > 0 {
+		result.WinRate = float64(result.Wins) / float64(len(games))
+	}
+
+	return &result, nil
+}
 func SyncLadderGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) error {
 	mostRecentGame, err := getMostRecentCRGame(db, "ladderGames")
 	if err != nil {
