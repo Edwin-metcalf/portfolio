@@ -301,7 +301,7 @@ func syncRankedGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) er
 
 func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*CRRankedLoadReturn, error) {
 	if err := syncRankedGames(db, client, playerTag); err != nil {
-		log.Printf("friendy Sync warning: %v", err)
+		log.Printf("Ranked SYNC warning: %v", err)
 	}
 
 	games, err := getRankedHistory(db)
@@ -517,6 +517,10 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 	if err != nil {
 		return nil, fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
 	}
+	if len(battleLog) == 0 {
+		return nil, fmt.Errorf("no battles found between %s and %s", tag1, tag2)
+	}
+
 	numGames := len(battleLog)
 	var matchupReturn ClashRoyaleFriendlyLoadReturn
 	gamesList := make([]CRFriendlyDataBaseEntry, numGames)

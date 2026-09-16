@@ -65,7 +65,22 @@ interface CRLadderChartPoint {
 export interface ClashRoyaleLoadReturn {
     profile: PlayerProfile;
     battleLog: CRLadderChartPoint[];
-    friendly: ClashRoyaleFriendlyLoadReturn
+    friendly: ClashRoyaleFriendlyLoadReturn;
+    ranked: CRRankedLoadReturn;
+}
+interface CRRankedDataBaseEntry {
+    battleTime: string;
+    result: number;
+    myDeck: unknown;
+    enemyDeck: unknown;
+}
+interface CRRankedLoadReturn {
+    games: CRRankedDataBaseEntry[];
+    wins: number;
+    losses: number;
+    ties: number;
+    winRate: number;
+
 }
 export interface ClashRoyaleStatsReturn {
     wins: number;

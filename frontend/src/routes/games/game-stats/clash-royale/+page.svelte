@@ -198,6 +198,25 @@
 		</div>
 
 		<section class="ranked-panel">
+			<h2 class="panel panel-label">Ranked Stats</h2>
+			<div class="profile-stats">
+				<div class="stat">
+					<span class="stat-label">Wins</span>
+					<span class="stat-value">{clashRoyaleData.ranked.wins}</span>
+				</div>
+				<div class="stat">
+					<span class="stat-label">Loses</span>
+					<span class="stat-value">{clashRoyaleData.ranked.losses}</span>
+				</div>
+				<div class="stat">
+					<span class="stat-label">Win Rate</span>
+					<span class="stat-value accent">{formatPercentage(clashRoyaleData.ranked.winRate)}</span>
+				</div>
+				<div class="stat">
+					<span class="stat-label">Current League</span>
+					<span class="stat-value">{leagueNumToNameMap.get(clashRoyaleData.profile.currentPathOfLegendSeasonResult.leagueNumber)}</span>
+				</div>
+			</div>
 
 		</section>
 
@@ -279,7 +298,8 @@
 	.profile-panel,
 	.winloss-panel,
 	.trophy-panel,
-	.friendly-panel {
+	.friendly-panel,
+	.ranked-panel {
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 1.5rem;
@@ -294,6 +314,10 @@
         max-width: 400px;
         margin: 0;
     }
+	.trophy-panel .chart-container {
+		max-width: 100%;
+		aspect-ratio: auto;
+	}
     .friendly-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
