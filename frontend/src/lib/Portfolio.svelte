@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks, BrainCircuit, FileCode2, Bot, Network, MessageSquare } from 'lucide-svelte';
+    import { Lock, UserPlus, Vote, BookOpenText, X, Code, Database, Server, Blocks, BrainCircuit, FileCode2, Bot, Network, MessageSquare, Wand } from 'lucide-svelte';
 
     interface Project {
         id: number;
@@ -13,22 +13,40 @@
     
     const projects: Project[] = [
         {
-            id: 1,
-            title: "Action-map Political Information Website",
-            description: "Action-map Political Inforamtion Website",
-            icon: Vote,
-            tools: ["Ruby", "Rails", "SQL"],
-            longDescription: "Worked in an agile team environment with multiple iterations. Used Ruby on Rails with MVC architecutre to build a wesbsite to learn about your representatives. Incorporated multiple API's to pull information along with omni auth2 for SSO. Also cached results onto a SQL database.",
-            highlights: ["Agile team environment to create a SaaS product ","Connected API calls and SQL Database", "built a responsive and intersting front end", "Used Cucumber and Rspec for exhaustive testing"]
+            id: 7,
+            title:  "Automated Evaluation for Vision-Language Models",
+            description: "Isaacsim evaluation platform",
+            icon: Bot,
+            tools: ["Python", "Isaacsim"],
+            longDescription: "Built a headless IsaacSim evaluation platform in Python for a AI model for evaluating Vision-Language models on autonomous control of a Franka Panda robot arm",
+            highlights: ["automated execution of vision-language  manipulation tasks", "Translated natural language into robot actions", "automated evaluation loop including task execution, success/failure logging, and performance metrics"]
         },
         {
             id: 2,
             title: "Secure File Sharing Software",
-            description: "End to end encypted file sharing software using: ",
+            description: "End to end encypted file sharing software supporting secure storage, sharing, and revocation of user access",
             icon: Lock,
             tools: ["Go"],
             longDescription: "Built an end to end encypted secure file sharing Software in Go. Leveraged AES-CTR, HashKDF, HMACs, RSA signatures, and UUID's to ensure Integrity, Confidentiality and Authenticity. Users are able to share and revoke access to files ",
-            highlights: ["Employed Cyptographic schemes to securely store, share and send files","used both public key encyption and symetric key encyption"]
+            highlights: ["Employed Cyptographic schemes to securely store, share and send files","used both public key encyption and symetric key encyption", "designed access-sharing and revoctation protocols"]
+        },
+        {
+            id: 10,
+            title: "MetCode",
+            description: "Agentic command line assistant written in Go",
+            icon: Wand,
+            tools: ["Ollama", "tailscale", "Go"],
+            longDescription: "MetCode is an agentic command line assistant that runs locally with Ollama, use with tailscale to run it on a PC from anywhere! MetCode provides a secure and private environment for executing commands. It can be used to automate tasks, generate code, and more.",
+            highlights: ["Agentic command line assistant", "Runs locally with Ollama", "Safe Secure and private"]
+        },
+        {
+            id: 8,
+            title: "Bit Torrent Client",
+            description: "Concurrent BitTorrent-style client using POSIX UDP",
+            icon: Network,
+            tools: ["C", "UDP", "Socket Programming"],
+            longDescription: "Implemented concurrent peer downloads and sliding-window reliability protocol on top of UDP for high throughput file transfer",
+            highlights: ["POSIX UDP socket programming", "sliding window reliability on top of UDP protocol", "Download chunks of files concurrently from multiple peers with SHA-1 Verficaiton"]
         },
         {
             id: 3,
@@ -36,26 +54,17 @@
             description: "My portfolio website",
             icon: UserPlus,
             tools: ["Svelte", "HTML", "CSS", "TS","Heroku","Go", "SQL"],
-            longDescription: "Used Svelte, HTML, CSS, and Type Script on the front end and Go along with Postgres on the backend. It is hosted using Heroku",
-            highlights: ["created an informative and good looking website", "Built my version of space invaders and used Go and SQL to make a global leaderboard"]
-        },
+            longDescription: "Designed and deployed a fill stack personal portfolio using Svelte/TypeScript and a Go/PostgeSQL backend. Global leaderboard for custom game. Clash Royale matchup generator and more.",
+            highlights: ["created an informative and good looking website", "Custom space invaders/vampire survivors game with global leaderboard", "Dota 2 and Clash royale game analysis", "Clash royale matchup generator"]
+        }, 
         {
-            id: 4,
-            title: "Class Registration Software",
-            description: "Class Registration Software",
-            icon: BookOpenText,
-            tools: ["Java"],
-            longDescription: "Created software that processes CSV files of students and their class selections along with classes and their openings. Then puts students in classes depending on factors like grade or draw number.",
-            highlights: ["Ability to load courses and students from CSV", "Return a CSV with all the students schedules with the correct classes enrolled"]
-        },
-        {
-            id: 5,
-            title: "NLP paper: Fan Sentiment Correlation with MLB team success",
-            description: "Temporal Analysis of sentiment of MLB fans",
-            icon: BrainCircuit,
-            tools: ["Python", "Scikit","Pandas"],
-            longDescription: "Conducted research on sentiment analysis. We used VADER classifier to train a logistic regression model that was then used to conduct a temporal analysis of the SF Giants and the NY Yankees fanbases.",
-            highlights: ["finding, processing, and cleaning of reddit data", "logistic regression model trained and tested", "temporal analysis of correlation of teams success and fan sentiment","Wrote a paper showing our results of Yankee fans being more volitile through the 2017 season"]
+            id: 1,
+            title: "Action-map Political Information Website",
+            description: "Action-map Political Inforamtion Website",
+            icon: Vote,
+            tools: ["Ruby", "Rails", "SQL"],
+            longDescription: "Ruby on Rails web application with MVC architecutre to help users learn about elected representatives. Incorporated external API's to pull information along with omni auth2 for SSO and saved information for users to see on SQL database.",
+            highlights: ["integrated Google Civic information and external APIs", "Devleoped MVC components and responsive and intersting front end", "Used Cucumber and Rspec for testing", "Agile development"]
         },
         {
             id: 6,
@@ -67,23 +76,23 @@
             highlights: ["recursive descent parsing and abstract syntax tree construction", "type checking for expressions, functions, conditions, and control flow", "optimizations: loop-invariant hoisting, constant fold, strength reduction, copy propagation, etc"]
         },
         {
-            id: 7,
-            title:  "Automated Evaluation for Vision-Language Models",
-            description: "Isaacsim evaluation platform",
-            icon: Bot,
-            tools: ["Python", "Isaacsim"],
-            longDescription: "Built a headless IsaacSim evaluation platform in Python for a AI model to control a Franka Panda robot arm",
-            highlights: ["Vision-Language model manipulation tasks using automated task execution", "Translating natural language into robot actions", "automated evaluation loop including task execution, success/failure logging, and performance metrics"]
+            id: 1,
+            title: "Action-map Political Information Website",
+            description: "Action-map Political Inforamtion Website",
+            icon: Vote,
+            tools: ["Ruby", "Rails", "SQL"],
+            longDescription: "Ruby on Rails web application with MVC architecutre to help users learn about elected representatives. Incorporated external API's to pull information along with omni auth2 for SSO and saved information for users to see on SQL database.",
+            highlights: ["integrated Google Civic information and external APIs", "Devleoped MVC components and responsive and intersting front end", "Used Cucumber and Rspec for testing", "Agile development"]
         },
         {
-            id: 8,
-            title: "Bit Torrent Client",
-            description: "Client written with POSIX library in C leverages UDP",
-            icon: Network,
-            tools: ["C", "UDP", "Socket Programming"],
-            longDescription: "Implemented concurrent peer downloads and sliding-window reliability protocol on top of UDP for high throughput file transfer",
-            highlights: ["POSIX UDP socket programming", "sliding window reliability on top of UDP protocol", "Download chunks of files concurrently from multiple peers with SHA-1 Verficaiton"]
-        }, 
+            id: 5,
+            title: "NLP paper: Fan Sentiment Correlation with MLB team success",
+            description: "Temporal Analysis of sentiment of MLB fans",
+            icon: BrainCircuit,
+            tools: ["Python", "Scikit","Pandas"],
+            longDescription: "Conducted research on sentiment analysis. We used VADER classifier to train a logistic regression model that was then used to conduct a temporal analysis of the SF Giants and the NY Yankees fanbases.",
+            highlights: ["finding, processing, and cleaning of reddit data", "logistic regression model trained and tested", "temporal analysis of correlation of teams success and fan sentiment","Wrote a paper showing our results of Yankee fans being more volitile through the 2017 season"]
+        },
         {
             id: 9,
             title: "Internet Relay Chat client",
@@ -92,7 +101,16 @@
             tools: ["C", "TCP", "Socket Programming"],
             longDescription: "Implemented a client that is in accordance with the IRC protocol with mutiple commnds",
             highlights: ["POSIX TCP socket programming", "join, part, quit, server, msg, nick, whois and more commands"]
-        }
+        },
+        {
+            id: 4,
+            title: "Class Registration Software",
+            description: "Class Registration Software",
+            icon: BookOpenText,
+            tools: ["Java"],
+            longDescription: "Created software that processes CSV files of students and their class selections along with classes and their openings. Then puts students in classes depending on factors like grade or draw number.",
+            highlights: ["Ability to load courses and students from CSV", "Return a CSV with all the students schedules with the correct classes enrolled"]
+        },
     ];
 
     let selectedProject: Project|null = null;
