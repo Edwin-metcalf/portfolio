@@ -56,6 +56,18 @@ type Arena struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
 }
+type IconUrls struct {
+	Medium string `json:"medium"`
+}
+type Card struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+	//dont need these right now
+	//level int
+	//rarity string
+	//elixerCost int
+	IconUrls IconUrls `json:"iconUrls"`
+}
 type PlayerProfileReturn struct {
 	Tag                             string                   `json:"tag"`
 	Name                            string                   `json:"name"`
@@ -84,12 +96,8 @@ type PlayerBattleData struct {
 	StartingTrophies int    `json:"startingTrophies"`
 	TrophyChange     int    `json:"trophyChange"`
 	Crowns           int    `json:"crowns"`
+	Cards            []Card `json:"cards"`
 }
-
-//type PlayerBattleDataList struct {
-//	List PlayerBattleData `json:"playerBattleData"`
-//}
-
 type Battle struct {
 	Type       string             `json:"type"`
 	BattleTime string             `json:"battleTime"`
@@ -288,8 +296,16 @@ func syncRankedGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) er
 					result = 0
 				}
 			}
+			myDeckJson, err := json.Marshal(battle.Team[0].Cards)
+			if err != nil {
+				log.Printf("failed to marshal my deck: %v", err)
+			}
+			enemyDeckJson, err := json.Marshal(battle.Opponent[0].Cards)
+			if err != nil {
+				log.Printf("failed to marshal enemy deck: %v", err)
+			}
 
-			if err := addRankedEntry(db, battle.BattleTime, result, json.RawMessage("null"), json.RawMessage("null")); err != nil {
+			if err := addRankedEntry(db, battle.BattleTime, result, myDeckJson, enemyDeckJson); err != nil {
 				log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
 			}
 		}
@@ -446,7 +462,7 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	}
 	battleLog, err := client.filterHeadToHeadBattles(myTag, friendTag)
 	if err != nil {
-		return fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
+		return fmt.Errorf("failed to fetch friendly battlelog: %w", err)
 	}
 
 	for _, battle := range battleLog {
@@ -469,12 +485,16 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 			result = 0
 		}
 
-		//game := CRFriendlyDataBaseEntry{
-		//	BattleTime: battle.BattleTime,
-		//	Result:     result,
-		//}
+		myDeckJson, err := json.Marshal(battle.Team[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal my deck: %v", err)
+		}
+		enemyDeckJson, err := json.Marshal(battle.Opponent[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal enemy deck: %v", err)
+		}
 
-		if err := addFriendlyEntry(db, battle.BattleTime, result, json.RawMessage("null"), json.RawMessage("null")); err != nil {
+		if err := addFriendlyEntry(db, battle.BattleTime, result, myDeckJson, enemyDeckJson); err != nil {
 			log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
 		}
 
@@ -515,7 +535,7 @@ func loadFriendlyStats(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string) (*ClashRoyaleFriendlyLoadReturn, error) {
 	battleLog, err := client.filterHeadToHeadBattles(tag1, tag2)
 	if err != nil {
-		return nil, fmt.Errorf("fauled to fetch friendly battlelog: %w", err)
+		return nil, fmt.Errorf("failed to fetch friendly battlelog: %w", err)
 	}
 	if len(battleLog) == 0 {
 		return nil, fmt.Errorf("no battles found between %s and %s", tag1, tag2)
@@ -535,8 +555,17 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 			continue
 		}
 		gamesList[i].BattleTime = battle.BattleTime
-		gamesList[i].MyDeck = json.RawMessage("null")
-		gamesList[i].EnemyDeck = json.RawMessage("null")
+
+		myDeckBytes, err := json.Marshal(battle.Team[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal my deck: %v", err)
+		}
+		enemyDeckBytes, err := json.Marshal(battle.Opponent[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal enemy deck: %v", err)
+		}
+		gamesList[i].MyDeck = myDeckBytes
+		gamesList[i].EnemyDeck = enemyDeckBytes
 
 		result := -1
 
