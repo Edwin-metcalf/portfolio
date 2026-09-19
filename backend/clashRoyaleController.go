@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -130,12 +133,27 @@ type ClashRoyaleFriendlyLoadReturn struct {
 	WinRate    float64                   `json:"winRate"`
 	Games      []CRFriendlyDataBaseEntry `json:"games"`
 }
+type DeckCardWinRates struct {
+	Deck      []Card                 `json:"deck"`
+	CardStats map[string]*CardRecord `json:"cardStats"`
+}
 type CRRankedLoadReturn struct {
-	Games   []CRRankedDataBaseEntry `json:"games"`
-	Wins    int                     `json:"wins"`
-	Losses  int                     `json:"losses"`
-	Ties    int                     `json:"ties"`
-	WinRate float64                 `json:"winRate"`
+	Games            []CRRankedDataBaseEntry `json:"games"`
+	Wins             int                     `json:"wins"`
+	Losses           int                     `json:"losses"`
+	Ties             int                     `json:"ties"`
+	WinRate          float64                 `json:"winRate"`
+	DeckCardWinRates []DeckCardWinRates      `json:"deckCardWinRates"`
+}
+type CardRecord struct {
+	Wins    int     `json:"wins"`
+	Losses  int     `json:"losses"`
+	WinRate float64 `json:"winRate"`
+}
+type GameResult struct {
+	MyDeck    []Card `json:"myDeck"`
+	EnemyDeck []Card `json:"enemyDeck"`
+	Result    int    `json:"result"`
 }
 
 // api key stuff is actually a JSON Web Token kinda cool something new
@@ -280,39 +298,31 @@ func syncRankedGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) er
 		if mostRecentGame != "" && battle.BattleTime <= mostRecentGame {
 			continue
 		}
+		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
+			continue
+		}
 
 		result := -1
-		for _, player := range battle.Team {
-			if player.Tag == playerTag {
-				if player.Crowns > battle.Opponent[0].Crowns {
-					result = 1
-				} else {
-					result = 0
-				}
-			} else if battle.Team[0].Tag == playerTag {
-				if battle.Team[0].Crowns > battle.Opponent[0].Crowns {
-					result = 1
-				} else {
-					result = 0
-				}
-			}
-			myDeckJson, err := json.Marshal(battle.Team[0].Cards)
-			if err != nil {
-				log.Printf("failed to marshal my deck: %v", err)
-			}
-			enemyDeckJson, err := json.Marshal(battle.Opponent[0].Cards)
-			if err != nil {
-				log.Printf("failed to marshal enemy deck: %v", err)
-			}
+		if battle.Team[0].Crowns > battle.Opponent[0].Crowns {
+			result = 1
+		} else if battle.Team[0].Crowns < battle.Opponent[0].Crowns {
+			result = 0
+		}
+		myDeckJson, err := json.Marshal(battle.Team[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal my deck: %v", err)
+		}
+		enemyDeckJson, err := json.Marshal(battle.Opponent[0].Cards)
+		if err != nil {
+			log.Printf("failed to marshal enemy deck: %v", err)
+		}
 
-			if err := addRankedEntry(db, battle.BattleTime, result, myDeckJson, enemyDeckJson); err != nil {
-				log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
-			}
+		if err := addRankedEntry(db, battle.BattleTime, result, myDeckJson, enemyDeckJson); err != nil {
+			log.Printf("failed to insert battle %s: %v", battle.BattleTime, err)
 		}
 	}
 
 	return nil
-
 }
 
 func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*CRRankedLoadReturn, error) {
@@ -325,6 +335,8 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 		return nil, fmt.Errorf("failed to get ranked history: %w", err)
 	}
 	var result CRRankedLoadReturn
+	deckToGamesMap := make(map[string]*deckGroup)
+
 	for _, g := range games {
 		result.Games = append(result.Games, g)
 		switch g.Result {
@@ -335,12 +347,101 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 		default:
 			result.Ties++
 		}
+
+		var myCards []Card
+		if err := json.Unmarshal(g.MyDeck, &myCards); err != nil {
+			log.Printf("failed to unmarshal my deck: %v", err)
+			continue
+		}
+
+		var enemyCards []Card
+		if err := json.Unmarshal(g.EnemyDeck, &enemyCards); err != nil {
+			log.Printf("failed to unmarshal enemy deck: %v", err)
+			continue
+		}
+
+		key := deckKey(myCards)
+		group, ok := deckToGamesMap[key]
+		if !ok {
+			group = &deckGroup{deck: myCards}
+			deckToGamesMap[key] = group
+		}
+
+		group.games = append(group.games, GameResult{
+			MyDeck:    myCards,
+			EnemyDeck: enemyCards,
+			Result:    g.Result,
+		})
 	}
+	result.DeckCardWinRates = deckToCardWinRate(deckToGamesMap)
+
 	if len(games) > 0 {
 		result.WinRate = float64(result.Wins) / float64(len(games))
 	}
 
 	return &result, nil
+}
+
+type deckGroup struct {
+	deck  []Card
+	games []GameResult
+}
+
+func deckKey(cards []Card) string {
+	//this makes the combination of card IDs into a string we can use as a key, need to sort to make sure
+	//two decks in different order are the same ID key
+	sorted := make([]Card, len(cards))
+
+	copy(sorted, cards)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Id < sorted[j].Id })
+
+	ids := make([]string, len(sorted))
+
+	for i, c := range sorted {
+		ids[i] = strconv.Itoa(c.Id)
+	}
+	return strings.Join(ids, "-")
+}
+func deckToCardWinRate(deckToGamesMap map[string]*deckGroup) []DeckCardWinRates {
+
+	var result []DeckCardWinRates
+	for _, group := range deckToGamesMap {
+		cardStats := winRateByCard(group.games, func(g GameResult) []Card { return g.EnemyDeck })
+		result = append(result, DeckCardWinRates{
+			Deck:      group.deck,
+			CardStats: cardStats,
+		})
+	}
+
+	return result
+}
+func winRateByCard(games []GameResult, side func(GameResult) []Card) map[string]*CardRecord {
+	// if side is func(g) { return g.EnemyDeck } then it means thats my win rate against the card
+	// if side is func(g) { return g.MyDeck } then it is for each of my cards that is my win rate with it
+	records := make(map[string]*CardRecord)
+
+	for _, g := range games {
+		for _, c := range side(g) {
+			rec, ok := records[c.Name]
+			if !ok {
+				rec = &CardRecord{}
+				records[c.Name] = rec
+			}
+
+			if g.Result == 1 {
+				rec.Wins += 1
+			} else if g.Result == 0 {
+				rec.Losses += 1
+			}
+		}
+	}
+	for _, rec := range records {
+		total := rec.Wins + rec.Losses
+		if total > 0 {
+			rec.WinRate = float64(rec.Wins) / float64(total)
+		}
+	}
+	return records
 }
 func SyncLadderGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) error {
 	mostRecentGame, err := getMostRecentCRGame(db, "ladderGames")

@@ -74,13 +74,27 @@ interface CRRankedDataBaseEntry {
     myDeck: unknown;
     enemyDeck: unknown;
 }
+interface Card {
+    name: string;
+    id: number;
+    iconUrls: { medium: string}
+}
+interface CardRecord {
+    wins: number;
+    losses: number;
+    winRate: number;
+}
+interface DeckCardWinRates {
+    deck: Card[];
+    cardStats: Record<string, CardRecord>;
+}
 interface CRRankedLoadReturn {
     games: CRRankedDataBaseEntry[];
     wins: number;
     losses: number;
     ties: number;
     winRate: number;
-
+    deckCardWinRates: DeckCardWinRates[];
 }
 export interface ClashRoyaleStatsReturn {
     wins: number;

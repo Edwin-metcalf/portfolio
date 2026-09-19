@@ -217,6 +217,32 @@
 					<span class="stat-value">{leagueNumToNameMap.get(clashRoyaleData.profile.currentPathOfLegendSeasonResult.leagueNumber)}</span>
 				</div>
 			</div>
+			<!--THINGS TO ADD
+			section titles like this deck, maybe add the evo information lowkey 
+			question if we need the images 
+			color code the win rates show that its this deck vs these cards ie this deck and matchups
+			then do it to the matchups looks a bit dumb right now
+			-->
+			{#if clashRoyaleData.ranked.deckCardWinRates?.length}
+				{#each clashRoyaleData.ranked.deckCardWinRates as deckStats}
+					<div class="ranked-deck">
+						<div class="deck-cards">
+							{#each deckStats.deck as card}
+								<img src={card.iconUrls.medium} alt={card.name} title={card.name} class="card-icon"/>
+							{/each}
+						</div>
+
+						<div class="card-matchups">
+							{#each Object.entries(deckStats.cardStats) as [cardName, record]}
+							<div class="matchup-chip">
+								<span class="matchup-name">{cardName}</span>
+								<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+							</div>
+							{/each}
+						</div>
+					</div>
+				{/each}
+			{/if}
 
 		</section>
 
@@ -258,6 +284,42 @@
 </div>
 
 <style>
+	.ranked-deck {
+		margin-top: 1.5rem;
+	}
+	.deck-cards {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.card-icon {
+		width: 48px;
+		height: 56px;
+		object-fit: contain;
+	}
+	.card-matchups {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-top: 1rem;
+	}
+	.matchup-chip {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 0.4rem 0.6rem;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+	}
+	.matchup-name {
+		color: var(--text-muted);
+	}
+	.matchup-rate {
+		color: var(--mint);
+	}
 .matchup-panel {
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
