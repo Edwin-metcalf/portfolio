@@ -4,7 +4,8 @@
 		createWinLoseChart,
 		createTrophyLineChart,
 		type TrophyPoint,
-		createHeadToHeadChart
+		createHeadToHeadChart,
+		type CardRecord
 	} from '../stats';
 	import Chart from 'chart.js/auto';
 	import { fetchAPI } from '$lib/api';
@@ -122,6 +123,14 @@
 
         return 15 + Math.floor((trophies - 5000) / 500);
     }
+	function getSortedRankedMatchups(cardStats: Record<string, CardRecord>) {
+		// will want to do all the entries I think or more then 5 
+		const entries = Object.entries(cardStats).sort((a,b) => b[1].winRate - b[1].winRate)
+		return {
+			best: entries.slice(0,5),
+			worst: entries.slice(-5).reverse()
+		}
+	}
 </script>
 
 <div class="game-stat-helper-page">
@@ -224,21 +233,54 @@
 			then do it to the matchups looks a bit dumb right now
 			-->
 			{#if clashRoyaleData.ranked.deckCardWinRates?.length}
-				{#each clashRoyaleData.ranked.deckCardWinRates as deckStats}
-					<div class="ranked-deck">
-						<div class="deck-cards">
-							{#each deckStats.deck as card}
-								<img src={card.iconUrls.medium} alt={card.name} title={card.name} class="card-icon"/>
-							{/each}
-						</div>
 
-						<div class="card-matchups">
-							{#each Object.entries(deckStats.cardStats) as [cardName, record]}
-							<div class="matchup-chip">
-								<span class="matchup-name">{cardName}</span>
-								<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+				{#each clashRoyaleData.ranked.deckCardWinRates as deckStats}
+					{@const {best, worst} = getSortedRankedMatchups(deckStats.cardStats)}
+					<div class="ranked-deck">
+						<div class="deck-column">
+							<h3 class="deck-subheader">This Deck</h3>
+							<div class="deck-cards">
+								{#each deckStats.deck as card}
+									<!--<img src={card.iconUrls.medium} alt={card.name} title={card.name} class="card-icon"/>-->
+									<span class="deck-card-name">{card.name}</span>
+								{/each}
 							</div>
-							{/each}
+						</div>
+						
+						<div class="matchup-column">
+							<h3 class="deck-subheader">Matchups</h3>
+
+							<div class="matchup-group">
+								<span class="matchup-group-label">
+									Best Against ->
+								</span>
+								<div class="matchup-scroll">
+									<div class="matchup-row">
+										{#each best as [cardName, record]}
+											<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
+												<span class="matchup-name">{cardName}</span>
+												<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							</div>
+
+							<div class="matchup-group">
+								<span class="matchup-group-label">
+									worst against ->
+								</span>
+								<div class="matchup-scroll">
+									<div class="matchup-row">
+										{#each worst as [cardName, record]}
+											<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
+												<span class="matchup-name">{cardName}</span>
+												<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -285,42 +327,146 @@
 
 <style>
 	.ranked-deck {
+		display: grid;
+		grid-template-columns: minmax(260px, 340px) 1fr;
+		gap: 2.5rem;
 		margin-top: 1.5rem;
+		padding: 1.25rem;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+	@media (max-width: 700px) {
+		.ranked-deck {
+			grid-template-columns: 1fr;
+		}
+	}
+	.deck-column {
+		border-right: 1px solid var(--border);
+		padding-right: 1.5rem;
+		min-width: 0;
+	}
+	@media (max-width: 700px) {
+		.deck-column {
+			border-right: none;
+			border-bottom: 1px solid var(--border);
+			padding-right: 0;
+			padding-bottom: 1.25rem;
+		}
+	}
+	.matchup-column {
+		padding-left: 1.5rem;
+		min-width: 0;
+	}
+	.deck-subheader {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted);
+		margin: 0 0 0.75rem;
 	}
 	.deck-cards {
-		display: flex;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 0.5rem;
-		flex-wrap: wrap;
+	}
+	.deck-card-name {
+		border-left: 2px solid var(--mint);
+		background: rgba(255, 255, 255, 0.04);
+		border-radius: var(--radius);
+		padding: 0.6rem 0.4rem;
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		color: var(--text);
+		line-height: 1.3;
+		overflow-wrap: break-word;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 3rem;
 	}
 	.card-icon {
 		width: 48px;
 		height: 56px;
 		object-fit: contain;
 	}
-	.card-matchups {
+	.matchup-group {
+		margin-bottom: 1rem;
+	}
+	.matchup-group:last-child {
+		margin-bottom: 0;
+	}
+	.matchup-group-label {
+		display: block;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		margin-bottom: 0.5rem;
+	}
+	.matchup-row {
 		display: flex;
 		gap: 0.5rem;
-		flex-wrap: wrap;
-		margin-top: 1rem;
+		overflow-x: auto;
+		padding-bottom: 0.25rem;
 	}
 	.matchup-chip {
+		flex: 0 0 100px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 2px;
-		border: 1px solid var(--border);
+		background: rgba(255, 255, 255, 0.04);
 		border-radius: var(--radius);
-		padding: 0.4rem 0.6rem;
+		border-left: 2px solid transparent;
+		padding: 0.5rem 0.4rem;
 		font-family: var(--font-mono);
 		font-size: 0.7rem;
 	}
+	.matchup-chip.positive {
+		border-left-color: var(--mint);
+	}
+	.matchup-chip.negative {
+		border-left-color: #e35d5d;
+	}
 	.matchup-name {
-		color: var(--text-muted);
+		color: var(--text);
 	}
 	.matchup-rate {
-		color: var(--mint);
+		color: var(--text-muted);
 	}
-.matchup-panel {
+	.matchup-row {
+		scrollbar-width: thin;
+		scrollbar-color: var(--border) transparent;
+	}
+	.matchup-row::-webkit-scrollbar {
+		height: 6px;
+	}
+	.matchup-row::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.matchup-row::-webkit-scrollbar-thumb {
+		background: var(--border);
+		border-radius: 999px;
+	}
+	.matchup-row::-webkit-scrollbar-thumb:hover {
+		background: var(--mint);
+	}
+	.matchup-scroll {
+		position: relative;
+	}
+	.matchup-scroll::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 8px;
+		width: 2.5rem;
+		background: linear-gradient(to right, transparent, var(--panel));
+		pointer-events: none;
+	}
+	.matchup-panel {
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 1.5rem;

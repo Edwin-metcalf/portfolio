@@ -79,7 +79,7 @@ interface Card {
     id: number;
     iconUrls: { medium: string}
 }
-interface CardRecord {
+export interface CardRecord {
     wins: number;
     losses: number;
     winRate: number;

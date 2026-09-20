@@ -359,6 +359,9 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 			log.Printf("failed to unmarshal enemy deck: %v", err)
 			continue
 		}
+		if len(myCards) == 0 {
+			continue
+		}
 
 		key := deckKey(myCards)
 		group, ok := deckToGamesMap[key]
