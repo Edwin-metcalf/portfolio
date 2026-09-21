@@ -124,7 +124,9 @@ export interface ClashRoyaleFriendlyLoadReturn {
     ties: number;
     winRate: number;
     games: CRFriendlyGame[];
-
+    cardWinRates: Record<string, CardRecord>;
+    myMatchup: PlayerCardMatchup;
+    friendMatchup: PlayerCardMatchup;
 }
 //typing for the date object in the line chart
 export type TrophyPoint = {

@@ -123,7 +123,7 @@
     }
 	function getSortedRankedMatchups(cardStats: Record<string, CardRecord>) {
 		// will want to do all the entries I think or more then 5 
-		const entries = Object.entries(cardStats).sort((a,b) => b[1].winRate - b[1].winRate)
+		const entries = Object.entries(cardStats).sort((a,b) => b[1].winRate - a[1].winRate)
 		return {
 			best: entries.slice(0,5),
 			worst: entries.slice(-5).reverse()
@@ -314,6 +314,32 @@
             </div>
 			
 			<div class="matchup-columns">
+				{#each [
+					{name: clashRoyaleData.friendly.myName, m: clashRoyaleData.friendly.myMatchup},
+					{name: clashRoyaleData.friendly.friendName, m: clashRoyaleData.friendly.friendMatchup}
+				] as player}
+					<div class="matchup-player">
+						<h3 class="matchup-player-name">{player.name}</h3>
+
+						<p class="matchup-label">Wins with</p>
+						{#each pickCards(player.m.withCards, true) as [card, rec]}
+							<p class="matchup-card">
+                    			{card} <span class="accent">{formatPercentage(rec.winRate)}</span> ({rec.wins}-{rec.losses})
+                			</p>
+						{:else}
+							<p class="matchup-card muted">Nothing stands out yet</p>
+						{/each}
+
+						<p class="matchup-label">Struggles against</p>
+						{#each pickCards(player.m.againstCards, false) as [card, rec]}
+							<p class="matchup-card">
+                    			{card} <span class="accent">{formatPercentage(rec.winRate)}</span> ({rec.wins}-{rec.losses})
+               				</p>
+						{:else}
+							<p class="matchup-card muted">Nothing stands out yet</p>
+						{/each}
+					</div>
+				{/each}
 			</div>
 		</section>
 
@@ -498,6 +524,34 @@
 		transform: translateY(-2px);
 		background: var(--mint);
 		color: var(--bg);
+	}
+	.matchup-columns {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 1.5rem;
+		margin-top: 1.5rem;
+	}
+	.matchup-player-name {
+		font-family: var(--font-display);
+		color: var(--text);
+		margin: 0 0 0.5rem;
+	}
+	.matchup-label {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted);
+		margin: 1rem 0 0.35rem;
+	}
+	.matchup-card {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--text);
+		margin: 0.2rem 0;
+	}
+	.matchup-card.muted {
+		color: var(--text-muted);
 	}
 	.chart-container {
         position: relative;

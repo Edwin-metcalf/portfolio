@@ -784,6 +784,8 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 		matchupReturn.WinRate = float64(wins) / float64(wins+losses)
 	}
 	matchupReturn.Games = gamesList
+	matchupReturn.MyMatchup = buildPlayerMatchup(gameResults)
+	matchupReturn.FriendMatchup = buildPlayerMatchup(flipGames(gameResults))
 
 	return &matchupReturn, nil
 
