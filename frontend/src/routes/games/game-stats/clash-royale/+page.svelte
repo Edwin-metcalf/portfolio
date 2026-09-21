@@ -5,7 +5,9 @@
 		createTrophyLineChart,
 		type TrophyPoint,
 		createHeadToHeadChart,
-		type CardRecord
+		type CardRecord,
+		formatPercentage,
+		pickCards
 	} from '../stats';
 	import Chart from 'chart.js/auto';
 	import { fetchAPI } from '$lib/api';
@@ -103,10 +105,6 @@
 			}
 		};
 	});
-
-	function formatPercentage(decimal: number) {
-		return (decimal * 100).toFixed(2) + '%';
-	}
 
 	function getBattleResult(result: number): 'win' | 'loss' | 'tie' {
 		if (result > 0) return 'win';
@@ -236,9 +234,13 @@
 
 				{#each clashRoyaleData.ranked.deckCardWinRates as deckStats}
 					{@const {best, worst} = getSortedRankedMatchups(deckStats.cardStats)}
+					{@const deckSubtitle = deckStats.deck.slice(0, 3).map((c) => c.name).join(', ')}
 					<div class="ranked-deck">
 						<div class="deck-column">
-							<h3 class="deck-subheader">This Deck</h3>
+							<h3 class="deck-subheader">My Deck</h3>
+							<span class="matchup-group-label">
+									{deckSubtitle} Deck
+							</span>
 							<div class="deck-cards">
 								{#each deckStats.deck as card}
 									<!--<img src={card.iconUrls.medium} alt={card.name} title={card.name} class="card-icon"/>-->
@@ -310,6 +312,9 @@
                     </div>
                 </div>
             </div>
+			
+			<div class="matchup-columns">
+			</div>
 		</section>
 
 		<section class="matchup-panel">

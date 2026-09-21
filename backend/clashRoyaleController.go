@@ -60,11 +60,14 @@ type Arena struct {
 	Name string `json:"name"`
 }
 type IconUrls struct {
-	Medium string `json:"medium"`
+	Medium          string `json:"medium"`
+	EvolutionMedium string `json:"evolutionMedium"`
+	HeroMedium      string `json:"HeroMedium"`
 }
 type Card struct {
-	Name string `json:"name"`
-	Id   int    `json:"id"`
+	Name           string `json:"name"`
+	Id             int    `json:"id"`
+	EvolutionLevel int    `json:"evolutionLevel"`
 	//dont need these right now
 	//level int
 	//rarity string
@@ -123,15 +126,22 @@ type PlayerBattleLogReturn struct {
 	RankList DateRankList `json:"rankList"`
 }
 type ClashRoyaleFriendlyLoadReturn struct {
-	MyTag      string                    `json:"myTag"`
-	FriendTag  string                    `json:"friendTag"`
-	MyName     string                    `json:"myName"`
-	FriendName string                    `json:"friendName"`
-	Wins       int                       `json:"wins"`
-	Losses     int                       `json:"losses"`
-	Ties       int                       `json:"ties"`
-	WinRate    float64                   `json:"winRate"`
-	Games      []CRFriendlyDataBaseEntry `json:"games"`
+	MyTag         string                    `json:"myTag"`
+	FriendTag     string                    `json:"friendTag"`
+	MyName        string                    `json:"myName"`
+	FriendName    string                    `json:"friendName"`
+	Wins          int                       `json:"wins"`
+	Losses        int                       `json:"losses"`
+	Ties          int                       `json:"ties"`
+	WinRate       float64                   `json:"winRate"`
+	Games         []CRFriendlyDataBaseEntry `json:"games"`
+	CardWinRates  map[string]*CardRecord    `json:"cardWinRates"`
+	MyMatchup     PlayerCardMatchup         `json:"myMatchup"`
+	FriendMatchup PlayerCardMatchup         `json:"friendMatchup"`
+}
+type PlayerCardMatchup struct {
+	WithCards    map[string]*CardRecord `json:"withCards"`
+	AgainstCards map[string]*CardRecord `json:"againstCards"`
 }
 type DeckCardWinRates struct {
 	Deck      []Card                 `json:"deck"`
@@ -446,6 +456,27 @@ func winRateByCard(games []GameResult, side func(GameResult) []Card) map[string]
 	}
 	return records
 }
+func buildPlayerMatchup(games []GameResult) PlayerCardMatchup {
+	return PlayerCardMatchup{
+		WithCards:    winRateByCard(games, func(g GameResult) []Card { return g.MyDeck }),
+		AgainstCards: winRateByCard(games, func(g GameResult) []Card { return g.EnemyDeck }),
+	}
+}
+func flipGames(games []GameResult) []GameResult {
+	flipped := make([]GameResult, len(games))
+
+	for i, g := range games {
+		r := g.Result
+
+		if r == 1 {
+			r = 0
+		} else if r == 0 {
+			r = 1
+		}
+		flipped[i] = GameResult{MyDeck: g.EnemyDeck, EnemyDeck: g.MyDeck, Result: r}
+	}
+	return flipped
+}
 func SyncLadderGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) error {
 	mostRecentGame, err := getMostRecentCRGame(db, "ladderGames")
 	if err != nil {
@@ -589,11 +620,21 @@ func syncFriendlyGames(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 			result = 0
 		}
 
-		myDeckJson, err := json.Marshal(battle.Team[0].Cards)
+		var myCards, enemyCards []Card
+
+		if battle.Team[0].Tag == myTag {
+			myCards = battle.Team[0].Cards
+			enemyCards = battle.Opponent[0].Cards
+		} else {
+			myCards = battle.Opponent[0].Cards
+			enemyCards = battle.Team[0].Cards
+		}
+
+		myDeckJson, err := json.Marshal(myCards)
 		if err != nil {
 			log.Printf("failed to marshal my deck: %v", err)
 		}
-		enemyDeckJson, err := json.Marshal(battle.Opponent[0].Cards)
+		enemyDeckJson, err := json.Marshal(enemyCards)
 		if err != nil {
 			log.Printf("failed to marshal enemy deck: %v", err)
 		}
@@ -616,7 +657,10 @@ func loadFriendlyStats(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 	if err != nil {
 		return nil, fmt.Errorf("failed to get friendly history: %w", err)
 	}
+
+	var gameResults []GameResult
 	var result ClashRoyaleFriendlyLoadReturn
+
 	for _, g := range games {
 		result.Games = append(result.Games, g)
 		switch g.Result {
@@ -627,12 +671,33 @@ func loadFriendlyStats(db *sql.DB, client *ClashRoyaleClient, myTag string, frie
 		default:
 			result.Ties++
 		}
+		var myCards []Card
+		if err := json.Unmarshal(g.MyDeck, &myCards); err != nil {
+			log.Printf("failed to unmarshal my deck: %v", err)
+			continue
+		}
+
+		var enemyCards []Card
+		if err := json.Unmarshal(g.EnemyDeck, &enemyCards); err != nil {
+			log.Printf("failed to unmarshal enemy deck: %v", err)
+			continue
+		}
+		if len(myCards) == 0 {
+			continue
+		}
+		gameResults = append(gameResults, GameResult{MyDeck: myCards, EnemyDeck: enemyCards, Result: g.Result})
 	}
+
 	result.MyTag = myTag
 	result.FriendTag = friendTag
 	if len(games) > 0 {
 		result.WinRate = float64(result.Wins) / float64(len(games))
 	}
+
+	result.CardWinRates = winRateByCard(gameResults, func(g GameResult) []Card { return g.MyDeck })
+	result.MyMatchup = buildPlayerMatchup(gameResults)
+	result.FriendMatchup = buildPlayerMatchup(flipGames(gameResults))
+
 	return &result, nil
 }
 
@@ -654,11 +719,22 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 	myName := findPlayerName(battleLog[0], tag1)
 	friendName := findPlayerName(battleLog[0], tag2)
 
+	var gameResults []GameResult
+
 	for i, battle := range battleLog {
 		if len(battle.Team) == 0 || len(battle.Opponent) == 0 {
 			continue
 		}
 		gamesList[i].BattleTime = battle.BattleTime
+		var myCards, enemyCards []Card
+
+		if battle.Team[0].Tag == tag1 {
+			myCards = battle.Team[0].Cards
+			enemyCards = battle.Opponent[0].Cards
+		} else {
+			myCards = battle.Opponent[0].Cards
+			enemyCards = battle.Team[0].Cards
+		}
 
 		myDeckBytes, err := json.Marshal(battle.Team[0].Cards)
 		if err != nil {
@@ -668,6 +744,8 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 		if err != nil {
 			log.Printf("failed to marshal enemy deck: %v", err)
 		}
+		//			THIS NEEDS TO CHANGE TO UNMARSHAL THE BYTES THEN DO THE WIN RATE BY CARD
+
 		gamesList[i].MyDeck = myDeckBytes
 		gamesList[i].EnemyDeck = enemyDeckBytes
 
@@ -689,7 +767,11 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 
 		gamesList[i].Result = result
 
+		gameResults = append(gameResults, GameResult{MyDeck: myCards, EnemyDeck: enemyCards, Result: result})
+
 	}
+
+	matchupReturn.CardWinRates = winRateByCard(gameResults, func(g GameResult) []Card { return g.MyDeck })
 
 	matchupReturn.MyTag = tag1
 	matchupReturn.FriendTag = tag2
@@ -698,7 +780,9 @@ func matchupGeneratorhelper(client *ClashRoyaleClient, tag1 string, tag2 string)
 	matchupReturn.Wins = wins
 	matchupReturn.Losses = losses
 	matchupReturn.Ties = ties
-	matchupReturn.WinRate = float64(wins) / float64(wins+losses)
+	if wins+losses > 0 {
+		matchupReturn.WinRate = float64(wins) / float64(wins+losses)
+	}
 	matchupReturn.Games = gamesList
 
 	return &matchupReturn, nil

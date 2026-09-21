@@ -84,9 +84,13 @@ export interface CardRecord {
     losses: number;
     winRate: number;
 }
-interface DeckCardWinRates {
+type DeckCardWinRates = {
     deck: Card[];
     cardStats: Record<string, CardRecord>;
+}
+export type PlayerCardMatchup = {
+    withCards: Record<string, CardRecord>;
+    againstCards: Record<string, CardRecord>;
 }
 interface CRRankedLoadReturn {
     games: CRRankedDataBaseEntry[];
@@ -268,4 +272,15 @@ export function createHeadToHeadChart(canvas:  HTMLCanvasElement, wins: number, 
         }
     }
     return new Chart(canvas, config)
+}
+
+export function formatPercentage(decimal: number) {
+	return (decimal * 100).toFixed(2) + '%';
+}
+
+export function pickCards(records: Record<string, CardRecord>, strong: boolean, count = 5) {
+    return Object.entries(records).filter(([,r]) => (strong ? r.winRate > 0.5 : r.winRate < 0.5))
+    .sort(([, a], [, b]) =>
+    (strong ? b.winRate - a.winRate : a.winRate - b.winRate) ||
+    (b.wins + b.losses) - (a.wins + a.losses)).slice(0, count)
 }

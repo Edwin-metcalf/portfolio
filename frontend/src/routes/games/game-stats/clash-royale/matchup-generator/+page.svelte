@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { fetchAPI } from "$lib/api";
     import { X } from 'lucide-svelte';
-    import { type ClashRoyaleFriendlyLoadReturn, type matchupGeneratorTags, createHeadToHeadChart } from "../../stats";
+    import { 
+		type ClashRoyaleFriendlyLoadReturn, 
+		type matchupGeneratorTags, 
+		createHeadToHeadChart,
+		formatPercentage,
+		pickCards
+	} from "../../stats";
     import Chart from 'chart.js/auto';
 
 
@@ -62,10 +68,6 @@
 		if (result > 0) return 'win';
 		if (result === 0) return 'loss';
 		return 'tie';
-	}
-
-    function formatPercentage(decimal: number) {
-		return (decimal * 100).toFixed(2) + '%';
 	}
 
 </script>
