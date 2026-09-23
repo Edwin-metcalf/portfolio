@@ -119,6 +119,35 @@
                         </div>
                     </div>
                 </div>
+
+				<div class="matchup-columns">
+                    {#each [
+                        { name: friendlyStats.myName, m: friendlyStats.myMatchup },
+                        { name: friendlyStats.friendName, m: friendlyStats.friendMatchup }
+                    ] as player}
+                        <div class="matchup-player">
+                            <h3 class="matchup-player-name">{player.name}</h3>
+
+                            <p class="matchup-label">Wins with</p>
+                            {#each pickCards(player.m.withCards, true) as [card, rec]}
+                                <p class="matchup-card">
+                                    {card} <span class="accent">{formatPercentage(rec.winRate)}</span> ({rec.wins}-{rec.losses})
+                                </p>
+                            {:else}
+                                <p class="matchup-card muted">Nothing stands out yet</p>
+                            {/each}
+
+                            <p class="matchup-label">Struggles against</p>
+                            {#each pickCards(player.m.againstCards, false) as [card, rec]}
+                                <p class="matchup-card">
+                                    {card} <span class="accent">{formatPercentage(rec.winRate)}</span> ({rec.wins}-{rec.losses})
+                                </p>
+                            {:else}
+                                <p class="matchup-card muted">Nothing stands out yet</p>
+                            {/each}
+                        </div>
+                    {/each}
+                </div>
             </section>
             {/if}
         {/if}
@@ -244,5 +273,33 @@
 		border: 1px solid rgba(255, 255, 255, 0.28);
 		color: var(--text-muted);
 	}
+	.matchup-columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .matchup-player-name {
+        font-family: var(--font-display);
+        color: var(--text);
+        margin: 0 0 0.5rem;
+    }
+    .matchup-label {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin: 1rem 0 0.35rem;
+    }
+    .matchup-card {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text);
+        margin: 0.2rem 0;
+    }
+    .matchup-card.muted {
+        color: var(--text-muted);
+    }
 
 </style>
