@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	//"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -62,7 +63,7 @@ func main() {
 	mux.HandleFunc("/api/games/space-invaders/clear", clearLeaderboardHandler)
 	mux.HandleFunc("/api/games/dota", dotaStatsHandler)
 	mux.HandleFunc("/api/games/clash-royale", clashRoyaleLoadHandler)
-	mux.HandleFunc("/api.games/clash-royale/matchup-generator", matchupGeneratorHandler)
+	mux.HandleFunc("/api/games/clash-royale/matchup-generator", matchupGeneratorHandler)
 	handler := corsMiddleware(mux)
 
 	port := os.Getenv("PORT")
@@ -71,5 +72,19 @@ func main() {
 	}
 
 	fmt.Printf("server up on god @ port %s\n", port)
+
+	//set up auto sync every 6 hours
+	syncTimer := time.NewTicker(6 * time.Hour)
+	//syncDone := make(chan bool) this never really stops running....
+
+	go func() {
+		synchClashRoyaleDatabase()
+		for t := range syncTimer.C {
+			log.Printf("[sync] ticker fires at %s", t.Format(time.RFC3339))
+			synchClashRoyaleDatabase()
+
+		}
+	}()
+
 	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, handler))
 }
