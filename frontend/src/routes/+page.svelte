@@ -38,16 +38,10 @@
                         <a href="/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-btn" in:fly={{ y: 20, duration: 800, delay: 600, easing: quintOut}}>
                             Resume
                         </a>
-                        <a style="display: none;" href="/games" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
-                            Games and Projects
-                        </a>
-                        <a href="#about-me" class="resume-btn" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
-                            scroll down for more!
-                            <ArrowDown size={15}/>
-                        </a>
                     </div>
-                    <!--<p class="name-subtitle">Check out what I am working on</p>-->
-                    <!-- prolly want to replace with cool buttons -->
+                    <a href="#about-me" class="scroll-down" aria-label="Scroll down for more" in:fly={{y: 20, duration: 800, delay: 600, easing: quintOut}}>
+                        <ArrowDown size={20}/>
+                    </a>
                 {/if}
 
             </div>
@@ -63,22 +57,24 @@
     <Courses></Courses>
     <Languages></Languages>
     <!-- section here for going to my projects I am currently working on -->
-    <section class="panel explore-section">
-        <h2>Want to check out what I am working on?</h2>
-        <div class="explore-buttons">
-            <a href="/games" class="explore-button">
-                <span class="explore-button-title">Current Projects</span>
-                <span class="explore-button-desc">See what else I've been building</span>
-            </a>
-            <a href="/games/game-stats/clash-royale/matchup-generator" class="explore-button">
-                <span class="explore-button-title">Clash Royale Matchup</span>
-                <span class="explore-button-desc">Check your head-to-head stats against a friend!</span>
-            </a>
-            <a href="/games/space-invaders" class="explore-button">
-                <span class="explore-button-title">Space Invaders</span>
-                <span class="explore-button-desc">A vampire survivors twist on the classic, with a global leaderboard</span>            </a>
+    <section class="explore-section">
+        <div class="explore-container">
+            <h2 class="explore-title">Want to check out what I am working on?</h2>
+            <div class="explore-buttons">
+                <a href="/games" class="explore-button">
+                    <span class="explore-button-title">Current Projects</span>
+                    <span class="explore-button-desc">See what else I've been building</span>
+                </a>
+                <a href="/games/game-stats/clash-royale/matchup-generator" class="explore-button">
+                    <span class="explore-button-title">Clash Royale Matchup</span>
+                    <span class="explore-button-desc">Check your head-to-head stats against a friend!</span>
+                </a>
+                <a href="/games/space-invaders" class="explore-button">
+                    <span class="explore-button-title">Space Invaders</span>
+                    <span class="explore-button-desc">A vampire survivors twist on the classic, with a global leaderboard</span>
+                </a>
+            </div>
         </div>
-
     </section>
     <Contact></Contact>
 
@@ -86,9 +82,23 @@
 
 <style>
  .explore-section {
+    padding: 80px 5%;
     text-align: center;
-    padding: 2rem;
-    margin: 2rem 8rem 0;
+
+  }
+
+  .explore-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .explore-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--text);
+    font-family: var(--font-display);
+    margin: 0;
   }
 
   .explore-buttons {
@@ -135,7 +145,7 @@
     }
     .name-header {
         text-align: center;
-        padding: 100px, 20px, 60px;
+        padding: 100px 20px 60px;
         background: transparent;
     }
     .name-header p {
@@ -212,6 +222,22 @@
         display: flex;
         justify-content: center;
         gap: 20px;
+    }
+
+    .scroll-down {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 28px;
+        padding: 8px;
+        color: var(--text-muted);
+        border-radius: var(--radius);
+        transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .scroll-down:hover {
+        color: var(--mint);
+        transform: translateY(2px);
     }
 
     :global(body) {

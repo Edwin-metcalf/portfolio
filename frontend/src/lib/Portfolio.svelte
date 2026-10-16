@@ -58,15 +58,6 @@
             highlights: ["created an informative and good looking website", "Custom space invaders/vampire survivors game with global leaderboard", "Dota 2 and Clash royale game analysis", "Clash royale matchup generator"]
         }, 
         {
-            id: 1,
-            title: "Action-map Political Information Website",
-            description: "Action-map Political Inforamtion Website",
-            icon: Vote,
-            tools: ["Ruby", "Rails", "SQL"],
-            longDescription: "Ruby on Rails web application with MVC architecutre to help users learn about elected representatives. Incorporated external API's to pull information along with omni auth2 for SSO and saved information for users to see on SQL database.",
-            highlights: ["integrated Google Civic information and external APIs", "Devleoped MVC components and responsive and intersting front end", "Used Cucumber and Rspec for testing", "Agile development"]
-        },
-        {
             id: 6,
             title: "Compiler",
             description: "Compiled custom programming language to RISC-V",
