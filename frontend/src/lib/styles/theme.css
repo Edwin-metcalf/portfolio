@@ -9,6 +9,21 @@
     --font-mono: 'IBM Plex Mono', monospace;
     --radius: 3px;
 }
+:focus-visible {
+    outline: 1px solid var(--mint);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
 body {
     background: var(--bg);
     color: var(--text);
