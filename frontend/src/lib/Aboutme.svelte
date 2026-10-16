@@ -68,27 +68,29 @@
     .about-title {
         font-size: 3rem;
         font-weight: 600;
-        color: #f0f6fc;
+        color: var(--text);
         margin-bottom: 30px;
         position: relative;
+        font-family: var(--font-display);
     }
     .about-title::after {
         content: '';
         display: block;
         width: 60px;
-        height: 3px;
-        background: #00d4aa;
+        height: 1px;
+        background: var(--border);
         margin: 20px auto;
-        border-radius: 2px;
     }
     .about-text {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         line-height: 1.8;
-        color: #c9d1d9;
+        color: var(--text);
         margin: 0;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         text-align: left;
-        text-indent: 8%;
+        max-width: 70ch;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     @media (max-width: 768px) {

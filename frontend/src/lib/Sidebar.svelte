@@ -78,13 +78,10 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
-        background: rgba(13, 17, 23, 0.95);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: 16px 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
     
     .nav-item {
@@ -96,9 +93,9 @@
         border: none;
         cursor: pointer;
         padding: 12px;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        color: #8b949e;
+        border-radius: var(--radius);
+        transition: all 0.15s ease;
+        color: var(--text-muted);
         overflow: hidden;
         white-space: nowrap;
     }
@@ -121,8 +118,8 @@
     }
     
     .nav-item:hover {
-        background: rgba(0, 212, 170, 0.1);
-        color: #00d4aa;
+        background: rgba(62, 207, 192, 0.15);
+        color: var(--mint);
         padding-right: 16px;
     }
     
@@ -137,9 +134,9 @@
     }
     
     .nav-item.active {
-        background: rgba(0, 212, 170, 0.15);
-        color: #00d4aa;
-        border-left: 3px solid #00d4aa;
+        background: rgba(62, 207, 192, 0.15);
+        color: var(--mint);
+        border-left: 2px solid var(--mint);
     }
     
     .nav-item.active .icon-wrapper {

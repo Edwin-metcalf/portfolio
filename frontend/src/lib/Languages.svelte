@@ -78,19 +78,19 @@
     .skills-title {
         font-size: 3rem;
         font-weight: 600;
-        color: #f0f6fc;
+        color: var(--text);
         text-align: center;
         margin-bottom: 50px;
         position: relative;
+        font-family: var(--font-display);
     }
     .skills-title::after {
         content: '';
         display: block;
         width: 60px;
-        height: 3px;
-        background: #00d4aa;
+        height: 1px;
+        background: var(--border);
         margin: 20px auto;
-        border-radius: 2px;
     }
     .skills-category {
         margin-bottom: 50px;
@@ -107,18 +107,16 @@
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        background: rgba(33, 38, 45, 0.5);
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(48, 54, 61, 0.5);
+        background: var(--panel);
+        border-radius: var(--radius);
+        transition: all 0.15s ease;
+        border: 1px solid var(--border);
         min-width: 120px;
     }
 
     .skill-item:hover {
-        transform: translateY(-5px);
-        background: rgba(33, 38, 45, 0.8);
-        border-color: #00d4aa;
-        box-shadow: 0 10px 25px rgba(0, 212, 170, 0.1);
+        transform: translateY(-2px);
+        border-color: var(--mint);
     }
 
     .skill-icon {
@@ -138,22 +136,21 @@
         fill: currentColor;
     }
     .skill-name {
-        font-size: 0.95rem;
-        color: #8b949e;
+        font-size: 0.85rem;
+        color: var(--text-muted);
         font-weight: 500;
         text-align: center;
-        opacity: 0;
-        transform: translateY(-10px);
-        transition: all 0.3s ease;
+        transition: all 0.15s ease;
         position: absolute;
         bottom: 10px;
         white-space: nowrap;
+        font-family: var(--font-mono);
+        opacity: 0;
     }
 
     .skill-item:hover .skill-name {
         opacity: 1;
-        transform: translateY(0);
-        color: #00d4aa;
+        color: var(--mint);
     }
 
     @media (max-width: 768px) {

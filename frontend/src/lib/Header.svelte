@@ -30,25 +30,27 @@
 <style>
     .header {
         overflow: hidden;
-        background: linear-gradient(90deg, #0d1117, #161b22, #21262d);
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
         padding: 20px 10px;
-        color: #f0f6fc;
-        transform: translateY(-2px);
+        color: var(--text);
+        transform: none;
     }
     .header a {
         float: left;
-        color: #f0f6fc;
+        color: var(--text);
         text-align: center;
         padding: 12px;
         text-decoration: none;
         font-size: 30px;
         line-height: 25px;
-        border-radius: 4px;
+        border-radius: var(--radius);
+        transition: all 0.15s ease;
     }
     .header a:hover {
-        background-color: #00d4aa;
-        color: #0d1117;
-        transform: translateY(-2px);
+        background-color: rgba(62, 207, 192, 0.15);
+        color: var(--mint);
+        transform: translateY(-1px);
     }
     .header-right {
         float: right;
@@ -60,7 +62,7 @@
         transition: filter 0.3s ease;
     }
     .logo:hover {
-        filter: brightness(0.5);
+        filter: brightness(0.7);
     }
 
 

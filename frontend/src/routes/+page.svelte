@@ -104,7 +104,7 @@
         justify-content: center;
         gap: 0.4rem;
         font-family: var(--font-mono);
-        background: var(--bg);
+        background: var(--panel);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 1.2rem 1rem;
@@ -125,14 +125,12 @@
     }
 
     .explore-button-desc {
-        color: var(--border);
+        color: var(--text-muted);
         font-size: 0.85rem;
         line-height: 1.3;
     }
     .main-page {
-        background:#21262d;
-        background-size: 400% 400%;
-        animation: gradient 30s linear infinite;
+        background: var(--bg);
         min-height: 100vh;
     }
     .name-header {
@@ -146,15 +144,12 @@
     .name-title {
         font-size: 4rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #8bf0dc, #00d4aa, #02614e);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--text);
         margin: 0;
     }
     .name-subtitle {
         font-size: 2rem;
-        color: #8b949e;
+        color: var(--text-muted);
         margin: auto;
         font-weight: 300;
     }
@@ -181,25 +176,16 @@
         width: 50vh;
         height: 50vh;
         border-radius: 50%;
-        border: 5px solid #0d1117;
+        border: 1px solid var(--border);
         object-fit: cover;
-        box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
     }
-    @keyframes glow {
-        from {
-            filter: drop-shadow(0 0 5px rgba(0, 212, 170, 0.3));
-        }
-        to {
-            filter: drop-shadow(0 0 20px rgba(0, 212, 170, 0.6));
-        }
-        html {
-            scroll-behavior: smooth;
-        }
+    html {
+        scroll-behavior: smooth;
     }
 
     .resume-btn:hover {
-        background: rgba(0, 212, 170, 0.15);
-        transform: translateY(-2px);
+        background: rgba(62, 207, 192, 0.15);
+        transform: translateY(-1px);
     }
 
     .resume-btn:active {
@@ -208,14 +194,14 @@
 
     .resume-btn {
         background: transparent;
-        color: #00d4aa;
-        border: 2px solid #00d4aa;
+        color: var(--mint);
+        border: 1px solid var(--mint);
         padding: 10px 26px;
         font-size: 1rem;
-        font-weight: 600;
-        border-radius: 12px;
+        font-weight: 500;
+        border-radius: var(--radius);
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.15s ease;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -229,14 +215,14 @@
     }
 
     :global(body) {
-        background: #0d1117; 
+        background: var(--bg); 
         margin: 0;
         padding: 0;
         overflow-x: hidden;
     }
 
     :global(html) {
-        background: #0d1117;
+        background: var(--bg);
     }
 
     @media (max-width: 768px) {
@@ -275,7 +261,7 @@
         .profile-pic {
             width: 250px;
             height: 250px;
-            border: 3px solid #0d1117;
+            border: 1px solid var(--border);
         }
     }
 

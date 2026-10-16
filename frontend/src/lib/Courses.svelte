@@ -66,22 +66,22 @@
     }
 
     .coursework-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: 600;
-        color: #f0f6fc;
+        color: var(--text);
         text-align: center;
         margin-bottom: 50px;
         position: relative;
+        font-family: var(--font-display);
     }
         
     .coursework-title::after {
         content: '';
         display: block;
         width: 60px;
-        height: 3px;
-        background: #00d4aa;
+        height: 1px;
+        background: var(--border);
         margin: 20px auto;
-        border-radius: 2px;
     }
     .schools-container {
         display: grid;
@@ -112,13 +112,16 @@
     }
 
     .school-name {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        color: #00d4aa;
+        color: var(--mint);
         margin-bottom: 20px;
         text-align: center;
         padding-bottom: 10px;
-        border-bottom: 2px solid rgba(0, 212, 170, 0.3);
+        border-bottom: 1px solid var(--border);
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .course-item {
@@ -135,10 +138,9 @@
     }
 
     .course-icon {
-        color: #00d4aa;
+        color: var(--mint);
         display: flex;
         align-items: center;
-        opacity: 0.8;
     }
 
     .course-name {
