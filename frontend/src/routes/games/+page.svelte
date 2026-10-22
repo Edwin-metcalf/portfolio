@@ -15,6 +15,12 @@
 			status: 'playable'
 		},
 		{
+			title: 'Clash Royale Matchup Generator',
+			description: 'Put you and a friends ID in to get your matchup analyzed!',
+			url: `/games/game-stats/clash-royale/matchup-generator`,
+			status: 'playable'
+		},
+		{
 			title: 'Under Construction',
 			description: 'Always working on something',
 			url: '#',
@@ -92,7 +98,7 @@
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 	}
 	.game-card.coming-soon {
-		background: var(--bg);
+		background: var(--panel);
 		border-color: var(--border);
 		cursor: not-allowed;
 		opacity: 0.6;
