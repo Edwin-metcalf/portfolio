@@ -116,6 +116,11 @@ func initDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	_, err = DB.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_friendly_battle_time ON friendlyGames (battle_time);`)
+	if err != nil {
+		return nil, err
+	}
+
 	var CRRankedStmt string
 	if driver == "postgres" {
 		CRRankedStmt = `

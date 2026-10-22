@@ -189,10 +189,6 @@
         border: 1px solid var(--border);
         object-fit: cover;
     }
-    html {
-        scroll-behavior: smooth;
-    }
-
     .resume-btn:hover {
         background: rgba(62, 207, 192, 0.15);
         transform: translateY(-1px);

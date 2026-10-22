@@ -40,7 +40,7 @@
 
     async function getMatchUpData(tags: matchupGeneratorTags): Promise<ClashRoyaleFriendlyLoadReturn | null> {
         try {
-            const result = await fetchAPI('/api.games/clash-royale/matchup-generator', { 
+            const result = await fetchAPI('/api/games/clash-royale/matchup-generator', { 
                 method: 'POST',
                 headers : {
                     'Content-Type': 'application/json'
