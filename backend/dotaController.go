@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/sync/semaphore"
 	//"golang.org/x/tools/playground"
 )
 
@@ -94,6 +96,7 @@ func getRecentGames(playerID string) (*[]recentGame, error) {
 	if APIKEY == "" {
 		log.Println("OPENDOTA API KEY NOT SET")
 	}
+	//cant do more than 17 it appears then I got throttled will probably have to do more serious caching? Idk
 	numberOfGames := 10
 	url := fmt.Sprintf("https://api.opendota.com/api/players/%s/matches?api_key=%s&limit=%d", playerID, APIKEY, numberOfGames)
 
@@ -318,14 +321,25 @@ func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]
 
 	matchupMap := make(map[string]matchupStats)
 	ch := make(chan matchupContrib, 10*5) //buffers to avoid blocking
-
 	var wg sync.WaitGroup
+
+	sem := semaphore.NewWeighted(8) //set a max amount of concurrent requests
+	ctx := context.Background()
 
 	for _, game := range rawData {
 		wg.Add(1)
 		g := game
+
+		//wait if there is no available worker
+		if err := sem.Acquire(ctx, 1); err != nil {
+			wg.Done()
+			continue
+		}
+
 		go func() {
 			defer wg.Done()
+			defer sem.Release(1)
+
 			var won bool
 			var yourTeam string
 
@@ -338,9 +352,9 @@ func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]
 				yourTeam = "dire"
 			}
 
-			mdStart := time.Now()
-			md, err := getMatchDetailsCached(g.MatchID)
-			log.Printf("[TIMING] getMatchDetails matchID=%d took=%s", g.MatchID, time.Since(mdStart))
+			//mdStart := time.Now()
+			md, err := GetMatchDetailsCached(g.MatchID)
+			//log.Printf("[TIMING] getMatchDetails matchID=%d took=%s", g.MatchID, time.Since(mdStart))
 			if err != nil {
 				log.Printf("Failed to get match details for %d: %v", g.MatchID, err)
 				return
@@ -382,31 +396,6 @@ func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]
 
 	log.Printf("[TIMING] getMatchupStats done, games=%d took=%s", len(rawData), time.Since(start))
 	return &matchupMap, nil
-}
-
-// we do a little caching
-var (
-	matchCache   = map[int]*MatchDetail{}
-	matchCacheMu sync.RWMutex
-)
-
-func getMatchDetailsCached(id int) (*MatchDetail, error) {
-	matchCacheMu.RLock()
-	if match, ok := matchCache[id]; ok {
-		matchCacheMu.RUnlock()
-		return match, nil
-	}
-	matchCacheMu.RUnlock()
-
-	match, err := getMatchDetails(id)
-	if err != nil {
-		return nil, err
-	}
-
-	matchCacheMu.Lock()
-	matchCache[id] = match
-	matchCacheMu.Unlock()
-	return match, nil
 }
 
 type dotaStatsReturn struct {

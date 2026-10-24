@@ -8,6 +8,7 @@ backend/*.test
 backend/vendor/
 backend/server
 backend/local.db
+backend/portfolio
 
 #frontend I hope this works pleas
 frontend/.output
