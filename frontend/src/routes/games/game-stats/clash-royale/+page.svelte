@@ -125,8 +125,8 @@
 		// will want to do all the entries I think or more then 5 
 		const entries = Object.entries(cardStats).sort((a,b) => b[1].winRate - a[1].winRate)
 		return {
-			best: entries.slice(0,5),
-			worst: entries.slice(-5).reverse()
+			best: entries.slice(0,10),
+			worst: entries.slice(-10).reverse()
 		}
 	}
 </script>

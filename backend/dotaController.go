@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	//"golang.org/x/tools/playground"
@@ -306,45 +307,70 @@ type matchupStats struct {
 	Games         int     `json:"games"`
 	WinRate       float32 `json:"winRate"`
 }
+type matchupContrib struct {
+	enemy string
+	won   bool
+}
 
 func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]matchupStats, error) {
+	log.Printf("[TIMING] getMatchupStats start, games=%d", len(rawData))
+	start := time.Now()
+
 	matchupMap := make(map[string]matchupStats)
+	ch := make(chan matchupContrib, 10*5) //buffers to avoid blocking
+
+	var wg sync.WaitGroup
 
 	for _, game := range rawData {
-		var won bool
-		var yourTeam string
-		if game.PlayerSlot < 128 {
-			won = game.RadiantWin
-			yourTeam = "radiant"
+		wg.Add(1)
+		g := game
+		go func() {
+			defer wg.Done()
+			var won bool
+			var yourTeam string
 
-		} else {
-			won = !game.RadiantWin
-			yourTeam = "dire"
-		}
+			if g.PlayerSlot < 128 {
+				won = g.RadiantWin
+				yourTeam = "radiant"
 
-		//yourHero := heroMap[game.HeroID]
-
-		matchDetails, err := getMatchDetails(game.MatchID)
-		if err != nil {
-			log.Printf("Failed to get match details for %d: %v", game.MatchID, err)
-			continue
-		}
-
-		enemyHeroes := getEnemyHeroes(matchDetails, yourTeam, heroMap)
-
-		for _, enemyHero := range enemyHeroes {
-			stats := matchupMap[enemyHero]
-			stats.EnemyHeroName = enemyHero
-			stats.Games += 1
-
-			if won {
-				stats.Wins += 1
 			} else {
-				stats.Losses += 1
+				won = !g.RadiantWin
+				yourTeam = "dire"
 			}
 
-			matchupMap[enemyHero] = stats
+			mdStart := time.Now()
+			md, err := getMatchDetailsCached(g.MatchID)
+			log.Printf("[TIMING] getMatchDetails matchID=%d took=%s", g.MatchID, time.Since(mdStart))
+			if err != nil {
+				log.Printf("Failed to get match details for %d: %v", g.MatchID, err)
+				return
+			}
+
+			//yourHero := heroMap[game.HeroID]
+
+			for _, enemyHero := range getEnemyHeroes(md, yourTeam, heroMap) {
+				ch <- matchupContrib{enemy: enemyHero, won: won}
+			}
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	//aggreate data in a single routine so no races
+
+	for c := range ch {
+		stats := matchupMap[c.enemy]
+		stats.EnemyHeroName = c.enemy
+		stats.Games += 1
+
+		if c.won {
+			stats.Wins += 1
+		} else {
+			stats.Losses += 1
 		}
+		matchupMap[c.enemy] = stats
 	}
 
 	for key, stats := range matchupMap {
@@ -354,7 +380,33 @@ func getMatchupStats(rawData []recentGame, heroMap map[int]string) (*map[string]
 		matchupMap[key] = stats
 	}
 
+	log.Printf("[TIMING] getMatchupStats done, games=%d took=%s", len(rawData), time.Since(start))
 	return &matchupMap, nil
+}
+
+// we do a little caching
+var (
+	matchCache   = map[int]*MatchDetail{}
+	matchCacheMu sync.RWMutex
+)
+
+func getMatchDetailsCached(id int) (*MatchDetail, error) {
+	matchCacheMu.RLock()
+	if match, ok := matchCache[id]; ok {
+		matchCacheMu.RUnlock()
+		return match, nil
+	}
+	matchCacheMu.RUnlock()
+
+	match, err := getMatchDetails(id)
+	if err != nil {
+		return nil, err
+	}
+
+	matchCacheMu.Lock()
+	matchCache[id] = match
+	matchCacheMu.Unlock()
+	return match, nil
 }
 
 type dotaStatsReturn struct {

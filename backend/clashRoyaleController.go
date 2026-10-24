@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -263,6 +264,8 @@ func (c *ClashRoyaleClient) getPlayerProfile(playerTag string) (*PlayerProfileRe
 
 // similar to get PlayerBattleLog but more simple want to just get the list
 func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error) {
+	log.Printf("[TIMING][CR] fetchBattleLog start tag=%s", playerTag)
+	start := time.Now()
 	encodedTag := url.PathEscape(playerTag)
 	req, err := http.NewRequest("GET", c.baseURL+"/players/"+encodedTag+"/battlelog", nil)
 	if err != nil {
@@ -272,20 +275,24 @@ func (c *ClashRoyaleClient) fetchBattleLog(playerTag string) (BattleList, error)
 	req.Header.Add("Authorization", "Bearer "+c.jwt)
 	resp, err := c.client.Do(req)
 	if err != nil {
+		log.Printf("[TIMING][CR] fetchBattleLog failed tag=%s took=%s err=%v", playerTag, time.Since(start), err)
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		log.Printf("[TIMING][CR] fetchBattleLog bad status tag=%s took=%s status=%d", playerTag, time.Since(start), resp.StatusCode)
 		return nil, fmt.Errorf("api error: status %d, body %s", resp.StatusCode, string(body))
 	}
 
 	var battleLog BattleList
 	err = json.NewDecoder(resp.Body).Decode(&battleLog)
 	if err != nil {
+		log.Printf("[TIMING][CR] fetchBattleLog decode failed tag=%s took=%s err=%v", playerTag, time.Since(start), err)
 		return nil, err
 	}
+	log.Printf("[TIMING][CR] fetchBattleLog done tag=%s count=%d took=%s", playerTag, len(battleLog), time.Since(start))
 	return battleLog, nil
 
 }
