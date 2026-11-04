@@ -304,6 +304,7 @@ func addRankedEntry(db *sql.DB, battle_time string, result int, my_deck json.Raw
 		return fmt.Errorf("result value needs to be 1, 0 or -1, it is: %v", result)
 	}
 	_, err := db.Exec(`INSERT INTO rankedGames (battle_time, result, my_deck, enemy_deck)
-	 					VALUES($1, $2, $3, $4)`, battle_time, result, my_deck, enemy_deck)
+	 					VALUES($1, $2, $3, $4)
+						ON CONFLICT (battle_time) DO NOTHING;`, battle_time, result, my_deck, enemy_deck)
 	return err
 }

@@ -88,6 +88,15 @@ type DeckCardWinRates = {
     deck: Card[];
     cardStats: Record<string, CardRecord>;
 }
+export interface CRRankedSeason {
+    id: string;
+    label: string;
+    wins: number;
+    losses: number;
+    ties: number;
+    winRate: number;
+    deckCardWinRates: DeckCardWinRates[];
+}
 export type PlayerCardMatchup = {
     withCards: Record<string, CardRecord>;
     againstCards: Record<string, CardRecord>;
@@ -99,6 +108,8 @@ interface CRRankedLoadReturn {
     ties: number;
     winRate: number;
     deckCardWinRates: DeckCardWinRates[];
+    currentSeasonId?: string;
+    seasons?: CRRankedSeason[];
 }
 export interface ClashRoyaleStatsReturn {
     wins: number;

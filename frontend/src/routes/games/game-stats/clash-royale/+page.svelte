@@ -27,6 +27,9 @@
 	let headToHeadInstance: Chart<'bar'> | null = null;
 
 	let loading = $state<boolean>(true);
+	let minMatchupGames = $state(3);
+	let selectedSeasonId = $state<string | null>(null);
+	const MIN_MATCHUP_OPTIONS = [1, 3, 5];
 	const leagueNumToNameMap = new Map<number, string>([
 		[1, 'Master I'],
 		[2, 'Master II'],
@@ -64,6 +67,8 @@
 			clashRoyaleData = gameStatsCache.clashRoyaleData.data;
 
 			if (!clashRoyaleData) return;
+
+			selectedSeasonId = clashRoyaleData.ranked.currentSeasonId ?? 'all';
 
 			loading = false;
 			await tick();
@@ -121,14 +126,64 @@
 
         return 15 + Math.floor((trophies - 5000) / 500);
     }
-	function getSortedRankedMatchups(cardStats: Record<string, CardRecord>) {
-		// will want to do all the entries I think or more then 5 
-		const entries = Object.entries(cardStats).sort((a,b) => b[1].winRate - a[1].winRate)
-		return {
-			best: entries.slice(0,10),
-			worst: entries.slice(-10).reverse()
-		}
+	function getSortedRankedMatchups(cardStats: Record<string, CardRecord>, minGames: number) {
+		// Ignore cards that only appeared in ties (0 decisions) and any card
+		// without enough games for its win rate to mean much.
+		const entries = Object.entries(cardStats).filter(([, record]) => {
+			const decisions = record.wins + record.losses;
+			return decisions > 0 && decisions >= minGames;
+		});
+
+		const sampleSize = (record: CardRecord) => record.wins + record.losses;
+
+		const best = entries
+			.filter(([, record]) => record.winRate > 0.5)
+			.sort(([, a], [, b]) => b.winRate - a.winRate || sampleSize(b) - sampleSize(a))
+			.slice(0, 10);
+
+		const even = entries
+			.filter(([, record]) => record.winRate === 0.5)
+			.sort(([, a], [, b]) => sampleSize(b) - sampleSize(a))
+			.slice(0, 10);
+
+		const worst = entries
+			.filter(([, record]) => record.winRate < 0.5)
+			.sort(([, a], [, b]) => a.winRate - b.winRate || sampleSize(b) - sampleSize(a))
+			.slice(0, 10);
+
+		return { best, even, worst };
 	}
+
+	const rankedSeasons = $derived(clashRoyaleData?.ranked.seasons ?? []);
+
+	const selectedRankedView = $derived.by(() => {
+		const data = clashRoyaleData;
+		if (!data) return null;
+
+		const seasonId = selectedSeasonId ?? data.ranked.currentSeasonId ?? 'all';
+		const season =
+			seasonId === 'all'
+				? null
+				: (data.ranked.seasons ?? []).find((candidate) => candidate.id === seasonId);
+
+		if (!season) {
+			return {
+				wins: data.ranked.wins,
+				losses: data.ranked.losses,
+				winRate: data.ranked.winRate,
+				deckCardWinRates: data.ranked.deckCardWinRates
+			};
+		}
+
+		return {
+			wins: season.wins,
+			losses: season.losses,
+			winRate: season.winRate,
+			deckCardWinRates: season.deckCardWinRates
+		};
+	});
+
+	const rankedDeckStats = $derived(selectedRankedView?.deckCardWinRates ?? []);
 </script>
 
 <div class="game-stat-helper-page">
@@ -205,19 +260,61 @@
 		</div>
 
 		<section class="ranked-panel">
-			<h2 class="panel panel-label">Ranked Stats</h2>
+			<div class="ranked-panel-header">
+				<h2 class="panel panel-label">Ranked Stats</h2>
+				<div class="matchup-filter" role="group" aria-label="Minimum games per matchup">
+					<span class="matchup-filter-label">Min games</span>
+					<div class="segmented-control">
+						{#each MIN_MATCHUP_OPTIONS as option}
+							<button
+								type="button"
+								class="segment"
+								class:active={minMatchupGames === option}
+								aria-pressed={minMatchupGames === option}
+								onclick={() => (minMatchupGames = option)}
+							>
+								{option}
+							</button>
+						{/each}
+					</div>
+				</div>
+			</div>
+			{#if rankedSeasons.length}
+				<div class="season-tabs" role="group" aria-label="Ranked season">
+					{#each rankedSeasons as season}
+						<button
+							type="button"
+							class="season-tab"
+							class:active={selectedSeasonId === season.id}
+							aria-pressed={selectedSeasonId === season.id}
+							onclick={() => (selectedSeasonId = season.id)}
+						>
+							{season.id === clashRoyaleData.ranked.currentSeasonId ? 'This season' : season.label}
+						</button>
+					{/each}
+					<button
+						type="button"
+						class="season-tab"
+						class:active={selectedSeasonId === 'all'}
+						aria-pressed={selectedSeasonId === 'all'}
+						onclick={() => (selectedSeasonId = 'all')}
+					>
+						All time
+					</button>
+				</div>
+			{/if}
 			<div class="profile-stats">
 				<div class="stat">
 					<span class="stat-label">Wins</span>
-					<span class="stat-value">{clashRoyaleData.ranked.wins}</span>
+					<span class="stat-value">{selectedRankedView?.wins ?? 0}</span>
 				</div>
 				<div class="stat">
 					<span class="stat-label">Loses</span>
-					<span class="stat-value">{clashRoyaleData.ranked.losses}</span>
+					<span class="stat-value">{selectedRankedView?.losses ?? 0}</span>
 				</div>
 				<div class="stat">
 					<span class="stat-label">Win Rate</span>
-					<span class="stat-value accent">{formatPercentage(clashRoyaleData.ranked.winRate)}</span>
+					<span class="stat-value accent">{formatPercentage(selectedRankedView?.winRate ?? 0)}</span>
 				</div>
 				<div class="stat">
 					<span class="stat-label">Current League</span>
@@ -230,10 +327,10 @@
 			color code the win rates show that its this deck vs these cards ie this deck and matchups
 			then do it to the matchups looks a bit dumb right now
 			-->
-			{#if clashRoyaleData.ranked.deckCardWinRates?.length}
+			{#if rankedDeckStats.length}
 
-				{#each clashRoyaleData.ranked.deckCardWinRates as deckStats}
-					{@const {best, worst} = getSortedRankedMatchups(deckStats.cardStats)}
+				{#each rankedDeckStats as deckStats}
+					{@const {best, even, worst} = getSortedRankedMatchups(deckStats.cardStats, minMatchupGames)}
 					{@const deckSubtitle = deckStats.deck.slice(0, 3).map((c) => c.name).join(', ')}
 					<div class="ranked-deck">
 						<div class="deck-column">
@@ -256,36 +353,77 @@
 								<span class="matchup-group-label">
 									Best Against ->
 								</span>
-								<div class="matchup-scroll">
-									<div class="matchup-row">
-										{#each best as [cardName, record]}
-											<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
-												<span class="matchup-name">{cardName}</span>
-												<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
-											</div>
-										{/each}
+								{#if best.length}
+									<div class="matchup-scroll">
+										<div class="matchup-row">
+											{#each best as [cardName, record]}
+												<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
+													<span class="matchup-name">{cardName}</span>
+													<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+													<span class="matchup-record">{record.wins}W&ndash;{record.losses}L</span>
+												</div>
+											{/each}
+										</div>
+									</div>
+								{:else}
+									<p class="matchup-empty">
+										No favorable matchups with {minMatchupGames}+ games.
+										{#if minMatchupGames > 1}Try lowering min games to 1.{/if}
+									</p>
+								{/if}
+							</div>
+
+							{#if even.length}
+								<div class="matchup-group">
+									<span class="matchup-group-label">
+										Even Against ->
+									</span>
+									<div class="matchup-scroll">
+										<div class="matchup-row">
+											{#each even as [cardName, record]}
+												<div class="matchup-chip even">
+													<span class="matchup-name">{cardName}</span>
+													<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+													<span class="matchup-record">{record.wins}W&ndash;{record.losses}L</span>
+												</div>
+											{/each}
+										</div>
 									</div>
 								</div>
-							</div>
+							{/if}
 
 							<div class="matchup-group">
 								<span class="matchup-group-label">
 									worst against ->
 								</span>
-								<div class="matchup-scroll">
-									<div class="matchup-row">
-										{#each worst as [cardName, record]}
-											<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
-												<span class="matchup-name">{cardName}</span>
-												<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
-											</div>
-										{/each}
+								{#if worst.length}
+									<div class="matchup-scroll">
+										<div class="matchup-row">
+											{#each worst as [cardName, record]}
+												<div class="matchup-chip" class:positive={record.winRate >= 0.5} class:negative={record.winRate < 0.5}>
+													<span class="matchup-name">{cardName}</span>
+													<span class="matchup-rate">{formatPercentage(record.winRate)}</span>
+													<span class="matchup-record">{record.wins}W&ndash;{record.losses}L</span>
+												</div>
+											{/each}
+										</div>
 									</div>
-								</div>
+								{:else}
+									<p class="matchup-empty">
+										No unfavorable matchups with {minMatchupGames}+ games.
+										{#if minMatchupGames > 1}Try lowering min games to 1.{/if}
+									</p>
+								{/if}
 							</div>
 						</div>
 					</div>
 				{/each}
+			{:else}
+				<p class="ranked-empty">
+					{selectedSeasonId === 'all'
+						? 'No ranked games recorded yet.'
+						: 'No ranked games recorded in this season yet.'}
+				</p>
 			{/if}
 
 		</section>
@@ -371,6 +509,84 @@
 		.ranked-deck {
 			grid-template-columns: 1fr;
 		}
+	}
+	.ranked-panel-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	.season-tabs {
+		display: flex;
+		gap: 1.25rem;
+		overflow-x: auto;
+		margin-top: 1.25rem;
+		border-bottom: 1px solid var(--border);
+		scrollbar-width: thin;
+		scrollbar-color: var(--border) transparent;
+	}
+	.season-tab {
+		flex: 0 0 auto;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.4px;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		padding: 0.25rem 0 0.6rem;
+		margin-bottom: -1px;
+		cursor: pointer;
+		transition: color 0.15s ease, border-color 0.15s ease;
+	}
+	.season-tab:hover {
+		color: var(--text);
+	}
+	.season-tab.active {
+		color: var(--mint);
+		border-bottom-color: var(--mint);
+	}
+	.matchup-filter {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+	.matchup-filter-label {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted);
+	}
+	.segmented-control {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+	.segment {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		background: transparent;
+		border: none;
+		border-right: 1px solid var(--border);
+		color: var(--text-muted);
+		padding: 0.3rem 0.6rem;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+	}
+	.segment:last-child {
+		border-right: none;
+	}
+	.segment:hover {
+		color: var(--text);
+		background: rgba(255, 255, 255, 0.06);
+	}
+	.segment.active {
+		background: var(--mint);
+		color: var(--bg);
 	}
 	.deck-column {
 		border-right: 1px solid var(--border);
@@ -461,11 +677,31 @@
 	.matchup-chip.negative {
 		border-left-color: #e35d5d;
 	}
+	.matchup-chip.even {
+		border-left-color: var(--text-muted);
+	}
 	.matchup-name {
 		color: var(--text);
 	}
 	.matchup-rate {
 		color: var(--text-muted);
+	}
+	.matchup-record {
+		color: var(--text-muted);
+		font-size: 0.6rem;
+		letter-spacing: 0.3px;
+	}
+	.matchup-empty {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		margin: 0;
+	}
+	.ranked-empty {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		margin: 1.5rem 0 0;
 	}
 	.matchup-row {
 		scrollbar-width: thin;

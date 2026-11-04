@@ -148,6 +148,15 @@ type DeckCardWinRates struct {
 	Deck      []Card                 `json:"deck"`
 	CardStats map[string]*CardRecord `json:"cardStats"`
 }
+type CRRankedSeason struct {
+	Id               string             `json:"id"`
+	Label            string             `json:"label"`
+	Wins             int                `json:"wins"`
+	Losses           int                `json:"losses"`
+	Ties             int                `json:"ties"`
+	WinRate          float64            `json:"winRate"`
+	DeckCardWinRates []DeckCardWinRates `json:"deckCardWinRates"`
+}
 type CRRankedLoadReturn struct {
 	Games            []CRRankedDataBaseEntry `json:"games"`
 	Wins             int                     `json:"wins"`
@@ -155,6 +164,8 @@ type CRRankedLoadReturn struct {
 	Ties             int                     `json:"ties"`
 	WinRate          float64                 `json:"winRate"`
 	DeckCardWinRates []DeckCardWinRates      `json:"deckCardWinRates"`
+	CurrentSeasonID  string                  `json:"currentSeasonId"`
+	Seasons          []CRRankedSeason        `json:"seasons"`
 }
 type CardRecord struct {
 	Wins    int     `json:"wins"`
@@ -342,6 +353,66 @@ func syncRankedGames(db *sql.DB, client *ClashRoyaleClient, playerTag string) er
 	return nil
 }
 
+const crSeasonStartHourUTC = 10
+
+// firstMondayAt returns the first Monday of the month at 10:00 UTC.
+func firstMondayAt(year int, month time.Month) time.Time {
+	first := time.Date(year, month, 1, crSeasonStartHourUTC, 0, 0, 0, time.UTC)
+	daysUntilMonday := (int(time.Monday) - int(first.Weekday()) + 7) % 7
+	return first.AddDate(0, 0, daysUntilMonday)
+}
+
+// seasonStartFor returns the season start that contains t. Seasons reset on the
+// first Monday of each month at 10:00 UTC, so a battle before that moment still
+// belongs to the previous season.
+func seasonStartFor(t time.Time) time.Time {
+	t = t.UTC()
+	start := firstMondayAt(t.Year(), t.Month())
+	if t.Before(start) {
+		previousMonth := time.Date(t.Year(), t.Month(), 1, crSeasonStartHourUTC, 0, 0, 0, time.UTC).AddDate(0, -1, 0)
+		start = firstMondayAt(previousMonth.Year(), previousMonth.Month())
+	}
+	return start
+}
+
+func seasonIDForTime(t time.Time) string {
+	return seasonStartFor(t).Format("2006-01")
+}
+
+func seasonLabel(id string) string {
+	t, err := time.Parse("2006-01", id)
+	if err != nil {
+		return id
+	}
+	return t.Format("January 2006")
+}
+
+func parseBattleTime(battleTime string) (time.Time, error) {
+	return time.Parse("20060102T150405.000Z", battleTime)
+}
+
+type rankedSeasonAccumulator struct {
+	wins           int
+	losses         int
+	ties           int
+	deckToGamesMap map[string]*deckGroup
+}
+
+func newRankedSeasonAccumulator() *rankedSeasonAccumulator {
+	return &rankedSeasonAccumulator{deckToGamesMap: make(map[string]*deckGroup)}
+}
+
+func (a *rankedSeasonAccumulator) addResult(result int) {
+	switch result {
+	case 1:
+		a.wins++
+	case 0:
+		a.losses++
+	default:
+		a.ties++
+	}
+}
+
 func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*CRRankedLoadReturn, error) {
 	if err := syncRankedGames(db, client, playerTag); err != nil {
 		log.Printf("Ranked SYNC warning: %v", err)
@@ -351,8 +422,13 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ranked history: %w", err)
 	}
+	return aggregateRankedStats(games), nil
+}
+
+func aggregateRankedStats(games []CRRankedDataBaseEntry) *CRRankedLoadReturn {
 	var result CRRankedLoadReturn
 	deckToGamesMap := make(map[string]*deckGroup)
+	seasons := make(map[string]*rankedSeasonAccumulator)
 
 	for _, g := range games {
 		result.Games = append(result.Games, g)
@@ -363,6 +439,19 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 			result.Losses++
 		default:
 			result.Ties++
+		}
+
+		var season *rankedSeasonAccumulator
+		if battleTime, err := parseBattleTime(g.BattleTime); err != nil {
+			log.Printf("failed to parse ranked battle time %q: %v", g.BattleTime, err)
+		} else {
+			seasonID := seasonIDForTime(battleTime)
+			season = seasons[seasonID]
+			if season == nil {
+				season = newRankedSeasonAccumulator()
+				seasons[seasonID] = season
+			}
+			season.addResult(g.Result)
 		}
 
 		var myCards []Card
@@ -387,19 +476,50 @@ func loadRankedStats(db *sql.DB, client *ClashRoyaleClient, playerTag string) (*
 			deckToGamesMap[key] = group
 		}
 
-		group.games = append(group.games, GameResult{
+		gameResult := GameResult{
 			MyDeck:    myCards,
 			EnemyDeck: enemyCards,
 			Result:    g.Result,
-		})
+		}
+		group.games = append(group.games, gameResult)
+
+		if season != nil {
+			seasonGroup, ok := season.deckToGamesMap[key]
+			if !ok {
+				seasonGroup = &deckGroup{deck: myCards}
+				season.deckToGamesMap[key] = seasonGroup
+			}
+			seasonGroup.games = append(seasonGroup.games, gameResult)
+		}
 	}
 	result.DeckCardWinRates = deckToCardWinRate(deckToGamesMap)
 
-	if len(games) > 0 {
-		result.WinRate = float64(result.Wins) / float64(len(games))
+	currentSeasonID := seasonIDForTime(time.Now().UTC())
+	if seasons[currentSeasonID] == nil {
+		seasons[currentSeasonID] = newRankedSeasonAccumulator()
+	}
+	for id, season := range seasons {
+		entry := CRRankedSeason{
+			Id:               id,
+			Label:            seasonLabel(id),
+			Wins:             season.wins,
+			Losses:           season.losses,
+			Ties:             season.ties,
+			DeckCardWinRates: deckToCardWinRate(season.deckToGamesMap),
+		}
+		if decisions := season.wins + season.losses; decisions > 0 {
+			entry.WinRate = float64(season.wins) / float64(decisions)
+		}
+		result.Seasons = append(result.Seasons, entry)
+	}
+	sort.Slice(result.Seasons, func(i, j int) bool { return result.Seasons[i].Id > result.Seasons[j].Id })
+	result.CurrentSeasonID = currentSeasonID
+
+	if decisions := result.Wins + result.Losses; decisions > 0 {
+		result.WinRate = float64(result.Wins) / float64(decisions)
 	}
 
-	return &result, nil
+	return &result
 }
 
 type deckGroup struct {
@@ -455,11 +575,14 @@ func winRateByCard(games []GameResult, side func(GameResult) []Card) map[string]
 			}
 		}
 	}
-	for _, rec := range records {
+	for name, rec := range records {
 		total := rec.Wins + rec.Losses
-		if total > 0 {
-			rec.WinRate = float64(rec.Wins) / float64(total)
+		if total == 0 {
+			// Cards that only showed up in ties have no win rate to report.
+			delete(records, name)
+			continue
 		}
+		rec.WinRate = float64(rec.Wins) / float64(total)
 	}
 	return records
 }
