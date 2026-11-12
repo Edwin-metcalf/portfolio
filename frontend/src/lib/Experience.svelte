@@ -1,10 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
+    type Weight = 'recent' | 'mid' | 'early';
+
     interface Role {
         period: string;
         title: string;
         org: string;
+        weight?: Weight;
         summary?: string;
         bullets?: string[];
         tags?: string[];
@@ -13,48 +16,53 @@
     // Placeholder dates and copy — replace with the real details.
     const history: Role[] = [
         {
-            period: '2017 — 2021',
-            title: 'Soccer Referee',
-            org: 'Middle & high school',
-            summary: 'Officiated middle and high school matches, managing game flow and player safety.'
-        },
-        {
-            period: '2021 — 2022',
-            title: 'Lacrosse Coach',
-            org: 'Youth lacrosse',
-            summary: 'Coached youth lacrosse, running practices and teaching fundamentals.'
-        },
-        {
-            period: 'Summer 2022',
-            title: 'Server',
-            org: 'Independent wine & beer bar',
-            summary: 'Guided guests through a rotating list of independent wines and beers.'
-        },
-        {
-            period: 'Summer 2023',
-            title: 'Market Research Intern',
-            org: 'Rainmaker Capital',
-            bullets: [
-                'Built market and competitor research for the investment team.',
-                'Turned findings into concise write-ups the team could act on.'
-            ]
-        },
-        {
             period: '2024 — 2025',
             title: 'Software Engineering Intern',
             org: 'Rainmaker Capital',
+            weight: 'recent',
             bullets: [
                 'Built and shipped internal tooling used by the investment team.',
                 'Worked across the stack on data-heavy features and APIs.',
                 'Wrote tests and reviewed code alongside the engineering team.'
             ],
             tags: ['Python', 'TypeScript', 'SQL']
+        },
+        {
+            period: 'Summer 2023',
+            title: 'Market Research Intern',
+            org: 'Rainmaker Capital',
+            weight: 'mid',
+            bullets: [
+                'Built market and competitor research for the investment team.',
+                'Turned findings into concise write-ups the team could act on.'
+            ]
+        },
+        {
+            period: 'Summer 2022',
+            title: 'Server',
+            org: 'Independent wine & beer bar',
+            weight: 'early',
+            summary: 'Guided guests through a rotating list of independent wines and beers.'
+        },
+        {
+            period: '2021 — 2022',
+            title: 'Lacrosse Coach',
+            org: 'Youth lacrosse',
+            weight: 'early',
+            summary: 'Coached youth lacrosse, running practices and teaching fundamentals.'
+        },
+        {
+            period: '2017 — 2021',
+            title: 'Soccer Referee',
+            org: 'Middle & high school',
+            weight: 'early',
+            summary: 'Officiated middle and high school matches, managing game flow and player safety.'
         }
     ];
 
     const present: Role[] = [
         {
-            period: 'Present',
+            period: '2025 — Present',
             title: 'Software Engineer',
             org: 'DataAnnotation (contract)',
             summary: 'Contract software engineer building and reviewing code used to train AI models.',
@@ -65,7 +73,7 @@
             tags: ['Python', 'TypeScript']
         },
         {
-            period: 'Present',
+            period: '2024 — Present',
             title: 'Founder & Maintainer',
             org: 'MetCode (open source)',
             summary: 'Open-source agentic command-line assistant written in Go.',
@@ -114,8 +122,53 @@
         <h1 class="experience-title" class:visible={headingVisible}>Experience</h1>
 
         <div class="timeline">
+            <div class="present">
+                {#each present as role}
+                    <article class="current-role">
+                        <p class="current-period">{role.period}</p>
+                        <h3 class="entry-title">{role.title}</h3>
+                        <p class="entry-org">{role.org}</p>
+                        {#if role.summary}
+                            <p class="entry-summary">{role.summary}</p>
+                        {/if}
+                        {#if role.bullets?.length}
+                            <ul class="entry-bullets">
+                                {#each role.bullets ?? [] as bullet}
+                                    <li>{bullet}</li>
+                                {/each}
+                            </ul>
+                        {/if}
+                        {#if role.tags?.length}
+                            <div class="entry-tags">
+                                {#each role.tags ?? [] as tag}
+                                    <span class="tag">{tag}</span>
+                                {/each}
+                            </div>
+                        {/if}
+                    </article>
+                {/each}
+            </div>
+
+            <div class="fork-row" bind:this={forkRef}>
+                <div class="fork-canvas" class:visible={forkVisible}>
+                    <svg class="fork-desktop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <path class="branch" d="M50 100 C50 48 24.2 62 24.2 0" pathLength="1" />
+                        <path class="branch" d="M50 100 C50 48 75.8 62 75.8 0" pathLength="1" />
+                    </svg>
+                    <svg class="fork-mobile" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <path class="branch" d="M0 0 L0 100" pathLength="1" />
+                    </svg>
+                    <span class="junction" aria-hidden="true"></span>
+                </div>
+            </div>
+
             {#each history as role}
-                <article class="timeline-entry">
+                <article
+                    class="timeline-entry"
+                    class:entry-recent={role.weight === 'recent'}
+                    class:entry-mid={role.weight === 'mid'}
+                    class:entry-early={role.weight === 'early'}
+                >
                     <span class="node" aria-hidden="true"></span>
                     <div class="entry-date">{role.period}</div>
                     <div class="entry-content">
@@ -141,46 +194,6 @@
                     </div>
                 </article>
             {/each}
-
-            <div class="fork-row" bind:this={forkRef}>
-                <div class="fork-date">Present</div>
-                <div class="fork-canvas" class:visible={forkVisible}>
-                    <svg class="fork-desktop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                        <path class="branch" d="M0 0 C0 52 24.2 38 24.2 100" pathLength="1" />
-                        <path class="branch" d="M0 0 C0 52 75.8 38 75.8 100" pathLength="1" />
-                    </svg>
-                    <svg class="fork-mobile" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                        <path class="branch" d="M0 0 L0 100" pathLength="1" />
-                    </svg>
-                    <span class="junction" aria-hidden="true"></span>
-                </div>
-            </div>
-
-            <div class="present">
-                {#each present as role}
-                    <article class="current-role">
-                        <h3 class="entry-title">{role.title}</h3>
-                        <p class="entry-org">{role.org}</p>
-                        {#if role.summary}
-                            <p class="entry-summary">{role.summary}</p>
-                        {/if}
-                        {#if role.bullets?.length}
-                            <ul class="entry-bullets">
-                                {#each role.bullets ?? [] as bullet}
-                                    <li>{bullet}</li>
-                                {/each}
-                            </ul>
-                        {/if}
-                        {#if role.tags?.length}
-                            <div class="entry-tags">
-                                {#each role.tags ?? [] as tag}
-                                    <span class="tag">{tag}</span>
-                                {/each}
-                            </div>
-                        {/if}
-                    </article>
-                {/each}
-            </div>
         </div>
     </div>
 </div>
@@ -193,7 +206,7 @@
     }
 
     .experience-container {
-        max-width: 900px;
+        max-width: 1000px;
         width: 100%;
     }
 
@@ -228,16 +241,154 @@
         width: 100%;
     }
 
+    .current-period {
+        margin: 0 0 8px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .present {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+
+    .current-role {
+        position: relative;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 26px 24px 24px;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .current-role::before {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--mint);
+        transform: translateX(-50%);
+        box-shadow: 0 0 0 4px var(--bg);
+    }
+
+    .current-role:hover {
+        border-color: var(--mint);
+        transform: translateY(-2px);
+    }
+
+    .current-role .entry-title {
+        font-size: 1.25rem;
+    }
+
+    .current-role .entry-org {
+        font-size: 0.72rem;
+    }
+
+    .current-role .entry-summary,
+    .current-role .entry-bullets li {
+        font-size: 0.92rem;
+    }
+
+    .fork-row {
+        position: relative;
+        height: 110px;
+    }
+
+    .fork-canvas {
+        position: absolute;
+        inset: 0;
+        clip-path: inset(0 0 100% 0);
+        transition: clip-path 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+    }
+
+    .fork-canvas.visible {
+        clip-path: inset(0 0 0 0);
+    }
+
+    .fork-canvas svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .fork-canvas .fork-desktop {
+        display: block;
+    }
+
+    .fork-canvas .fork-mobile {
+        display: none;
+    }
+
+    .branch {
+        fill: none;
+        stroke: var(--mint);
+        stroke-width: 1;
+        stroke-opacity: 0.55;
+        vector-effect: non-scaling-stroke;
+    }
+
+    .junction {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--mint);
+        transform: translate(-50%, 50%);
+    }
+
     .timeline-entry {
+        --title-size: 1.12rem;
+        --org-size: 0.7rem;
+        --body-size: 0.9rem;
+        --entry-pad: 32px;
+        --node-size: 8px;
+        --date-size: 0.72rem;
         position: relative;
         display: grid;
-        grid-template-columns: 150px 1fr;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .timeline-entry.entry-recent {
+        --title-size: 1.35rem;
+        --org-size: 0.75rem;
+        --body-size: 0.95rem;
+        --entry-pad: 44px;
+        --node-size: 9px;
+        --date-size: 0.75rem;
+    }
+
+    .timeline-entry.entry-mid {
+        --title-size: 1.08rem;
+        --org-size: 0.7rem;
+        --body-size: 0.87rem;
+        --entry-pad: 30px;
+        --node-size: 8px;
+        --date-size: 0.7rem;
+    }
+
+    .timeline-entry.entry-early {
+        --title-size: 0.9rem;
+        --org-size: 0.64rem;
+        --body-size: 0.8rem;
+        --entry-pad: 22px;
+        --node-size: 6px;
+        --date-size: 0.66rem;
     }
 
     .timeline-entry::before {
         content: '';
         position: absolute;
-        left: 150px;
+        left: 50%;
         top: 0;
         bottom: 0;
         width: 1px;
@@ -247,9 +398,9 @@
     .entry-date {
         grid-column: 1;
         text-align: right;
-        padding: 3px 28px 0 0;
+        padding: 3px 32px 0 0;
         font-family: var(--font-mono);
-        font-size: 0.75rem;
+        font-size: var(--date-size);
         letter-spacing: 0.5px;
         text-transform: uppercase;
         color: var(--text-muted);
@@ -258,10 +409,10 @@
 
     .node {
         position: absolute;
-        left: 150px;
+        left: 50%;
         top: 6px;
-        width: 9px;
-        height: 9px;
+        width: var(--node-size);
+        height: var(--node-size);
         border-radius: 50%;
         background: var(--bg);
         border: 1px solid var(--border);
@@ -277,13 +428,13 @@
 
     .entry-content {
         grid-column: 2;
-        padding: 0 0 44px 30px;
+        padding: 0 0 var(--entry-pad) 32px;
     }
 
     .entry-title {
         margin: 0;
         font-family: var(--font-display);
-        font-size: 1.35rem;
+        font-size: var(--title-size);
         font-weight: 600;
         color: var(--text);
         line-height: 1.3;
@@ -292,7 +443,7 @@
     .entry-org {
         margin: 5px 0 0;
         font-family: var(--font-mono);
-        font-size: 0.75rem;
+        font-size: var(--org-size);
         letter-spacing: 0.5px;
         text-transform: uppercase;
         color: var(--mint);
@@ -301,7 +452,7 @@
     .entry-summary {
         margin: 10px 0 0;
         color: var(--text-muted);
-        font-size: 0.95rem;
+        font-size: var(--body-size);
         line-height: 1.65;
         max-width: 62ch;
     }
@@ -318,7 +469,7 @@
         padding-left: 16px;
         margin-bottom: 6px;
         color: var(--text-muted);
-        font-size: 0.95rem;
+        font-size: var(--body-size);
         line-height: 1.6;
     }
 
@@ -352,106 +503,6 @@
         padding: 4px 9px;
     }
 
-    .fork-row {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-    }
-
-    .fork-date {
-        grid-column: 1;
-        text-align: right;
-        padding: 0 28px 0 0;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: var(--mint);
-        line-height: 1;
-        transform: translateY(-50%);
-    }
-
-    .fork-canvas {
-        grid-column: 2;
-        position: relative;
-        height: 104px;
-    }
-
-    .fork-canvas svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-        overflow: visible;
-    }
-
-    .fork-mobile {
-        display: none;
-    }
-
-    .branch {
-        fill: none;
-        stroke: var(--mint);
-        stroke-width: 1;
-        stroke-opacity: 0.55;
-        vector-effect: non-scaling-stroke;
-        stroke-dasharray: 1;
-        stroke-dashoffset: 1;
-        transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
-    }
-
-    .fork-canvas.visible .branch {
-        stroke-dashoffset: 0;
-    }
-
-    .junction {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: var(--mint);
-        transform: translate(-50%, -50%);
-        box-shadow: 0 0 0 4px var(--bg);
-    }
-
-    .present {
-        margin-left: 150px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-    }
-
-    .current-role {
-        position: relative;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 26px 24px 24px;
-        transition: border-color 0.15s ease, transform 0.15s ease;
-    }
-
-    .current-role::before {
-        content: '';
-        position: absolute;
-        top: -5px;
-        left: 50%;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: var(--mint);
-        transform: translateX(-50%);
-        box-shadow: 0 0 0 4px var(--bg);
-    }
-
-    .current-role:hover {
-        border-color: var(--mint);
-        transform: translateY(-2px);
-    }
-
-    .current-role .entry-title {
-        font-size: 1.2rem;
-    }
-
     @media (max-width: 768px) {
         .experience-section {
             padding: 50px 5%;
@@ -466,37 +517,42 @@
             width: 50px;
         }
 
-        .timeline-entry {
-            display: block;
+        .present {
+            position: relative;
+            grid-template-columns: 1fr;
+            gap: 20px;
             padding-left: 22px;
         }
 
-        .timeline-entry::before {
+        .present::before {
+            content: '';
+            position: absolute;
             left: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border);
         }
 
-        .node {
-            left: 0;
-            top: 5px;
-        }
-
-        .entry-date {
-            text-align: left;
-            padding: 0 0 8px;
-        }
-
-        .entry-content {
-            padding: 0 0 36px;
+        .current-role::before {
+            top: 26px;
+            bottom: auto;
+            left: -22px;
+            transform: translate(-50%, -50%);
         }
 
         .fork-row {
-            display: block;
+            height: 56px;
         }
 
-        .fork-date {
-            text-align: left;
-            padding: 0 0 8px 22px;
-            transform: none;
+        .fork-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border);
         }
 
         .fork-canvas .fork-desktop {
@@ -508,31 +564,37 @@
         }
 
         .fork-canvas {
-            height: 36px;
-        }
-
-        .present {
             position: relative;
-            margin-left: 0;
-            padding-left: 22px;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            height: 100%;
         }
 
-        .present::before {
-            content: '';
-            position: absolute;
+        .junction {
             left: 0;
+            bottom: auto;
             top: 0;
-            bottom: 0;
-            width: 1px;
-            background: linear-gradient(to bottom, var(--border) 0%, var(--border) 82%, transparent 100%);
+            transform: translate(-50%, -50%);
         }
 
-        .current-role::before {
-            top: 26px;
-            left: -22px;
-            transform: translate(-50%, -50%);
+        .timeline-entry {
+            display: block;
+            padding-left: 22px;
+        }
+
+        .timeline-entry::before {
+            left: 0;
+        }
+
+        .node {
+            left: 0;
+        }
+
+        .entry-date {
+            text-align: left;
+            padding: 0 0 8px;
+        }
+
+        .entry-content {
+            padding: 0 0 var(--entry-pad);
         }
     }
 </style>
