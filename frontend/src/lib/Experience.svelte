@@ -33,18 +33,6 @@
             tags: ['PHP', 'JavaScript', 'SQL', 'CRM']
         },
         {
-            id: 'market-research',
-            period: 'June 2024 - August 2024',
-            title: 'Market Research Intern',
-            org: 'Rainmaker Capital',
-            weight: 'mid',
-            blurb: 'Market research in the AI healthcare space.',
-            bullets: [
-                'Conducted indepth research on healthcare technologies and AI application.',
-                'Turned research int a stakeholder report.'
-            ]
-        },
-        {
             id: 'server',
             period: 'June 2024 - May 2026',
             title: 'Server and Storage Assistant',
@@ -52,8 +40,20 @@
             weight: 'early',
             blurb: 'Served guests and managed inventory.',
             bullets: [
-                'Serve food and beverages in a high-paced environment, and manage deliveries, while ensuring timely and accurate receipt of products',
-                'Managed stock by organizing wine storage lockers and maintianing accurate inventory records.'
+                'Served food and beverages in a fast-paced environment and managed deliveries, ensuring timely and accurate receipt of products.',
+                'Managed stock by organizing wine storage lockers and maintaining accurate inventory records.'
+            ]
+        },
+        {
+            id: 'market-research',
+            period: 'June 2024 - August 2024',
+            title: 'Market Research Intern',
+            org: 'Rainmaker Capital',
+            weight: 'mid',
+            blurb: 'Market research in the AI healthcare space.',
+            bullets: [
+                'Conducted in-depth research on healthcare technologies and AI applications.',
+                'Turned research into a stakeholder report.'
             ]
         },
         {
@@ -101,7 +101,7 @@
             blurb: 'Open-source agentic command-line assistant written in Go.',
             bullets: [
                 'Created and maintain an open-source CLI agent optimized for small (7–8B parameter) models running offline on modest consumer hardware. 5+ outside contributors and 5+ stars on GitHub.',
-                'Implemented the tool-calling loop including, tool dispatch, tool-result feedback, multi-call handling, and a file-system toolset. Test coverage at 60%+.',
+                'Implemented the tool-calling loop including tool dispatch, tool-result feedback, multi-call handling, and a file-system toolset. Test coverage at 60%+.',
                 'Diagnosed model-specific failures: hallucinated tool names, and a model whose tool calls never parsed due to a template mismatch. Compared models on tool-call judgment and standardized on the best performer.'
             ],
             tags: ['Go', 'Ollama', 'Tailscale'],
@@ -220,13 +220,14 @@
                 </div>
             </div>
 
-            {#each history as role}
+            {#each history as role, i}
                 {@const open = !!openRoles[role.id]}
                 <article
                     class="timeline-entry"
                     class:entry-recent={role.weight === 'recent'}
                     class:entry-mid={role.weight === 'mid'}
                     class:entry-early={role.weight === 'early'}
+                    style={`--spine-alpha: ${(0.5 - (i / Math.max(1, history.length - 1)) * 0.34).toFixed(2)}`}
                 >
                     <span class="node" aria-hidden="true"></span>
                     <div class="entry-date">{role.period}</div>
@@ -377,14 +378,24 @@
         padding: 0;
         background: none;
         border: none;
+        border-radius: var(--radius);
         color: inherit;
         font: inherit;
         text-align: left;
         cursor: pointer;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .entry-toggle:hover,
+    .entry-toggle:focus-visible {
+        background-color: rgba(255, 255, 255, 0.02);
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.02);
     }
 
     .entry-toggle:hover .entry-title,
-    .entry-toggle:hover .chevron {
+    .entry-toggle:hover .chevron,
+    .entry-toggle:focus-visible .entry-title,
+    .entry-toggle:focus-visible .chevron {
         color: var(--mint);
     }
 
@@ -611,7 +622,8 @@
         top: 0;
         bottom: 0;
         width: 1px;
-        background: var(--border);
+        background: var(--mint);
+        opacity: var(--spine-alpha, 0.3);
     }
 
     .entry-date {
@@ -678,7 +690,8 @@
             top: 0;
             bottom: 0;
             width: 1px;
-            background: var(--border);
+            background: var(--mint);
+            opacity: 0.5;
         }
 
         .current-role {
@@ -686,24 +699,28 @@
         }
 
         .current-role::before {
-            top: 26px;
-            bottom: auto;
+            display: none;
+        }
+
+        .current-period {
+            position: relative;
+        }
+
+        .current-period::before {
+            content: '';
+            position: absolute;
             left: -22px;
+            top: 50%;
+            width: var(--node-size);
+            height: var(--node-size);
+            border-radius: 50%;
+            background: var(--mint);
             transform: translate(-50%, -50%);
+            z-index: 1;
         }
 
         .fork-row {
             height: 56px;
-        }
-
-        .fork-row::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: var(--border);
         }
 
         .fork-canvas .fork-desktop {
