@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { User, Code, Briefcase, Mail } from 'lucide-svelte';
+    import { User, Code, Briefcase, Mail, History } from 'lucide-svelte';
 
     let visible = false;
     let activeSection = 'about-me'
@@ -8,6 +8,7 @@
 
     const sections = [
         {id: 'about-me', icon: User, label: 'About'},
+        {id: 'experience', icon: History, label: 'Experience'},
         {id: 'portfolio', icon: Briefcase, label: 'Portfolio'},
         {id: 'skills', icon: Code, label: 'Skills'},
         {id: 'contact', icon: Mail, label: 'Contact'}

@@ -18,6 +18,7 @@
         </a>
         <div class="header-right">
             <a href="#about-me" in:fly={{ y: -50, duration: 800, delay: 200, easing: quintOut}}>About me</a>
+            <a href="#experience" in:fly={{ y: -50, duration: 800, delay: 300, easing: quintOut}}>Experience</a>
             <a href="#portfolio" in:fly={{ y: -50, duration: 800, delay: 400, easing: quintOut}}>Portfolio</a>
             <a href="#skills" in:fly={{ y: -50, duration: 800, delay: 600, easing: quintOut}}>Skills</a>
             <a href="#contact" in:fly={{ y: -50, duration: 800, delay: 800, easing: quintOut}}>Contact</a>
@@ -65,6 +66,13 @@
         filter: brightness(0.7);
     }
 
+
+    @media (max-width: 1000px) and (min-width: 769px) {
+        .header a {
+            font-size: 20px;
+            padding: 10px 8px;
+        }
+    }
 
     @media (max-width: 768px) {
         .header {

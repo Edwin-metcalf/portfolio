@@ -6,6 +6,7 @@
 
     import Header from '../lib/Header.svelte';
     import Aboutme from '../lib/Aboutme.svelte';
+    import Experience from '$lib/Experience.svelte';
     import Languages from '$lib/Languages.svelte';
     import Portfolio from '$lib/Portfolio.svelte';
     import Contact from '$lib/Contact.svelte';
@@ -53,6 +54,7 @@
         </div>
     </div>
     <Aboutme></Aboutme>
+    <Experience></Experience>
     <Portfolio></Portfolio>
     <Courses></Courses>
     <Languages></Languages>
