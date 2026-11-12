@@ -624,6 +624,7 @@
         width: 1px;
         background: var(--mint);
         opacity: var(--spine-alpha, 0.3);
+        transform: translateX(-50%);
     }
 
     .entry-date {
@@ -692,6 +693,7 @@
             width: 1px;
             background: var(--mint);
             opacity: 0.5;
+            transform: translateX(-50%);
         }
 
         .current-role {

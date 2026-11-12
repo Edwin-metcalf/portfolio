@@ -6,6 +6,7 @@
 		type TrophyPoint,
 		createHeadToHeadChart,
 		type CardRecord,
+		type DeckCardWinRates,
 		formatPercentage,
 		pickCards
 	} from '../stats';
@@ -117,6 +118,16 @@
 		return 'tie';
 	}
 
+	function sortRankedDeckByGames(deckStats: DeckCardWinRates[]): DeckCardWinRates[] {
+		const totalGames = (deck: DeckCardWinRates) =>
+			Object.values(deck.cardStats).reduce(
+				(sum, record) => sum + record.wins + record.losses,
+				0
+			);
+
+		return [...deckStats].sort((a, b) => totalGames(b) - totalGames(a));
+	}
+
     function getArenaNumByTrophies(trophies: number): number {
         //this is kinda a hack solution especially at lower arenas
         if (trophies < 5000) {
@@ -183,7 +194,9 @@
 		};
 	});
 
-	const rankedDeckStats = $derived(selectedRankedView?.deckCardWinRates ?? []);
+	const rankedDeckStats = $derived(
+		sortRankedDeckByGames(selectedRankedView?.deckCardWinRates ?? [])
+	);
 </script>
 
 <div class="game-stat-helper-page">

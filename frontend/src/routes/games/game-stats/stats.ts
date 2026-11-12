@@ -84,7 +84,7 @@ export interface CardRecord {
     losses: number;
     winRate: number;
 }
-type DeckCardWinRates = {
+export type DeckCardWinRates = {
     deck: Card[];
     cardStats: Record<string, CardRecord>;
 }
